@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+message Result {
+    string url = 1;
+    string title = 2;
+    repeated string snippets = 3;
+}
+
+message SearchResponse {
+    repeated Result results = 1;
+}
+  

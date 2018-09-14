@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>Falanx.JsonCodec</AssemblyName>
+    <RootNamespace>Falanx.JsonCodec</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Codec.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Falanx.Ast\Falanx.Ast.fsproj" />
+  </ItemGroup>
+  <Import Project="..\.paket\Paket.Restore.targets" />
+</Project>

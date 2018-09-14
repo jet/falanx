@@ -1,0 +1,48 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "Falanx.Ast", "Falanx.Ast\Falanx.Ast.fsproj", "{B08EA3D8-BBA3-46D0-AFAD-29598867B602}"
+EndProject
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "Falanx.BinaryCodec", "Falanx.BinaryCodec\Falanx.BinaryCodec.fsproj", "{0AB8DCF4-3F95-4828-AF62-01F2AE6BD230}"
+EndProject
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "Falanx.Generator", "Falanx.Generator\Falanx.Generator.fsproj", "{74F2C84F-312E-4435-8E7D-004A443F1A37}"
+EndProject
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "Falanx.BinaryGenerator", "Falanx.BinaryGenerator\Falanx.BinaryGenerator.fsproj", "{4B5A54E7-7269-44EC-A205-E651B2FFE04F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2F38C19C-607D-4B48-A479-4304245351DD}"
+	ProjectSection(SolutionItems) = preProject
+		bundle.proto = bundle.proto
+		oneOf.proto = oneOf.proto
+		searchResponse.proto = searchResponse.proto
+	EndProjectSection
+EndProject
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "Falanx.JsonCodec", "Falanx.JsonCodec\Falanx.JsonCodec.fsproj", "{2E5DF937-250F-4C52-8EE5-3DEC728EECD9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B08EA3D8-BBA3-46D0-AFAD-29598867B602}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B08EA3D8-BBA3-46D0-AFAD-29598867B602}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B08EA3D8-BBA3-46D0-AFAD-29598867B602}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B08EA3D8-BBA3-46D0-AFAD-29598867B602}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0AB8DCF4-3F95-4828-AF62-01F2AE6BD230}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0AB8DCF4-3F95-4828-AF62-01F2AE6BD230}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0AB8DCF4-3F95-4828-AF62-01F2AE6BD230}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0AB8DCF4-3F95-4828-AF62-01F2AE6BD230}.Release|Any CPU.Build.0 = Release|Any CPU
+		{74F2C84F-312E-4435-8E7D-004A443F1A37}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{74F2C84F-312E-4435-8E7D-004A443F1A37}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{74F2C84F-312E-4435-8E7D-004A443F1A37}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{74F2C84F-312E-4435-8E7D-004A443F1A37}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4B5A54E7-7269-44EC-A205-E651B2FFE04F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4B5A54E7-7269-44EC-A205-E651B2FFE04F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4B5A54E7-7269-44EC-A205-E651B2FFE04F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4B5A54E7-7269-44EC-A205-E651B2FFE04F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E5DF937-250F-4C52-8EE5-3DEC728EECD9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E5DF937-250F-4C52-8EE5-3DEC728EECD9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E5DF937-250F-4C52-8EE5-3DEC728EECD9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E5DF937-250F-4C52-8EE5-3DEC728EECD9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,25 @@
+<Project ToolsVersion="15.0">
+
+  <PropertyGroup>
+    <NupkgsDir>$([System.IO.Path]::GetFullPath("$(MSBuildThisFileDirectory)/artifact/nupkg"))</NupkgsDir>
+    <MonoOrEmpty Condition=" '$(OS)' != 'Windows_NT' ">mono </MonoOrEmpty>
+  </PropertyGroup>
+
+  <Target Name="Restore">
+    <Exec Command="$(MonoOrEmpty)paket.exe restore" WorkingDirectory=".paket" ConsoleToMSBuild="true" />
+  </Target>
+
+  <Target Name="Build" DependsOnTargets="Restore">
+    <Exec Command='dotnet build Falanx.Generator -c Release' />
+    <Exec Command='dotnet build Falanx.Generator-net4 -c Release' />
+  </Target>
+
+  <Target Name="Pack" DependsOnTargets="Restore">
+    <RemoveDir Directories="$(NupkgsDir)" />
+    <Exec Command='dotnet pack Falanx.BinaryCodec -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
+    <Exec Command='dotnet pack Falanx.Generator -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
+    <Exec Command='dotnet pack Falanx.Generator-net -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
+  </Target>
+
+</Project>
+ 

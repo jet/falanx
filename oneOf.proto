@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+message SampleMessage {
+    int32 martId = 1;
+    oneof test_oneof {
+      string first_name = 4;
+      int32 age = 9;
+      string last_name = 7;
+    }
+}

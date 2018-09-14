@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <AssemblyName>dotnet-Falanx.BinaryGenerator</AssemblyName>
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <VersionSuffix>alpha</VersionSuffix>
+    <RootNamespace>Falanx.Generator</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);IncludeP2POutput</TargetsForTfmSpecificBuildOutput>
+  </PropertyGroup>
+  <Target Name="IncludeP2POutput">
+    <ItemGroup>
+      <BuildOutputInPackage Include="$(MSBuildProjectDirectory)/$(OutputPath)Falanx.BinaryCodec.dll" />
+      <BuildOutputInPackage Include="$(MSBuildProjectDirectory)/$(OutputPath)Falanx.BinaryGenerator.dll" />
+      <BuildOutputInPackage Include="$(MSBuildProjectDirectory)/$(OutputPath)Falanx.Ast.dll" />
+    </ItemGroup>
+  </Target>
+
+  <!-- this add an empty prefercliruntime file in the root of nupkg
+  this is needed so the clitool can run with any .net core runtime version -->
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Program.fs" />
+    <Content Include="prefercliruntime">
+      <PackagePath>.</PackagePath>
+      <Pack>true</Pack>
+    </Content>
+    <ProjectReference Include="..\Falanx.JsonCodec\Falanx.JsonCodec.fsproj" />
+    <ProjectReference Include="..\Falanx.BinaryGenerator\Falanx.BinaryGenerator.fsproj" PrivateAssets="All" />
+  </ItemGroup>
+  <Import Project="..\.paket\Paket.Restore.targets" />
+</Project>
