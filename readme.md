@@ -1,6 +1,6 @@
-# schematization
+# Falanx Proto3 code generation
 
-This repository contains the code generator to generate F# source (.fs files) from `proto3` source. This is part of the schematization project.  The general concepts are as follows:
+This repository contains the code generator to generate F# source (.fs files) from `proto3` source.  The general concepts are as follows:
 
 *  Resuse as much off the shelf code as possible for the mvp as to get a feel for how things will work and refine from there.
 *  Code generation, to generate F# source code, rather than types being injected as a type provider.
