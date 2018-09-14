@@ -1,59 +1,62 @@
-# schematization
+# Falanx Proto3 code generation
 
-This repository deal with the code generation needed for the schematization project.  The general concepts are as follows:
+This repository contains the code generator to generate F# source (.fs files) from `proto3` source.  The general concepts are as follows:
 
 *  Resuse as much off the shelf code as possible for the mvp as to get a feel for how things will work and refine from there.
-*  Code generation where code exists rather than being injected as it is with a type provider.
-*  Idiomatic F# code is generated rather than simple .NET 1.1 era code, this means records, discriminated unions etc are generated where appropriate.
+*  Code generation, to generate F# source code, rather than types being injected as a type provider.
+*  Idiomatic F# code is generated rather than simple .NET 1.1 era code. This means records, discriminated unions, etc., are generated where appropriate.
 
 # Project structure
 
-The solution is relatively simple with four projects
+The solution has four projects.
 
 ## Projects in this repository
 
 ### Falanx.Ast
-This deals with helping to map ProvidedTypes/Methods/Properties that are defined in the Type Provider SDK and map them to AST entities
+This maps ProvidedTypes, Methods, and Properties that are defined in the Type Provider SDK to AST entities.
 
 ### Falanx.BinaryCodec
-This project acts as a helper project for the client in order to serialize and deserialize code
+This is a helper project for the client to serialize and deserialize code.
 
 ### Falanx.BinaryGenerator
+<TODO: Write a desciption>
 
 ### Falanx.Generator
-The generator is a simple command line program which references all the other projects in order to produce F# code from the `.proto` files.
+The generator is a simple command line program which uses the other projects to produce F# code from the `.proto` files.
 
-## Upstream projects
+## Depdendencies
 
 ### Type Provider SDK
-This project allows you to build type providers by leveridging quotations and wrappers arounf Type/MethodInfo/PropertyInfo etc in order to generate and inject IL into a target assembly.  We are not using the type provider generator mechanism, omly its skeletal structure and definitions.  This allows us to save a lot of time by reusing and adapting already written quotation code that was build for Froto.TypeProvider.
+This project allows you to build type providers by leveraging quotations and wrappers around Types, MethodInfo, PropertyInfo, etc., to generate and inject CIL (Common Intermediate Language) into a target assembly.  Falanx does not use the type provider generator mechanism, only the skeletal structure and definitions.  This allows us to save a lot of time by reusing and adapting already written quotation code that was build for Froto.TypeProvider.
 
 ### FsAst
-This was a proof of concept demo of using the untyped F# ast to generate code via the code formatter Fantomas.
+This was a proof of concept demo using the untyped F# AST to generate code via the code formatter Fantomas.
 
 ### Froto.Serialization
-This generates binary protocol for proto specific fields.
+This generates binary protocol for `proto` specific fields.
 
 ### Froto.Parser
 This parses the `.proto` definition files to produce an AST.
 
 ### Fantomas
-This is an F# code formatter assembly that can not only format F# code but also F# AST's back into code.
+This is an F# code formatter assembly that format F# code and can turn an F# AST back into code.
 
 
-# How to build
+# How to build Falanx
 
-This is a simple project there is not yet a fake script as no elaborate build is yet required, all you have to do is `dotnet build Falanx.sln` from the root folder and the default solution should have its references restored via paket and then built.
+This is a simple project, so there is no fake script as no elaborate build is yet required. All you have to do is `dotnet build Falanx.sln` from the root folder. The default solution will have its references restored via `paket` and then built.
 
-## Generating code from a .protofile
+# Using Falanx
 
-From the root folder running the following will generate a `.fs` file for a specified `.proto` file:
+## Generating code from a .proto file
+
+From the root folder, to generate a `.fs` file for a specified `.proto` file:
 
 ```
 dotnet run --project Falanx.Generator/Falanx.Generator.fsproj --inputfile bundle.proto --defaultnamespace test --outputfile bundle.fs
 ```
 
-Command line arguments are as follows, these can also be shown by passing `--help`:
+Command line arguments can be shown by calling with  `--help`:
 
 ```
 USAGE: dotnet-Falanx.Generator [--help] --inputfile <string> --defaultnamespace <string> --outputfile <string>
@@ -66,7 +69,7 @@ OPTIONS:
 ```
 
 
-## to build packages
+## To build packages
 
 from root
 
@@ -74,7 +77,7 @@ from root
 dotnet msbuild build.proj /t:Pack /p:Version=0.1.0-alpha7
 ```
 
-and nupkg will be in `artifact/nupkg`  
+The nupkg will be in `artifact/nupkg`  
 
 ## Security
 This repository is actively monitored by Jet Engineers and the Jet Security team. Please monitor this repo for security updates and advisories. For more information and contacts, please see [SECURITY](security.md)
