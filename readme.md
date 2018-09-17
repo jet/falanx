@@ -24,7 +24,7 @@ This is a helper project for the client to serialize and deserialize code.
 ### Falanx.Generator
 The generator is a simple command line program which uses the other projects to produce F# code from the `.proto` files.
 
-## Depdendencies
+## Dependencies
 
 ### Type Provider SDK
 This project allows you to build type providers by leveraging quotations and wrappers around Types, MethodInfo, PropertyInfo, etc., to generate and inject CIL (Common Intermediate Language) into a target assembly.  Falanx does not use the type provider generator mechanism, only the skeletal structure and definitions.  This allows us to save a lot of time by reusing and adapting already written quotation code that was build for Froto.TypeProvider.
@@ -71,7 +71,7 @@ OPTIONS:
 
 ## To build packages
 
-from root
+From root
 
 ```
 dotnet msbuild build.proj /t:Pack /p:Version=0.1.0-alpha7
