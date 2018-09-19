@@ -98,28 +98,29 @@ module temp =
     let dd = jfieldopt "title" (fun x -> x.title)
     let abcde = aa |> bb |> cc |> dd  
      
-    let typeName (m : Type) = 
-        m.Name.Split('`').[0]
+    let typeName (m : Type) =
+        Microsoft.FSharp.Compiler.PrettyNaming.DemangleGenericTypeName  m.Name
+        
     let rec generic (m : Type) = 
         if m.IsGenericType then   
-            sprintf "typedefof<%s>.MakeGernericType(%s)" (typeName m) (m.GetGenericArguments() |> genericArgs)
-            
+            sprintf "%s%s" (typeName m) (m.GetGenericArguments() |> genericArgs)
         else
-            sprintf "typeof<%s>" (typeName m)
+            typeName m
+            
     and genericArgs (args : Type []) = 
         let x = args |> Array.map generic |> String.concat ", "
-        sprintf "[|%s|]" x
+        sprintf "[%s]" x
     
     let rec fsSig (t : Type) = 
         if Reflection.FSharpType.IsFunction t then 
             let a,b = Reflection.FSharpType.GetFunctionElements t
-            sprintf "%s -> %s" (fsSig a) (fsSig b)
+            sprintf "Func[%s, %s]" (fsSig a) (fsSig b)
         elif Reflection.FSharpType.IsTuple t then 
             let types = Reflection.FSharpType.GetTupleElements t
-            let str = types |> Array.map fsSig |> String.concat " * "
-            sprintf "(%s)" str
+            let str = types |> Array.map fsSig |> String.concat ", "
+            sprintf "Tuple`%i[%s]" types.Length str
         else    
-            typeName t
+            generic t
                            
     let recordCreation() =
         // NewRecord (Result2, u, t)
@@ -212,22 +213,41 @@ module temp =
     let callPipeRight (arg:Expr) (func:Expr) =
         //public static TResult op_PipeRight<T1, TResult>(T1 arg, FSharpFunc<T1, TResult> func)
         let pipeRight = <@ (|>) @>
-        //first param:
-        //FSharpFunc`2[FSharpOption`1[String],FSharpFunc`2[FSharpOption`1[String],Result2]]
-        //second param:
-        //FSharpFunc`2[FSharpFunc`2[FSharpOption`1[String],FSharpFunc`2[FSharpOption`1[String],Result2]],Tuple`2[FSharpFunc`2[IReadOnlyDictionary`2[JToken],FSharpResult`2[FSharpFunc`2[FSharpOption`1[String],FSharpFunc`2[FSharpOption`1[String],Result2]],String]],FSharpFunc`2[Result2,IReadOnlyDictionary`2[String,JToken]]]]
+
         let fullPipeRight = <@ fun (u : Option<String>) (t : Option<String>) -> { url = u; title = t } : Result2
                                |> mapping<Option<String> -> Option<String> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken> @>
-        let fullPipeRightCall =  fullPipeRight |> function Call(_,mi,_) -> mi | _ -> failwith "failed!"
-        //let fullPipeRightCallType = fullPipeRightCall.Type              
+                               
+        let fullPipeRightCall, justCall =  fullPipeRight |> function Call(_,mi,_) as call -> mi, call | _ -> failwith "failed!"
+        //[0] = {FSharpExpr} "Lambda (u, Lambda (t, NewRecord (Result2, u, t)))"
+        //[1] = {FSharpExpr} "Lambda (f, Call (None, mapping, [f]))"
+                   
         let methodInfoUnTyped = pipeRight |> function Lambda(_, Lambda(_, Call(_,mi,_))) -> mi | _ -> failwith "failed!"
         let methodInfoGeneric = methodInfoUnTyped.GetGenericMethodDefinition()
+               
+        let argType = arg.Type
+        let argTypeV = fsSig argType
         
         let funcType = func.Type
-        let argType = arg.Type
+        let funcTypeV = fsSig funcType
         
-        let methodInfoTyped   = methodInfoGeneric.MakeGenericMethod([|func.Type; arg.Type|])        
-        let expr = Expr.Call(methodInfoTyped, [func; arg])
+        let funcTypeReturn = getFunctionReturnType funcType
+        let funcTypeReturnV = fsSig funcTypeReturn
+
+        //fullpiperight
+        //op_PipeRight[Func`2,Tuple`2](Func`2[Option`1[String],Func`2[Option`1[String],Result2]],Func`2[Func`2[Option`1[String],Func`2[Option`1[String],Result2]],Tuple`2[Func`2[IReadOnlyDictionary`2[String,JToken],FSharpResult`2[Func`2[Option`1[String],Func`2[Option`1[String],Result2]],String]],Func`2[Result2,IReadOnlyDictionary`2[String,JToken]]]])
+
+        //arg
+        //[|Func`2[Option`1[String],Func`2[Option`1[String],Result2]]
+          
+        //func  
+        //Tuple`2[Func`2[IReadOnlyDictionary`2[String,JToken],FSharpResult`2[Func`2[Option`1[String],Func`2[Option`1[String],Result2]],String]],Func`2[Result2,IReadOnlyDictionary`2[String,JToken]]]|]
+          
+                
+        
+        let methodInfoTyped   = methodInfoGeneric.MakeGenericMethod([|arg.Type; funcTypeReturn|])
+        //methodInfoTyped
+        //op_PipeRight[Func`2,Tuple`2](Func`2[Option`1[String],Func`2[Option`1[String],Result2]],Func`2[Func`2[Option`1[String],Func`2[Option`1[String],Result2]],Tuple`2[Func`2[IReadOnlyDictionary`2[String,JToken],FSharpResult`2[Func`2[Option`1[String],Func`2[Option`1[String],Result2]],String]],Func`2[Result2,IReadOnlyDictionary`2[String,JToken]]]])   
+        let expr = Expr.Call(methodInfoTyped, [arg; func])
         expr
     
 
