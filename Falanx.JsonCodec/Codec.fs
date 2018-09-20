@@ -139,11 +139,7 @@ module temp =
                 Expr.Lambda(t, 
                     Expr.NewRecord(recordType, [Expr.Var u; Expr.Var t] )))
         l1
-      
-    let replaceArgs (mi: MethodInfo) (a:Type) b =
-        let genericDefinition = mi.GetGenericMethodDefinition()
-        genericDefinition.MakeGenericMethod([|a; typeof<IReadOnlyDictionary<string,JsonValue>>; typeof<string> ;b; typeof<string>; typeof<JToken>|])
-        
+              
     let rec getFunctionReturnType typ =
         if FSharp.Reflection.FSharpType.IsFunction typ then
             let domain, range = FSharp.Reflection.FSharpType.GetFunctionElements typ
@@ -166,31 +162,35 @@ module temp =
         
     
     let callMapping() =
-        //As an expression is looks like:
+    
+        let replaceLambdaArgs (mi: MethodInfo) (lambda:Type) =
+            let genericDefinition = mi.GetGenericMethodDefinition()
+            let lambdaReturn = getFunctionReturnType lambda
+            genericDefinition.MakeGenericMethod([|lambda; typeof<IReadOnlyDictionary<string,JsonValue>>; typeof<string> ;lambdaReturn; typeof<string>; typeof<JToken>|])
+
+        //mapping f: 'a -> ('b -> Result<'a,'c>) * ('d -> IReadOnlyDictionary<'e,'f>)
+        
+        //As an expression it looks like:
         //Call (None, mapping, [Lambda (u, NewRecord (Result, u))])
 
-        //mapping takes:
-        //f: 'a -> ('b -> Result<'a,'c>) * ('d -> IReadOnlyDictionary<'e,'f>)
-
-        //in generic types its defined:
+        //in generic types or a C# point of view its defined:
         //Tuple<FSharpFunc<b, FSharpResult<a, c>>, FSharpFunc<d, IReadOnlyDictionary<e, f>>> mapping<a, b, c, d, e, f>(a f)
 
-        //for the prototype with Record3 we would have a type signature like this:
-        //<Option<String> -> Option<String> -> Result3, IReadOnlyDictionary<String, JToken>, String, Result3, String, JToken>
+        //for a Record3 we would have a type signature like this:
+        //mapping<Option<String> -> Option<String> -> Result3, IReadOnlyDictionary<String, JToken>, String, Result3, String, JToken>
         
-        let mappingMi =
+        let mappingMethodInfo =
             <@ mapping<_,IReadOnlyDictionary<string,JsonValue>,string,_,string,JToken> @>
             |> function Lambda(_, Call(_,mi,_)) -> mi | _ -> failwith "failed!"
         
         //get lambdas type and return
         let lambda = lambdaRecord()
         let lambdaType = lambda.Type
-        let lambdaReturn = getFunctionReturnType lambdaType
         
-        let mappingMiFull = replaceArgs mappingMi lambdaType lambdaReturn
-        let mappingMiFullArgs = mappingMiFull.GetGenericArguments()
+        let mappingMethodInfoFull = replaceLambdaArgs mappingMethodInfo lambdaType
+        let mappingMiFullArgs = mappingMethodInfoFull.GetGenericArguments()
         
-        //usage would be like this normally in idiomatic F# (Type annotations added to gain clarity)
+        //usage would normally be a lambda piped into mapping:
         //fun f : Option<String> -> Option<String> -> Result2 
         //|> mapping<Option<String> -> Option<String> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken> 
         
@@ -202,36 +202,26 @@ module temp =
         //generic signature:
         //System.Tuple`2[FSharpFunc`2[IReadOnlyDictionary`2[String, JToken],FSharpResult`2[FSharpFunc`2[FSharpOption`1[String], FSharpFunc`2[FSharpOption`1[String],Result2]],String]],FSharpFunc`2[Result3,IReadOnlyDictionary`2[JToken]]]
 
-        let lambdaElements = getLambdaElements lambdaType
-        let lambdaPlusMapping = makeFunctionTypeFromElements [yield! lambdaElements ; yield mappingMiFull.ReturnType ]
-
         let f = Var("f", lambdaType)
-        let call = Expr.Call(mappingMiFull, [Expr.Var(f)])
+        let call = Expr.Call(mappingMethodInfoFull, [Expr.Var(f)])
         let lambda = Expr.Lambda(f, call)
         lambda
         
     let callPipeRight (arg:Expr) (func:Expr) =
-        //public static TResult op_PipeRight<T1, TResult>(T1 arg, FSharpFunc<T1, TResult> func)
-        let pipeRight = <@ (|>) @>
-
+        //sanity checks
         let fullPipeRight = <@ fun (u : Option<String>) (t : Option<String>) -> { url = u; title = t } : Result2
                                |> mapping<Option<String> -> Option<String> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken> @>
                                
         let fullPipeRightCall, justCall =  fullPipeRight |> function Call(_,mi,_) as call -> mi, call | _ -> failwith "failed!"
         //[0] = {FSharpExpr} "Lambda (u, Lambda (t, NewRecord (Result2, u, t)))"
         //[1] = {FSharpExpr} "Lambda (f, Call (None, mapping, [f]))"
-                   
-        let methodInfoUnTyped = pipeRight |> function Lambda(_, Lambda(_, Call(_,mi,_))) -> mi | _ -> failwith "failed!"
+        //end sanity
+                
+        //public static TResult op_PipeRight<T1, TResult>(T1 arg, FSharpFunc<T1, TResult> func)
+        let methodInfoUnTyped = <@ (|>) @> |> function Lambda(_, Lambda(_, Call(_,mi,_))) -> mi | _ -> failwith "failed!"
         let methodInfoGeneric = methodInfoUnTyped.GetGenericMethodDefinition()
-               
-        let argType = arg.Type
-        let argTypeV = fsSig argType
-        
-        let funcType = func.Type
-        let funcTypeV = fsSig funcType
-        
-        let funcTypeReturn = getFunctionReturnType funcType
-        let funcTypeReturnV = fsSig funcTypeReturn
+       
+        let funcTypeReturn = getFunctionReturnType func.Type
 
         //fullpiperight
         //op_PipeRight[Func`2,Tuple`2](Func`2[Option`1[String],Func`2[Option`1[String],Result2]],Func`2[Func`2[Option`1[String],Func`2[Option`1[String],Result2]],Tuple`2[Func`2[IReadOnlyDictionary`2[String,JToken],FSharpResult`2[Func`2[Option`1[String],Func`2[Option`1[String],Result2]],String]],Func`2[Result2,IReadOnlyDictionary`2[String,JToken]]]])
@@ -240,11 +230,9 @@ module temp =
         //[|Func`2[Option`1[String],Func`2[Option`1[String],Result2]]
           
         //func  
-        //Tuple`2[Func`2[IReadOnlyDictionary`2[String,JToken],FSharpResult`2[Func`2[Option`1[String],Func`2[Option`1[String],Result2]],String]],Func`2[Result2,IReadOnlyDictionary`2[String,JToken]]]|]
-          
-                
+        //Tuple`2[Func`2[IReadOnlyDictionary`2[String,JToken],FSharpResult`2[Func`2[Option`1[String],Func`2[Option`1[String],Result2]],String]],Func`2[Result2,IReadOnlyDictionary`2[String,JToken]]]|]   
         
-        let methodInfoTyped   = methodInfoGeneric.MakeGenericMethod([|arg.Type; funcTypeReturn|])
+        let methodInfoTyped = methodInfoGeneric.MakeGenericMethod([|arg.Type; funcTypeReturn|])
         //methodInfoTyped
         //op_PipeRight[Func`2,Tuple`2](Func`2[Option`1[String],Func`2[Option`1[String],Result2]],Func`2[Func`2[Option`1[String],Func`2[Option`1[String],Result2]],Tuple`2[Func`2[IReadOnlyDictionary`2[String,JToken],FSharpResult`2[Func`2[Option`1[String],Func`2[Option`1[String],Result2]],String]],Func`2[Result2,IReadOnlyDictionary`2[String,JToken]]]])   
         let expr = Expr.Call(methodInfoTyped, [arg; func])
@@ -287,40 +275,7 @@ module temp =
         let pipecreationToMapping = callPipeRight lambdaRecord mapping
         let ctast, ctpt = Quotations.ToAst( mapping, knownNamespaces = knownNamespaces )
         let code = Fantomas.CodeFormatter.FormatAST(ctpt, "test", None, Fantomas.FormatConfig.FormatConfig.Default)
-        code
-        
-
-        
-(*
-Call (None, op_PipeRight,
-      [Call (None, op_PipeRight,
-             [Call (None, op_PipeRight, [Lambda (u, Lambda (t, NewRecord (Result2, u, t))), Lambda (f, Call (None, mapping, [f]))]),
-              Let (fieldName, Value ("url"),
-                   Let (getter, Lambda (x, PropertyGet (Some (x), url, [])),
-                        Lambda (tupledArg,
-                                Let (arg20@, TupleGet (tupledArg, 0),
-                                     Let (arg21@, TupleGet (tupledArg, 1),
-                                          Call (None, jfieldopt, [fieldName, getter, arg20@, arg21@] )
-                                         )
-                                    )
-                               )
-                       )
-                  )
-             ]
-            ),
-       Let (fieldName, Value ("title"),
-            Let (getter, Lambda (x, PropertyGet (Some (x), title, [])),
-                 Lambda (tupledArg,
-                         Let (arg20@, TupleGet (tupledArg, 0),
-                              Let (arg21@, TupleGet (tupledArg, 1),
-                                   Call (None, jfieldopt, [fieldName, getter, arg20@, arg21@] )
-                                  )
-                             )
-                        )
-                )
-           )
-      ])
-*)                                
+        code                              
     
 //    let test = <@ jfieldopt<Result,string,_> x x @>
 //    let testS = qs.SimplifyQuotation test
