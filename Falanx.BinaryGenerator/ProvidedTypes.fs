@@ -35,7 +35,7 @@ module ProvidedTypes =
                         then setter
                         else
                             Expr.Sequential(
-                                <@@ argNotNull x x@@>
+                                <@@ argNotNull x x @@>
                                 |> Expr.methoddefof
                                 |> Expr.callStatic [Expr.Value name; Expr.box args.[1]],
                                 setter)))

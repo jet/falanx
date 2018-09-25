@@ -70,17 +70,14 @@ namespace Falanx.Ast
         /// Obtaining CLI-compliant EventInfo from an expression
         let eventof expr =
             match expr with
-            | Call(None, createEvent, [Lambda (arg1, Call (_, addHandler, [Var var1]))
-                                       Lambda (arg2, Call (_, removeHandler, [Var var2]))
+            | Call(None, createEvent, [Lambda (arg1, Call (_, add, [Var var1]))
+                                       Lambda (arg2, Call (_, remove, [Var var2]))
                                        Lambda (_, NewDelegate _)] )
                 when createEvent.Name = "CreateEvent"
-                && addHandler.Name.StartsWith ("add_")
-                && removeHandler.Name.StartsWith ("remove_")
-                && arg1 = var1
-                && arg2 = var2 ->
-                    addHandler.DeclaringType.GetEvent(
-                    addHandler.Name.Remove (0, 4),
-                    BindingFlags.Public ||| BindingFlags.Instance ||| BindingFlags.Static ||| BindingFlags.NonPublic)
+                && add.Name.StartsWith ("add_") && remove.Name.StartsWith ("remove_")
+                && arg1 = var1 && arg2 = var2 ->
+                    add.DeclaringType.GetEvent(
+                    add.Name.[0..4], BindingFlags.Public ||| BindingFlags.Instance ||| BindingFlags.Static ||| BindingFlags.NonPublic)
             
             | _ -> failwith "Not a event expression"
         
