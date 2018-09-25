@@ -126,19 +126,18 @@ module temp =
         // NewRecord (Result2, u, t)
         let recordType = typeof<Result2>
         Expr.NewRecord(recordType, [ <@ None: Option<string> @>; <@ None: Option<string> @> ])
-        
-    let lambdaRecord() =
+    
+    let createLambdaRecord recordType =
         //Lambda (u, Lambda (t, NewRecord (Result2, u, t))
-        let uType = typeof<string option>
-        let tType = typeof<string option >
-        let recordType = typeof<Result2>
-        let l1 =
-            let u = Var("u", uType)
-            let t = Var("t", tType)
-            Expr.Lambda(u,
-                Expr.Lambda(t, 
-                    Expr.NewRecord(recordType, [Expr.Var u; Expr.Var t] )))
-        l1
+        let recordFields = Reflection.FSharpType.GetRecordFields(recordType)
+        let recordVars =
+            recordFields
+            |> List.ofArray
+            |> List.map(fun pi -> Var(pi.Name, pi.PropertyType))
+
+        let thing = 
+            List.foldBack (fun v acc -> Expr.Lambda(v,acc)) recordVars (Expr.NewRecord(recordType, recordVars |> List.map (Expr.Var) ))
+        thing
               
     let rec getFunctionReturnType typ =
         if FSharp.Reflection.FSharpType.IsFunction typ then
@@ -164,9 +163,13 @@ module temp =
     let callMapping() =
     
         let replaceLambdaArgs (mi: MethodInfo) (lambda:Type) =
-            let genericDefinition = mi.GetGenericMethodDefinition()
             let lambdaReturn = getFunctionReturnType lambda
-            genericDefinition.MakeGenericMethod([|lambda; typeof<IReadOnlyDictionary<string,JsonValue>>; typeof<string> ;lambdaReturn; typeof<string>; typeof<JToken>|])
+            mi.MakeGenericMethod([|lambda
+                                   typeof<IReadOnlyDictionary<string,JsonValue>>
+                                   typeof<string>
+                                   lambdaReturn
+                                   typeof<string>
+                                   typeof<JToken>|])
 
         //mapping f: 'a -> ('b -> Result<'a,'c>) * ('d -> IReadOnlyDictionary<'e,'f>)
         
@@ -179,12 +182,11 @@ module temp =
         //for a Record3 we would have a type signature like this:
         //mapping<Option<String> -> Option<String> -> Result3, IReadOnlyDictionary<String, JToken>, String, Result3, String, JToken>
         
-        let mappingMethodInfo =
-            <@ mapping<_,IReadOnlyDictionary<string,JsonValue>,string,_,string,JToken> @>
-            |> function Lambda(_, Call(_,mi,_)) -> mi | _ -> failwith "failed!"
+        let mappingMethodInfo = Expr.methoddefof <@ mapping<_,IReadOnlyDictionary<string,JsonValue>,string,_,string,JToken> @>
         
         //get lambdas type and return
         let lambda = lambdaRecord()
+        let lambda2 = createLambdaRecord(typeof<Result2>)
         let lambdaType = lambda.Type
         
         let mappingMethodInfoFull = replaceLambdaArgs mappingMethodInfo lambdaType
@@ -212,14 +214,13 @@ module temp =
         let fullPipeRight = <@ fun (u : Option<String>) (t : Option<String>) -> { url = u; title = t } : Result2
                                |> mapping<Option<String> -> Option<String> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken> @>
                                
-        let fullPipeRightCall, justCall =  fullPipeRight |> function Call(_,mi,_) as call -> mi, call | _ -> failwith "failed!"
+        let fullPipeRightCall =  Expr.methodof fullPipeRight
         //[0] = {FSharpExpr} "Lambda (u, Lambda (t, NewRecord (Result2, u, t)))"
         //[1] = {FSharpExpr} "Lambda (f, Call (None, mapping, [f]))"
         //end sanity
                 
         //public static TResult op_PipeRight<T1, TResult>(T1 arg, FSharpFunc<T1, TResult> func)
-        let methodInfoUnTyped = <@ (|>) @> |> function Lambda(_, Lambda(_, Call(_,mi,_))) -> mi | _ -> failwith "failed!"
-        let methodInfoGeneric = methodInfoUnTyped.GetGenericMethodDefinition()
+        let methodInfoGeneric = Expr.methoddefof<@ (|>) @>
        
         let funcTypeReturn = getFunctionReturnType func.Type
 
@@ -237,20 +238,40 @@ module temp =
         //op_PipeRight[Func`2,Tuple`2](Func`2[Option`1[String],Func`2[Option`1[String],Result2]],Func`2[Func`2[Option`1[String],Func`2[Option`1[String],Result2]],Tuple`2[Func`2[IReadOnlyDictionary`2[String,JToken],FSharpResult`2[Func`2[Option`1[String],Func`2[Option`1[String],Result2]],String]],Func`2[Result2,IReadOnlyDictionary`2[String,JToken]]]])   
         let expr = Expr.Call(methodInfoTyped, [arg; func])
         expr
+        
+//    let jfieldOpt() =
+//        <@ jfieldopt x x @>
+        
+    let printerOfDoom() =
     
-
-    let ttt : (IReadOnlyDictionary<String,JToken> -> Result<(Option<String> -> Option<String> -> Result2),String>) * (Result2 -> IReadOnlyDictionary<String,JToken>) =
-        let a = fun (u : Option<String>) (t : Option<String>) -> { url = u; title = t } : Result2
-        let b = mapping<Option<String> -> Option<String> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken>        
-        a |> b
-     
-    let printerOfDoom() =   
+        let rec traverseQuotation f q = 
+          let q = defaultArg (f q) q
+          match q with     
+          | ExprShape.ShapeLambda(v, body)  -> Expr.Lambda(v, traverseQuotation f body)
+          | ExprShape.ShapeCombination(comb, args) -> ExprShape.RebuildShapeCombination(comb, List.map (traverseQuotation f) args )          
+          | ExprShape.ShapeVar _ -> q
+              
         let q = 
             <@ 
-                        let a = fun (u : Option<String>) (t : Option<String>) -> { url = u; title = t } : Result2
-                        let b = mapping<Option<String> -> Option<String> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken>        
-                        a |> b
+                let a = fun (u : Option<String>) (t : Option<String>) -> { url = u; title = t } : Result2
+                let b = mapping<Option<String> -> Option<String> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken>        
+                a |> b
             @>
+            
+        let r =
+            <@
+                fun u t -> { url = u; title= t }
+                |> mapping<Option<String> -> Option<String> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken>
+                |> jfieldopt "url" (fun x -> x.url)
+            @>
+            
+        let s = 
+            r |>
+            traverseQuotation (fun exp ->
+                match exp with
+                | DerivedPatterns.Lambdas(vars, exp) as full ->
+                    Some(full)
+                | _ -> None)
         
         let rec loop q =
             match q with
@@ -258,7 +279,7 @@ module temp =
             | Patterns.Call(_,m,_) when m.IsGenericMethod ->
                 m.GetGenericArguments()
             
-        printfn "%A" (loop q)
+        printfn "%A" (loop r)
 
     let tryCode() =
         printerOfDoom()
@@ -267,12 +288,14 @@ module temp =
         let result2Apply = result2applyExpression
         let result3Apply = result3ApplyExpr
 
-        let ttt1, ttt2 = ttt
-
         let record = recordCreation()
-        let lambdaRecord = lambdaRecord()  
+        let lambdaRecord = createLambdaRecord typeof<Result2>
         let mapping = callMapping()
-        let pipecreationToMapping = callPipeRight lambdaRecord mapping
+        let pipeLambdaToMapping = callPipeRight lambdaRecord mapping
+        
+        
+        
+        
         let ctast, ctpt = Quotations.ToAst( mapping, knownNamespaces = knownNamespaces )
         let code = Fantomas.CodeFormatter.FormatAST(ctpt, "test", None, Fantomas.FormatConfig.FormatConfig.Default)
         code                              
