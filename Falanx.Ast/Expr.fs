@@ -13,8 +13,45 @@ namespace Falanx.Ast
         open ProviderImplementation.ProvidedTypes
         open ProviderImplementation.ProvidedTypes.UncheckedQuotations
         
+        let private onlyVar = function Var v -> Some v | _ -> None
+        
+        /// Get FieldInfo from expression
+        let fieldof expr =
+          match expr with
+            | FieldGet(_, info) -> info
+            | Lambda(arg, FieldGet(Some(Var var), info))
+            | Let(arg, _, FieldGet(Some(Var var), info))
+                when arg = var -> info
+            | _ -> failwith "Not a field expression"
+        
+        /// Get PropertyInfo from expression
+        let propertyof expr =
+          match expr with
+            | PropertyGet(_, info, _) -> info
+            | Lambda(arg, PropertyGet(Some(Var var), info, _))
+            | Let(arg, _, PropertyGet(Some(Var var), info, _))
+                when arg = var -> info
+            | _ -> failwith "Not a property expression"
+        
+        let private (|LetInCall|_|) expr =
+            let rec loop e collectedArgs =
+                match e with
+                | Let(arg, _, exp2) ->  
+                    let newArgs = Set.add arg collectedArgs
+                    loop exp2 newArgs
+                | Call(instance, mi, args) ->
+                    let setOfCallArgs =
+                        args
+                        |> List.choose onlyVar
+                        |> Set.ofList
+                    if Set.isSubset setOfCallArgs collectedArgs then
+                        Some mi
+                    else None
+                | _ -> None
+            loop expr Set.empty
+        
         let private (|Func| _ |) expr =
-            let onlyVar = function Var v -> Some v | _ -> None
+            
             match expr with
             // function values without arguments
             | Lambda (arg, Call (target, info, []))
@@ -23,13 +60,18 @@ namespace Falanx.Ast
             | Lambda (arg, Call (target, info, [Var var]))
                 when arg = var -> Some (target, info)
             // function values with a set of curried or tuple arguments
-            | Lambdas (args, Call (target, info, exprs))
-                when List.choose onlyVar exprs
-                    = List.concat args -> Some (target, info)
+            | Lambdas (args, Call (target, info, exprs)) ->
+                let justArgs = List.choose onlyVar exprs
+                let allArgs = List.concat args
+                if justArgs = allArgs then
+                    Some (target, info)
+                else None
+            | Lambdas(args, somethingElse) ->
+                None
             | _ -> None
             
         /// Get a MethodInfo from an expression yhat is a method call or a function type value
-        let methodof expr =
+        let rec methodof expr =
             match expr with
             // any ordinary calls: foo.Bar ()
             | Call (_, info, _) -> info
@@ -47,6 +89,7 @@ namespace Falanx.Ast
             | Let (arg, _, Call (Some (Var var), info, _))
             | Let (arg, _, Func (Some (Var var), info))
                 when arg = var -> info
+            | LetInCall(info) -> info
             | _ -> failwith "Not a method expression"
             
         /// Gets the generic method definition of an expression
