@@ -14,14 +14,8 @@ open Falanx.Ast
 [<CLIMutable>]
 type Result2 =
     { mutable url : string option 
-      mutable title : string option }
+      mutable title : int option }
       
-[<CLIMutable>]
-type Result3 =
-  { mutable url : string option
-    mutable title : string option
-    mutable snippets : string ResizeArray }
-
 module Quotations =
     let rec traverseForCall q = [
       match q with
@@ -41,7 +35,7 @@ module temp =
            
     let result2pipe =
         fun u t -> { url = u; title= t }
-        |>mapping
+        |> mapping
         |> jfieldopt "url" (fun x -> x.url)
         |> jfieldopt "title" (fun x -> x.title)
         
@@ -73,24 +67,24 @@ module temp =
             |> jfieldopt "title" (fun x -> x.title) @>
                    
     let result2PipeToMapping = 
-        <@  fun u t -> { url = u; title= t }
-            |> mapping<string option -> string option -> Result2,IReadOnlyDictionary<string,JsonValue>,string,Result2,string,JToken> @>
+        <@  fun u t -> { url = u; title = t }
+            |> mapping<string option -> int option -> Result2, IReadOnlyDictionary<string, JsonValue>, string, Result2, string, JToken> @>
                    
-    let result3Apply =
-        jfield "snippets"  (fun x -> x.snippets)
-            (jfieldopt "title"  (fun x -> x.title)
-              (jfieldopt "url" (fun x -> x.url)
-                  (
-                      mapping (fun u t s -> { url = u; title = t; snippets = s })
-                  )
-              )
-            )
-            
-    let result3ApplyExpr = <@
-        jfield "snippets"  (fun x -> x.snippets)
-            (jfieldopt "title"  (fun x -> x.title)
-            (jfieldopt "url" (fun x -> x.url)
-            (mapping (fun u t s -> { url = u; title = t; snippets = s })))) @>
+//    let result3Apply =
+//        jfield "snippets"  (fun x -> x.snippets)
+//            (jfieldopt "title"  (fun x -> x.title)
+//              (jfieldopt "url" (fun x -> x.url)
+//                  (
+//                      mapping (fun u t s -> { url = u; title = t; snippets = s })
+//                  )
+//              )
+//            )
+//            
+//    let result3ApplyExpr = <@
+//        jfield "snippets"  (fun x -> x.snippets)
+//            (jfieldopt "title"  (fun x -> x.title)
+//            (jfieldopt "url" (fun x -> x.url)
+//            (mapping (fun u t s -> { url = u; title = t; snippets = s })))) @>
                    
     let aa = fun u t -> { url = u; title= t }
     let bb = mapping<_,IReadOnlyDictionary<string,JsonValue>,string,_,string,JToken>
@@ -122,10 +116,10 @@ module temp =
         else    
             generic t
                            
-    let recordCreation() =
-        // NewRecord (Result2, u, t)
-        let recordType = typeof<Result2>
-        Expr.NewRecord(recordType, [ <@ None: Option<string> @>; <@ None: Option<string> @> ])
+//    let recordCreation() =
+//        // NewRecord (Result2, u, t)
+//        let recordType = typeof<Result2>
+//        Expr.NewRecord(recordType, [ <@ None: Option<string> @>; <@ None: Option<string> @> ])
     
     let createLambdaRecord recordType =
         //Lambda (u, Lambda (t, NewRecord (Result2, u, t))
@@ -156,8 +150,8 @@ module temp =
         ]
         
     let makeFunctionTypeFromElements (xs: Type list) =
-        let thing = xs |> List.reduceBack (fun a b -> Reflection.FSharpType.MakeFunctionType(a, b) )
-        thing
+        let newFunction = xs |> List.reduceBack (fun a b -> Reflection.FSharpType.MakeFunctionType(a, b) )
+        newFunction
         
     
     let callMapping() =
@@ -185,8 +179,7 @@ module temp =
         let mappingMethodInfo = Expr.methoddefof <@ mapping<_,IReadOnlyDictionary<string,JsonValue>,string,_,string,JToken> @>
         
         //get lambdas type and return
-        let lambda = lambdaRecord()
-        let lambda2 = createLambdaRecord(typeof<Result2>)
+        let lambda = createLambdaRecord(typeof<Result2>)
         let lambdaType = lambda.Type
         
         let mappingMethodInfoFull = replaceLambdaArgs mappingMethodInfo lambdaType
@@ -211,8 +204,8 @@ module temp =
         
     let callPipeRight (arg:Expr) (func:Expr) =
         //sanity checks
-        let fullPipeRight = <@ fun (u : Option<String>) (t : Option<String>) -> { url = u; title = t } : Result2
-                               |> mapping<Option<String> -> Option<String> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken> @>
+        let fullPipeRight = <@ fun (u : Option<String>) (t : Option<int>) -> { url = u; title = t } : Result2
+                               |> mapping<Option<String> -> Option<int> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken> @>
                                
         let fullPipeRightCall =  Expr.methodof fullPipeRight
         //[0] = {FSharpExpr} "Lambda (u, Lambda (t, NewRecord (Result2, u, t)))"
@@ -251,48 +244,122 @@ module temp =
           | ExprShape.ShapeCombination(comb, args) -> ExprShape.RebuildShapeCombination(comb, List.map (traverseQuotation f) args )          
           | ExprShape.ShapeVar _ -> q
               
-        let q = 
-            <@ 
-                let a = fun (u : Option<String>) (t : Option<String>) -> { url = u; title = t } : Result2
-                let b = mapping<Option<String> -> Option<String> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken>        
-                a |> b
-            @>
-            
+//        let q = 
+//            <@ 
+//                let a = fun (u : Option<String>) (t : Option<String>) -> { url = u; title = t } : Result2
+//                let b = mapping<Option<String> -> Option<String> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken>        
+//                a |> b
+//            @>
+//            
         let r =
+//          Call: jfieldopt
+//          0: Result2
+//          1: String
+//          2: Option<Int32> -> Result2
+//          
+//          Call: jfieldopt
+//          0: Result2
+//          1: Int32
+//          2: Result2
+
             <@
                 fun u t -> { url = u; title= t }
-                |> mapping<Option<String> -> Option<String> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken>
-                |> jfieldopt "url" (fun x -> x.url)
+                |> mapping<Option<String> -> Option<int> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken>
+                |> jfieldopt<Result2, string, Option<int> -> Result2> "url" (fun x -> x.url)
+                |> jfieldopt<Result2, int, Result2> "title" (fun x -> x.title)
             @>
-            
-        let s = 
-            r |>
-            traverseQuotation (fun exp ->
-                match exp with
-                | DerivedPatterns.Lambdas(vars, exp) as full ->
-                    Some(full)
-                | _ -> None)
+                    
+//        let rec loop e =
+//            match e with
+//            | Patterns.Let(_,_,b) -> loop b
+//            | Patterns.Call(_instance,m, args) when m.IsGenericMethod ->
+//                m.Name, m.GetGenericArguments()
+        let result = 
+            r |> traverseQuotation (fun e -> match e with
+                                             | Call(_,mi,_) when mi.IsGenericMethod -> 
+                                                                        printfn "Call: %s" mi.Name
+                                                                        mi.GetGenericArguments()
+                                                                        |> Array.iteri (fun i a -> printfn "%i: %A" i a)
+                                                                        None
+                                             | Let(v,mi,_) ->
+                                                 printfn "Var: %s\n%A" v.Name v.Type
+                                                 None
+                                             | _ -> None)
+                                                                        
         
-        let rec loop q =
-            match q with
-            | Patterns.Let(_,_,b) -> loop b
-            | Patterns.Call(_,m,_) when m.IsGenericMethod ->
-                m.GetGenericArguments()
-            
-        printfn "%A" (loop r)
+
+        ()   
+        //printfn "%A" (loop r)
 
     let tryCode() =
         printerOfDoom()
         let result2Pipe = result2Pipe
         let result2PipeToMapping = result2PipeToMapping
         let result2Apply = result2applyExpression
-        let result3Apply = result3ApplyExpr
+//        let result3Apply = result3ApplyExpr
 
-        let record = recordCreation()
         let lambdaRecord = createLambdaRecord typeof<Result2>
         let mapping = callMapping()
-        let pipeLambdaToMapping = callPipeRight lambdaRecord mapping
-        
+        let pipeLambdaToMapping =  callPipeRight lambdaRecord mapping
+                   
+        let jfieldopt =
+            //
+            // fun u t -> { url = u; title= t }
+            // |> mapping<Option<String> -> Option<int> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken>
+            // |> jfieldopt<Result2, string, Option<int> -> Result2> "url" (fun x -> x.url)
+            // |> jfieldopt<Result2, int, Result2> "title" (fun x -> x.title)
+            let recordType = typeof<Result2>
+            let fieldType = typeof<string>
+            let nextFieldType = typeof<int>
+            let remainingType = 
+                //if lastField then recordType else
+                Reflection.FSharpType.MakeFunctionType(typedefof<Option<_>>.MakeGenericType(nextFieldType), recordType)
+            
+            let jfieldoptMethodInfo = Expr.methoddefof <@ jfieldopt<_,string,_> x x x @>
+            //                          Record    ; fieldType; nextFieldType -> Record
+            let jFieldTypeArguments = [|recordType; fieldType; remainingType|]
+            let jfieldoptMethodInfoTyped = jfieldoptMethodInfo.MakeGenericMethod jFieldTypeArguments
+            
+            let fieldName = Expr.Value "url"
+            
+            let xvar = Var("x", recordType)
+            let propertyInfo = Expr.propertyof<@ (x:Result2).url @>
+            let getter = Expr.Lambda(xvar, Expr.PropertyGet( Expr.Var xvar, propertyInfo) )
+
+            // IReadOnlyDictionary<String, JToken> -> Result<Option<fieldType> -> Option<nextFieldType> -> Record, String>
+            let domain = typeof<IReadOnlyDictionary<String, JToken>>
+            let range =
+                let currentField = typedefof<Option<_>>.MakeGenericType(fieldType)
+                let nextField = typedefof<Option<_>>.MakeGenericType(nextFieldType)
+                let functionType = makeFunctionTypeFromElements [currentField; nextField; recordType]
+                //typeof<Result<Option<fieldType> -> Option<nextFieldType> -> Record, String>>
+                typedefof<Result<_,_>>.MakeGenericType([|functionType; typeof<string>|])
+                
+            let decoderType = Reflection.FSharpType.MakeFunctionType(domain, range)
+            
+            //decoder is:
+            //IReadOnlyDictionary<String,JToken> -> Result< Result2 -> Option<String> -> Option<Int32>, String>
+            
+            //decoder should be:
+            //IReadOnlyDictionary<String,JToken> -> Result< Option<String> -> Option<Int32> -> Result2, String>
+            let typeDecoderShouldBe = typeof<IReadOnlyDictionary<String, JToken> -> Result<Option<string> -> Option<int> -> Result2, String>>
+            let decoder = Var("decode", decoderType)
+            
+            // Record -> IReadOnlyDictionary<String, JToken>
+            let encoderType = Reflection.FSharpType.MakeFunctionType(recordType, typeof<IReadOnlyDictionary<String, JToken>>)
+            let encoder = Var("encode", encoderType)
+            
+            // decoder * encoder
+            // ( IReadOnlyDictionary<String, JToken> -> Result<Option<fieldType> -> Option<nextFieldType> -> Record, String>) * (Record -> IReadOnlyDictionary<String, JToken> )
+            let codecType = Reflection.FSharpType.MakeTupleType [|decoderType; encoderType|]
+            
+            let codec = Var("codec", codecType)
+            
+            Expr.Lambda(codec,
+                Expr.Let(decoder, Expr.TupleGet(Expr.Var codec, 0),
+                    Expr.Let(encoder, Expr.TupleGet(Expr.Var codec, 1),
+                        Expr.Call(jfieldoptMethodInfoTyped, [fieldName; getter; Expr.Var decoder; Expr.Var encoder]))))
+
         
         
         
