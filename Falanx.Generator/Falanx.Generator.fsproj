@@ -8,17 +8,6 @@
     <VersionSuffix>alpha</VersionSuffix>
     <RootNamespace>Falanx.Generator</RootNamespace>
   </PropertyGroup>
-  <PropertyGroup>
-    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);IncludeP2POutput</TargetsForTfmSpecificBuildOutput>
-  </PropertyGroup>
-  <Target Name="IncludeP2POutput">
-    <ItemGroup>
-      <BuildOutputInPackage Include="$(MSBuildProjectDirectory)/$(OutputPath)Falanx.JsonCodec.dll" />
-      <BuildOutputInPackage Include="$(MSBuildProjectDirectory)/$(OutputPath)Falanx.BinaryCodec.dll" />
-      <BuildOutputInPackage Include="$(MSBuildProjectDirectory)/$(OutputPath)Falanx.BinaryGenerator.dll" />
-      <BuildOutputInPackage Include="$(MSBuildProjectDirectory)/$(OutputPath)Falanx.Ast.dll" />
-    </ItemGroup>
-  </Target>
 
   <!-- this add an empty prefercliruntime file in the root of nupkg
   this is needed so the clitool can run with any .net core runtime version -->
