@@ -16,7 +16,9 @@
 
   <Target Name="Pack" DependsOnTargets="Restore">
     <RemoveDir Directories="$(NupkgsDir)" />
+    <Exec Command='dotnet pack Falanx.JsonCodec -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
     <Exec Command='dotnet pack Falanx.BinaryCodec -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
+    <Exec Command='dotnet pack Falanx.Ast -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
     <Exec Command='dotnet pack Falanx.Generator -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
     <Exec Command='dotnet pack Falanx.Generator-net -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
   </Target>

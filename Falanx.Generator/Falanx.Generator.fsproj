@@ -13,6 +13,7 @@
   </PropertyGroup>
   <Target Name="IncludeP2POutput">
     <ItemGroup>
+      <BuildOutputInPackage Include="$(MSBuildProjectDirectory)/$(OutputPath)Falanx.JsonCodec.dll" />
       <BuildOutputInPackage Include="$(MSBuildProjectDirectory)/$(OutputPath)Falanx.BinaryCodec.dll" />
       <BuildOutputInPackage Include="$(MSBuildProjectDirectory)/$(OutputPath)Falanx.BinaryGenerator.dll" />
       <BuildOutputInPackage Include="$(MSBuildProjectDirectory)/$(OutputPath)Falanx.Ast.dll" />
