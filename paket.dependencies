@@ -7,6 +7,7 @@ nuget FParsec 1.0.3
 nuget Froto.Parser
 nuget Froto.Serialization
 nuget Fleece.NewtonsoftJson
+nuget Newtonsoft.Json 11.0.2
 
 github 7sharp9/FSharp.TypeProviders.SDK:generator src/ProvidedTypes.fs 
 github 7sharp9/FSharp.TypeProviders.SDK:generator src/ProvidedTypesTesting.fs 

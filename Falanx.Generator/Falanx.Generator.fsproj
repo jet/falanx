@@ -19,7 +19,7 @@
       <Pack>true</Pack>
     </Content>
     <ProjectReference Include="..\Falanx.JsonCodec\Falanx.JsonCodec.fsproj" />
-    <ProjectReference Include="..\Falanx.BinaryGenerator\Falanx.BinaryGenerator.fsproj" PrivateAssets="All" />
+    <ProjectReference Include="..\Falanx.BinaryGenerator\Falanx.BinaryGenerator.fsproj" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
