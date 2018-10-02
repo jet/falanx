@@ -1,0 +1,3 @@
+<Project>
+  <Import Project="..\build\Falanx.Sdk.targets" />
+</Project>

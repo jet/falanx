@@ -1,0 +1,134 @@
+<Project TreatAsLocalProperty="
+         FalanxSdk_ArgsFile;
+         FalanxSdk_CodeGenDirectory;
+         FalanxSdk_CodeGeneratorEnabled;
+         FalanxSdk_CoreAssembly;
+         FalanxSdk_DotNetHost;
+         FalanxSdk_GeneratorAssembly;
+         FalanxSdk_MSBuildIsCore;
+         FalanxSdk_OutputFileName;
+         FalanxSdk_InputFileName;
+         FalanxSdk_TargetIsCore;
+         FalanxSdk_TaskAssembly;
+         FalanxSdk_GeneratorExeHost;
+         FalanxSdk_GeneratorExe;
+         FalanxSdk_CodeGeneratorTargetFramework;">
+
+  <PropertyGroup>
+    <FalanxSdk_CodeGeneratorTargetFramework>netcoreapp2.0</FalanxSdk_CodeGeneratorTargetFramework>
+    <FalanxSdk_DotNetHost>dotnet</FalanxSdk_DotNetHost>
+
+    <!-- Specify the assembly containing the MSBuild tasks. -->
+    <FalanxSdk_MSBuildIsCore Condition="'$(MSBuildRuntimeType)' == 'Core' or '$(OS)' != 'Windows_NT'">true</FalanxSdk_MSBuildIsCore>
+    <FalanxSdk_TaskAssembly Condition="'$(FalanxSdkCodeGenTasksAssembly)' != ''">$(FalanxSdkCodeGenTasksAssembly)</FalanxSdk_TaskAssembly>
+    <FalanxSdk_TaskAssembly Condition="'$(FalanxSdk_TaskAssembly)' == '' and '$(FalanxSdk_MSBuildIsCore)' == 'true'">$(MSBuildThisFileDirectory)..\tasks\$(FalanxSdk_CodeGeneratorTargetFramework)\FalanxSdk.CodeGenerator.MSBuild.Tasks.dll</FalanxSdk_TaskAssembly>
+
+    <!-- When the MSBuild host is full-framework, we defer to PATH for dotnet -->
+    <FalanxSdk_DotNetHost Condition="'$(FalanxSdk_MSBuildIsCore)' != 'true'">dotnet</FalanxSdk_DotNetHost>
+    <FalanxSdk_DotNetHost Condition="'$(DotNetHost)' != ''">$(DotNetHost)</FalanxSdk_DotNetHost>
+
+    <!-- Specify the assembly containing the code generator. -->
+    <FalanxSdk_GeneratorAssembly Condition="'$(FalanxSdk_GeneratorAssembly)' == ''">$(FalanxSdk_CoreAssembly)</FalanxSdk_GeneratorAssembly>
+
+    <FalanxSdk_GeneratorExeHost Condition=" '$(FalanxSdk_GeneratorExe)' == '' ">dotnet </FalanxSdk_GeneratorExeHost>
+    <FalanxSdk_GeneratorExe Condition=" '$(FalanxSdk_GeneratorExe)' == '' ">Falanx.BinaryGenerator</FalanxSdk_GeneratorExe>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <FalanxSdkCodeGenLogLevel Condition="'$(FalanxSdkCodeGenLogLevel)' == ''">Warning</FalanxSdkCodeGenLogLevel>
+    <FalanxSdk_CodeGenDirectory Condition="'$([System.IO.Path]::IsPathRooted($(IntermediateOutputPath)))' == 'true'">$(IntermediateOutputPath)</FalanxSdk_CodeGenDirectory>
+    <FalanxSdk_CodeGenDirectory Condition="'$(FalanxSdk_CodeGenDirectory)' == ''">$(ProjectDir)$(IntermediateOutputPath)</FalanxSdk_CodeGenDirectory>
+    <FalanxSdk_OutputFileName>$(FalanxSdk_CodeGenDirectory)$(TargetName).FalanxSdk.g.fs</FalanxSdk_OutputFileName>
+    <FalanxSdk_CodeGeneratorEnabled Condition=" '$(DesignTimeBuild)' != 'true'">true</FalanxSdk_CodeGeneratorEnabled>
+    <FalanxSdk_ArgsFile>$(FalanxSdk_CodeGenDirectory)$(TargetName).FalanxSdk.g.args.txt</FalanxSdk_ArgsFile>
+    <FalanxSdkGenerateCodeDependsOn>$(FalanxSdkGenerateCodeDependsOn);ResolveReferences;FalanxSdkGenerateInputCache</FalanxSdkGenerateCodeDependsOn>
+    <FalanxSdk_InputFileName>@(ProtoFile -> '%(FullPath)')</FalanxSdk_InputFileName>
+  </PropertyGroup>
+  
+  <!--
+    Input to the code generator should not include its output.
+  -->
+  <ItemGroup>
+    <FalanxSdk_CodeGenInputs Include="$(FalanxSdk_InputFileName);@(ReferencePath)" />
+    <FalanxSdk_CodeGenInputs Remove="$(FalanxSdk_OutputFileName)" />
+  </ItemGroup>
+
+  <!-- Properties used to support correct, incremental builds. -->
+  <PropertyGroup>
+    <!--
+      Since the FalanxSdk code generator also affects the state of @(Compile) and hence the compile inputs file,
+      we maintain a separate cache with FalanxSdk' own files removed. Otherwise there would be a circular dependency
+      whereby the cache updates and triggers the code generator, which triggers a cache update.
+    -->
+    <FalanxSdk_CodeGenInputCache>$(IntermediateOutputPath)$(MSBuildProjectFile).FalanxSdkCodeGenInputs.cache</FalanxSdk_CodeGenInputCache>
+  </PropertyGroup>
+
+  <!--
+    Update the file which captures the total set of all inputs to the code generator.
+    This is based on the _GenerateCompileDependencyCache target from the .NET project system.
+  -->
+  <Target Name="FalanxSdkGenerateInputCache"
+          DependsOnTargets="ResolveAssemblyReferences"
+          BeforeTargets="FalanxSdkGenerateCode">
+
+    <Hash ItemsToHash="@(FalanxSdk_CodeGenInputs)">
+      <Output TaskParameter="HashResult" PropertyName="FalanxSdk_UpdatedInputCacheContents" />
+    </Hash>
+
+    <WriteLinesToFile
+      Overwrite="true"
+      File="$(FalanxSdk_CodeGenInputCache)"
+      Lines="$(FalanxSdk_UpdatedInputCacheContents)"
+      WriteOnlyWhenDifferent="True" />
+
+    <ItemGroup>
+      <FileWrites Include="$(FalanxSdk_CodeGenInputCache)" />
+    </ItemGroup>
+    
+  </Target>
+
+  <Target Name="FalanxSdkGenerateCode"
+          DependsOnTargets="$(FalanxSdkGenerateCodeDependsOn)"
+          AfterTargets="FalanxSdkGenerateInputCache"
+          BeforeTargets="AssignTargetPaths"
+          Condition="'$(FalanxSdk_CodeGeneratorEnabled)' == 'true'"
+          Inputs="@(FalanxSdk_CodeGenInputs);$(FalanxSdk_CodeGenInputCache)"
+          Outputs="$(FalanxSdk_OutputFileName)">
+
+    <ItemGroup>
+      <FalanxSdk_CodeGenArgs Include="WaitForDebugger" Condition="'$(FalanxSdkCodeGenWaitForDebugger)' != ''" />
+      <FalanxSdk_CodeGenArgs Include="LogLevel:$(FalanxSdkCodeGenLogLevel)" />
+      <FalanxSdk_CodeGenArgs Include="ProjectPath:$(MSBuildProjectFullPath)"/>
+      <FalanxSdk_CodeGenArgs Include="ProjectGuid:$(ProjectGuid)"/>
+      <FalanxSdk_CodeGenArgs Include="AssemblyName:$(AssemblyName)"/>
+      <FalanxSdk_CodeGenArgs Include="OutputType:$(OutputType)"/>
+      <FalanxSdk_CodeGenArgs Include="TargetPath:$(TargetPath)"/>
+      <FalanxSdk_CodeGenArgs Include="CodeGenOutputFile:$(FalanxSdk_OutputFileName)"/>
+      <FalanxSdk_CodeGenArgs Include="@(Compile -> 'Compile:%(FullPath)')"/>
+      <FalanxSdk_CodeGenArgs Include="@(ReferencePath -> 'Reference:%(FullPath)')"/>
+      <FalanxSdk_CodeGenArgs Include="DefineConstants:$(DefineConstants.Replace(';',','))"/>
+    </ItemGroup>
+
+    <Message Text="[FalanxSdk.CodeGenerator] - CodeGen executable=$(FalanxSdk_GeneratorAssembly)" Importance="Low" />
+    <Message Text="[FalanxSdk.CodeGenerator] - CodeGen arguments=@(FalanxSdk_CodeGenArgs -> '%(Identity)')" Importance="Low"/>
+    <Message Text="[FalanxSdk.CodeGenerator] - CodeGen arguments file=$(FalanxSdk_ArgsFile)" Importance="Low"/>
+    <WriteLinesToFile Overwrite="true" File="$(FalanxSdk_ArgsFile)" Lines="@(FalanxSdk_CodeGenArgs)"/>
+
+    <!-- Use dotnet to execute the process. -->
+    <Exec Command="$(FalanxSdk_GeneratorExeHost)&quot;$(FalanxSdk_GeneratorExe)&quot; --inputfile &quot;$(FalanxSdk_InputFileName)&quot; --outputfile &quot;$(FalanxSdk_OutputFileName)&quot; --defaultnamespace &quot;$(RootNamespace)&quot;" Outputs="$(FalanxSdk_OutputFileName)" />
+
+    <ItemGroup>
+      <Compile Include="$(FalanxSdk_OutputFileName)" Condition="Exists('$(FalanxSdk_OutputFileName)')" />
+      <FileWrites Include="$(FalanxSdk_OutputFileName)" Condition="Exists('$(FalanxSdk_OutputFileName)')"/>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="FalanxSdkIncludeCodegenOutputDuringDesignTimeBuild"
+          BeforeTargets="AssignTargetPaths"
+          Condition="'$(FalanxSdk_CodeGeneratorEnabled)' != 'true' and Exists('$(FalanxSdk_OutputFileName)')">
+    <ItemGroup>
+      <Compile Include="$(FalanxSdk_OutputFileName)"/>
+      <FileWrites Include="$(FalanxSdk_OutputFileName)"/>
+    </ItemGroup>
+  </Target>
+</Project>
