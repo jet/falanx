@@ -8,7 +8,7 @@ module Program =
     let main args =
         let r =
             { BundleRequest.martId = Some 1
-              MemberId =  Some "myId"
+              memberId =  Some "myId"
               channelType = None
               retailSkus = new ResizeArray<string>() }
 
