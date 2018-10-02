@@ -76,6 +76,7 @@ module Proto =
         //TODO: support enum types: enum types x.Field :?> Provided.Literal?
                 
         let openSystem = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "System")
+        let openFrotoSerialization = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "Froto.Serialization")
         let openSystemCollectionsGeneric = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "System.Collections.Generic")
         let openBinaryCodec = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "Falanx.BinaryCodec")
         let openBinaryCodecPrimitive = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "Falanx.BinaryCodec.Primitives")
@@ -83,6 +84,7 @@ module Proto =
         let knownNamespaces =
             [ providedTypeRoot.Namespace
               "System"
+              "Froto.Serialization"
               "System.Collections.Generic"
               "Falanx.BinaryCodec"
               "Falanx.BinaryCodec.Primitives"
@@ -113,6 +115,7 @@ module Proto =
                     .AddModule(
                         SynModuleOrNamespaceRcd.CreateNamespace(Ident.CreateLong defaultnamespace)
                             .AddDeclarations ( [ yield openSystem
+                                                 yield openFrotoSerialization
                                                  yield openSystemCollectionsGeneric
                                                  yield openBinaryCodec
                                                  yield openBinaryCodecPrimitive
