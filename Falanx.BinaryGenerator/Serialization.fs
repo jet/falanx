@@ -95,7 +95,7 @@ module Serialization =
             //required is proto2 specific
             | Class(_scope, _name), Required ->
                 <@@ writeEmbedded x x x @@>
-                |> Expr.getMethodDef
+                |> Expr.methoddefof
                 |> Expr.callStatic [position; buffer; Expr.Coerce(value, typeof<IMessage>)]
             | Union _, _ -> failwith "union fields should not be serialized here"
             | Enum(_scope, _name), rule ->

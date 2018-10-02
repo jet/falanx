@@ -4,25 +4,138 @@ namespace Falanx.Ast
         open System
         open System.Collections
         open System.Collections.Generic
+        open System.Reflection
         
         open FSharp.Quotations
+        open FSharp.Quotations.DerivedPatterns
         open FSharp.Quotations.Patterns
         
         open ProviderImplementation.ProvidedTypes
         open ProviderImplementation.ProvidedTypes.UncheckedQuotations
         
+        let private onlyVar = function Var v -> Some v | _ -> None
+        
+        /// Get FieldInfo from expression
+        let fieldof expr =
+          match expr with
+            | FieldGet(_, info) -> info
+            | Lambda(arg, FieldGet(Some(Var var), info))
+            | Let(arg, _, FieldGet(Some(Var var), info))
+                when arg = var -> info
+            | _ -> failwith "Not a field expression"
+        
+        /// Get PropertyInfo from expression
+        let propertyof expr =
+          match expr with
+            | PropertyGet(_, info, _) -> info
+            | Lambda(arg, PropertyGet(Some(Var var), info, _))
+            | Let(arg, _, PropertyGet(Some(Var var), info, _))
+                when arg = var -> info
+            | _ -> failwith "Not a property expression"
+        
+        let private (|LetInCall|_|) expr =
+            let rec loop e collectedArgs =
+                match e with
+                | Let(arg, _, exp2) ->  
+                    let newArgs = Set.add arg collectedArgs
+                    loop exp2 newArgs
+                | Call(instance, mi, args) ->
+                    let setOfCallArgs =
+                        args
+                        |> List.choose onlyVar
+                        |> Set.ofList
+                    if Set.isSubset setOfCallArgs collectedArgs then
+                        Some mi
+                    else None
+                | _ -> None
+            loop expr Set.empty
+        
+        let private (|Func| _ |) expr =
+            
+            match expr with
+            // function values without arguments
+            | Lambda (arg, Call (target, info, []))
+                when arg.Type = typeof<unit> -> Some (target, info)
+            // function values with one argument
+            | Lambda (arg, Call (target, info, [Var var]))
+                when arg = var -> Some (target, info)
+            // function values with a set of curried or tuple arguments
+            | Lambdas (args, Call (target, info, exprs)) ->
+                let justArgs = List.choose onlyVar exprs
+                let allArgs = List.concat args
+                if justArgs = allArgs then
+                    Some (target, info)
+                else None
+            | Lambdas(args, somethingElse) ->
+                None
+            | _ -> None
+            
+        /// Get a MethodInfo from an expression yhat is a method call or a function type value
+        let rec methodof expr =
+            match expr with
+            // any ordinary calls: foo.Bar ()
+            | Call (_, info, _) -> info
+            // calls and function values via a lambda argument:
+            // fun (x: string) -> x.Substring (1, 2)
+            // fun (x: string) -> x.StartsWith
+            | Lambda (arg, Call (Some (Var var), info, _))
+            | Lambda (arg, Func (Some (Var var), info))
+                when arg = var -> info
+            // any function values:someString.StartsWith
+            | Func (_, info) -> info
+            // calls and function values ​​via instances:
+            // "abc" .StartsWith ("a")
+            // "abc" .Substring
+            | Let (arg, _, Call (Some (Var var), info, _))
+            | Let (arg, _, Func (Some (Var var), info))
+                when arg = var -> info
+            | LetInCall(info) -> info
+            | _ -> failwith "Not a method expression"
+            
+        /// Gets the generic method definition of an expression
+        /// which is a generic method, value expression orfunctional type
+        let methoddefof expr =
+          match methodof expr with
+          | info when info.IsGenericMethod -> info.GetGenericMethodDefinition()
+          | info -> failwithf "%A is not generic" info
+
+        /// Gets the ConstructorInfo from a new object or record expression
+        let constructorof expr =
+            match expr with
+            | NewObject (info, _) -> info
+            // Get the record constructor
+            | NewRecord (recordType, _) ->
+                match recordType.GetConstructors() with
+                | [| info |] -> info
+                | _ -> failwith "Invalid record type"
+            | _ -> failwith "Not a constructor expression"
+        
+        /// Obtaining CLI-compliant EventInfo from an expression
+        let eventof expr =
+            match expr with
+            | Call(None, createEvent, [Lambda (arg1, Call (_, add, [Var var1]))
+                                       Lambda (arg2, Call (_, remove, [Var var2]))
+                                       Lambda (_, NewDelegate _)] )
+                when createEvent.Name = "CreateEvent"
+                && add.Name.StartsWith ("add_") && remove.Name.StartsWith ("remove_")
+                && arg1 = var1 && arg2 = var2 ->
+                    add.DeclaringType.GetEvent(
+                    add.Name.[0..4], BindingFlags.Public ||| BindingFlags.Instance ||| BindingFlags.Static ||| BindingFlags.NonPublic)
+            
+            | _ -> failwith "Not a event expression"
+        
+        /// Get UnionCaseInfo from an expression
+        let unioncaseof expr =
+            match expr with
+            | NewUnionCase (info, _)
+            | UnionCaseTest (_, info) -> info
+            | _ -> failwith "Not a union case expression"
+        
+        
         let sequence expressions = 
             if expressions |> Seq.isEmpty then Expr.Value(()) 
             else expressions |> Seq.reduce (fun acc s -> Expr.Sequential(acc, s))
-        
-        let getMethodDef e =
-            match e with
-            | Call(_, m, _) ->
-                if m.IsGenericMethod
-                then m.GetGenericMethodDefinition()
-                else m
-            | x -> Printf.ksprintf invalidOp "Expression %A is not supported" x
-        
+               
         let private isGenerated (ty: Type) =
             ty :? ProvidedTypeDefinition || 
             (ty.IsGenericType && ty.GetGenericArguments() |> Seq.exists (fun gt -> gt :? ProvidedTypeDefinition))
@@ -40,7 +153,7 @@ namespace Falanx.Ast
         let callStatic parameters staticMethod = Expr.CallUnchecked(staticMethod, parameters)
             
         let callStaticGeneric types arguments expr =
-            expr |> getMethodDef |> makeGenericMethod types |> callStatic arguments
+            expr |> methoddefof |> makeGenericMethod types |> callStatic arguments
     
         let rec private typeHierarchy (ty: Type) = seq {
             if not <| isNull ty

@@ -26,6 +26,8 @@ module main =
     [<EntryPoint>]
     let main argv =
         try
+            let code = temp.tryCode()
+                        
             let results = parser.Parse argv
             let inputFile = results.GetResult InputFile
             let outputFile = results.GetResult OutputFile

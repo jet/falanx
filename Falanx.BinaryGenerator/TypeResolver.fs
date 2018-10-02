@@ -25,11 +25,11 @@ module TypeResolver =
                 | _ -> String.Empty
             yield! allScopes nextScope
     } 
-    
+
     ///discover/create all top level type skeletons
-    let discoverTypes scope (file: ProtoFile): TypesLookup =
+    let discoverTypes (scope: string) (file: ProtoFile): TypesLookup =
     
-        let rec loop scope (message: ProtoMessage) = seq {
+        let rec processMessage scope (message: ProtoMessage) = seq {
             let fullName = scope +.+ message.Name
             
             //message unions
@@ -46,26 +46,42 @@ module TypeResolver =
             yield! message.Enums |> Seq.map (fun enum -> TypeKind.Enum(fullName, enum.Name), fullName +.+ enum.Name)
               
             //nested messages     
-            yield! message.Messages |> Seq.collect (loop fullName)
+            yield! message.Messages |> Seq.collect (processMessage fullName)
         }
         
-        //global enums
-        let enums =
-            file.Enums
-            |> Seq.map (fun protoEmum -> scope +.+ protoEmum.Name, (TypeKind.Enum(scope, protoEmum.Name), ProvidedTypes.enum protoEmum.Name))
-        
-        file.Messages
-        |> Seq.collect (loop scope)
-        |> Seq.map (fun (kind, fullName) -> 
-            let ty = 
-                match kind with
-                | Union(_scope, name, _unionFields) -> ProvidedUnion(name, Some typeof<obj>, isErased = false) :> ProvidedTypeDefinition
-                | Class(scope, name) -> ProvidedRecord(name, Some typeof<obj>, isErased = false) :> _
-                | Enum(scope, name) -> ProvidedTypes.enum name
-                | Primitive -> invalidOpf "Primitive type '%s' does not require custom Type" fullName
-            fullName, (kind, ty))
-        |> Seq.append enums
+        let rec processFile (file: ProtoFile) (scope: string) =
+            seq {
+                //imports
+                let importsAndScope = 
+                        file.Imports
+                        |> List.map (fun import -> let protoFile = ProtoFile.fromFile import
+                                                   let rootScope = protoFile.Packages |> Seq.tryHead |> Option.defaultValue String.Empty
+                                                   rootScope, protoFile)
+                for (scope, file) in importsAndScope do
+                    yield! processFile file scope
+                
+                //global enums
+                let enums =
+                    file.Enums
+                    |> Seq.map (fun protoEmum -> scope +.+ protoEmum.Name, (TypeKind.Enum(scope, protoEmum.Name), ProvidedTypes.enum protoEmum.Name))
+                
+                yield!
+                    file.Messages
+                    |> Seq.collect (processMessage scope)
+                    |> Seq.map (fun (kind, fullName) -> 
+                        let ty = 
+                            match kind with
+                            | Union(_scope, name, _unionFields) -> ProvidedUnion(name, Some typeof<obj>, isErased = false) :> ProvidedTypeDefinition
+                            | Class(scope, name) -> ProvidedRecord(name, Some typeof<obj>, isErased = false) :> _
+                            | Enum(scope, name) -> ProvidedTypes.enum name
+                            | Primitive -> invalidOpf "Primitive type '%s' does not require custom Type" fullName
+                        fullName, (kind, ty))
+                    |> Seq.append enums
+            }   
+        processFile file scope
         |> Map.ofSeq
+        
+
         
     let resolveScalar = function
         | "double" -> Some typeof<proto_double>

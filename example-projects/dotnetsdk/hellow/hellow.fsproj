@@ -11,8 +11,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="ProtoCodec" Version="0.1.0-*" />
-    <DotNetCliToolReference Include="dotnet-protoGenerator" Version="0.1.0-*" />
+    <DotNetCliToolReference Include="dotnet-Falanx.BinaryGenerator" Version="0.1.0-*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="dotnet-Falanx.BinaryGenerator" Version="0.1.0" />
+    <PackageReference Include="Falanx.BinaryCodec" Version="0.1.0" />
+    <PackageReference Include="Fleece.NewtonsoftJson" Version="0.7.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.0" />
   </ItemGroup>
 
 </Project>
