@@ -232,8 +232,66 @@ module temp =
         let expr = Expr.Call(methodInfoTyped, [arg; func])
         expr
         
-//    let jfieldOpt() =
-//        <@ jfieldopt x x @>
+    let jfieldopt (recordType: Type) (fieldType: Type ) (nextFieldType: Type option) =
+        //
+        // fun u t -> { url = u; title= t }
+        // |> mapping<Option<String> -> Option<int> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken>
+        // |> jfieldopt<Result2, string, Option<int> -> Result2> "url" (fun x -> x.url)
+        // |> jfieldopt<Result2, int, Result2> "title" (fun x -> x.title)
+        let remainingTypeExpression = 
+            match nextFieldType with 
+            | Some nextFieldType ->
+                Reflection.FSharpType.MakeFunctionType(typedefof<Option<_>>.MakeGenericType(nextFieldType), recordType)
+            | None -> recordType
+        
+        let jfieldoptMethodInfo = Expr.methoddefof <@ jfieldopt<_,string,_> x x x @>
+        //                          Record    ; fieldType; nextFieldType -> Record
+        let jFieldTypeArguments = [|recordType; fieldType; remainingTypeExpression|]
+        let jfieldoptMethodInfoTyped = jfieldoptMethodInfo.MakeGenericMethod jFieldTypeArguments
+        
+        let fieldName = Expr.Value "url"
+        
+        let xvar = Var("x", recordType)
+        let propertyInfo = Expr.propertyof<@ (x:Result2).url @>
+        let getter = Expr.Lambda(xvar, Expr.PropertyGet( Expr.Var xvar, propertyInfo) )
+
+        // IReadOnlyDictionary<String, JToken> -> Result<Option<fieldType> -> Option<nextFieldType> -> Record, String>
+        let domain = typeof<IReadOnlyDictionary<String, JToken>>
+        let range =
+            let currentField = typedefof<Option<_>>.MakeGenericType(fieldType)
+            let nextField =
+                match nextFieldType with 
+                | Some nextFieldType ->
+                    typedefof<Option<_>>.MakeGenericType(nextFieldType)
+                | None -> recordType
+            let functionType = makeFunctionTypeFromElements [currentField; nextField; recordType]
+            //typeof<Result<Option<fieldType> -> Option<nextFieldType> -> Record, String>>
+            typedefof<Result<_,_>>.MakeGenericType([|functionType; typeof<string>|])
+            
+        let decoderType = Reflection.FSharpType.MakeFunctionType(domain, range)
+        
+        //decoder is:
+        //IReadOnlyDictionary<String,JToken> -> Result< Result2 -> Option<String> -> Option<Int32>, String>
+        
+        //decoder should be:
+        //IReadOnlyDictionary<String,JToken> -> Result< Option<String> -> Option<Int32> -> Result2, String>
+        let typeDecoderShouldBe = typeof<IReadOnlyDictionary<String, JToken> -> Result<Option<string> -> Option<int> -> Result2, String>>
+        let decoder = Var("decode", decoderType)
+        
+        // Record -> IReadOnlyDictionary<String, JToken>
+        let encoderType = Reflection.FSharpType.MakeFunctionType(recordType, typeof<IReadOnlyDictionary<String, JToken>>)
+        let encoder = Var("encode", encoderType)
+        
+        // decoder * encoder
+        // ( IReadOnlyDictionary<String, JToken> -> Result<Option<fieldType> -> Option<nextFieldType> -> Record, String>) * (Record -> IReadOnlyDictionary<String, JToken> )
+        let codecType = Reflection.FSharpType.MakeTupleType [|decoderType; encoderType|]
+        
+        let codec = Var("codec", codecType)
+        
+        Expr.Lambda(codec,
+            Expr.Let(decoder, Expr.TupleGet(Expr.Var codec, 0),
+                Expr.Let(encoder, Expr.TupleGet(Expr.Var codec, 1),
+                    Expr.Call(jfieldoptMethodInfoTyped, [fieldName; getter; Expr.Var decoder; Expr.Var encoder]))))
         
     let printerOfDoom() =
     
@@ -301,64 +359,10 @@ module temp =
         let lambdaRecord = createLambdaRecord typeof<Result2>
         let mapping = callMapping()
         let pipeLambdaToMapping =  callPipeRight lambdaRecord mapping
+        
+        let firstJfieldOpt = jfieldopt typeof<Result2> typeof<string> (Some typeof<int>)
                    
-        let jfieldopt =
-            //
-            // fun u t -> { url = u; title= t }
-            // |> mapping<Option<String> -> Option<int> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken>
-            // |> jfieldopt<Result2, string, Option<int> -> Result2> "url" (fun x -> x.url)
-            // |> jfieldopt<Result2, int, Result2> "title" (fun x -> x.title)
-            let recordType = typeof<Result2>
-            let fieldType = typeof<string>
-            let nextFieldType = typeof<int>
-            let remainingType = 
-                //if lastField then recordType else
-                Reflection.FSharpType.MakeFunctionType(typedefof<Option<_>>.MakeGenericType(nextFieldType), recordType)
-            
-            let jfieldoptMethodInfo = Expr.methoddefof <@ jfieldopt<_,string,_> x x x @>
-            //                          Record    ; fieldType; nextFieldType -> Record
-            let jFieldTypeArguments = [|recordType; fieldType; remainingType|]
-            let jfieldoptMethodInfoTyped = jfieldoptMethodInfo.MakeGenericMethod jFieldTypeArguments
-            
-            let fieldName = Expr.Value "url"
-            
-            let xvar = Var("x", recordType)
-            let propertyInfo = Expr.propertyof<@ (x:Result2).url @>
-            let getter = Expr.Lambda(xvar, Expr.PropertyGet( Expr.Var xvar, propertyInfo) )
 
-            // IReadOnlyDictionary<String, JToken> -> Result<Option<fieldType> -> Option<nextFieldType> -> Record, String>
-            let domain = typeof<IReadOnlyDictionary<String, JToken>>
-            let range =
-                let currentField = typedefof<Option<_>>.MakeGenericType(fieldType)
-                let nextField = typedefof<Option<_>>.MakeGenericType(nextFieldType)
-                let functionType = makeFunctionTypeFromElements [currentField; nextField; recordType]
-                //typeof<Result<Option<fieldType> -> Option<nextFieldType> -> Record, String>>
-                typedefof<Result<_,_>>.MakeGenericType([|functionType; typeof<string>|])
-                
-            let decoderType = Reflection.FSharpType.MakeFunctionType(domain, range)
-            
-            //decoder is:
-            //IReadOnlyDictionary<String,JToken> -> Result< Result2 -> Option<String> -> Option<Int32>, String>
-            
-            //decoder should be:
-            //IReadOnlyDictionary<String,JToken> -> Result< Option<String> -> Option<Int32> -> Result2, String>
-            let typeDecoderShouldBe = typeof<IReadOnlyDictionary<String, JToken> -> Result<Option<string> -> Option<int> -> Result2, String>>
-            let decoder = Var("decode", decoderType)
-            
-            // Record -> IReadOnlyDictionary<String, JToken>
-            let encoderType = Reflection.FSharpType.MakeFunctionType(recordType, typeof<IReadOnlyDictionary<String, JToken>>)
-            let encoder = Var("encode", encoderType)
-            
-            // decoder * encoder
-            // ( IReadOnlyDictionary<String, JToken> -> Result<Option<fieldType> -> Option<nextFieldType> -> Record, String>) * (Record -> IReadOnlyDictionary<String, JToken> )
-            let codecType = Reflection.FSharpType.MakeTupleType [|decoderType; encoderType|]
-            
-            let codec = Var("codec", codecType)
-            
-            Expr.Lambda(codec,
-                Expr.Let(decoder, Expr.TupleGet(Expr.Var codec, 0),
-                    Expr.Let(encoder, Expr.TupleGet(Expr.Var codec, 1),
-                        Expr.Call(jfieldoptMethodInfoTyped, [fieldName; getter; Expr.Var decoder; Expr.Var encoder]))))
 
         
         
