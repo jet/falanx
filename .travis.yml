@@ -1,0 +1,15 @@
+language: csharp
+
+mono: 5.12.0
+dotnet: 2.1.401
+
+script:
+  - dotnet pack build.proj -v n
+
+matrix:
+  include:
+    - os: linux
+      dist: trusty
+      sudo: required
+    - os: osx
+      osx_image: xcode9
