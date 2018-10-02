@@ -1,0 +1,32 @@
+image:
+  - Visual Studio 2017
+
+before_build:
+  - ps: >-
+      $buildId = $env:APPVEYOR_BUILD_NUMBER.PadLeft(5, '0');
+      $versionSuffixPR = "-PR$($env:APPVEYOR_PULL_REQUEST_NUMBER)-$buildId";
+      $branchName = "$env:APPVEYOR_REPO_BRANCH".Replace("_","");
+      $versionSuffixBRANCH = "-$branchName-$buildId";
+      $env:VersionSuffix = if ("$env:APPVEYOR_REPO_TAG" -eq "true") { "" } else { if ("$env:APPVEYOR_PULL_REQUEST_NUMBER") { $versionSuffixPR } else { $versionSuffixBRANCH } };
+
+build_script:
+  - cmd: echo vs %VersionSuffix%"
+  - cmd: dotnet pack build.proj -v n
+
+artifacts:
+  - path: artifact\nupkg\*.nupkg
+    name: nupkgs
+    type: NuGetPackage
+
+on_finish:
+  - ps: >-
+      $wc = New-Object 'System.Net.WebClient';
+      $testResults = @(
+        # '.\bin\test_results\TestResults.xml'
+      )
+  - ps: >-
+      Foreach ($path in $testResults) {
+        If (Test-Path $path) {
+          $wc.UploadFile("https://ci.appveyor.com/api/testresults/nunit3/$($env:APPVEYOR_JOB_ID)", (Resolve-Path $path))
+        }
+      }
