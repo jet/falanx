@@ -1,9 +1,6 @@
 <Project ToolsVersion="15.0">
 
-  <PropertyGroup>
-    <NupkgsDir>$([System.IO.Path]::GetFullPath("$(MSBuildThisFileDirectory)/artifact/nupkg"))</NupkgsDir>
-    <MonoOrEmpty Condition=" '$(OS)' != 'Windows_NT' ">mono </MonoOrEmpty>
-  </PropertyGroup>
+  <Import Project="Directory.Build.props" />
 
   <Target Name="Restore">
     <Exec Command="$(MonoOrEmpty)paket.exe restore" WorkingDirectory=".paket" ConsoleToMSBuild="true" />
