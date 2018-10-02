@@ -232,7 +232,7 @@ module temp =
         let expr = Expr.Call(methodInfoTyped, [arg; func])
         expr
         
-    let jfieldopt (recordType: Type) (fieldType: Type ) (nextFieldType: Type option) =
+    let callJfieldopt (recordType: Type) (fieldType: Type ) (nextFieldType: Type option) =
         //
         // fun u t -> { url = u; title= t }
         // |> mapping<Option<String> -> Option<int> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken>
@@ -354,18 +354,10 @@ module temp =
         let result2Pipe = result2Pipe
         let result2PipeToMapping = result2PipeToMapping
         let result2Apply = result2applyExpression
-//        let result3Apply = result3ApplyExpr
-
         let lambdaRecord = createLambdaRecord typeof<Result2>
         let mapping = callMapping()
         let pipeLambdaToMapping =  callPipeRight lambdaRecord mapping
-        
-        let firstJfieldOpt = jfieldopt typeof<Result2> typeof<string> (Some typeof<int>)
-                   
-
-
-        
-        
+        let firstJfieldOpt = callJfieldopt typeof<Result2> typeof<string> (Some typeof<int>)
         
         let ctast, ctpt = Quotations.ToAst( mapping, knownNamespaces = knownNamespaces )
         let code = Fantomas.CodeFormatter.FormatAST(ctpt, "test", None, Fantomas.FormatConfig.FormatConfig.Default)
