@@ -105,8 +105,8 @@ module TypeGeneration =
             ProvidedMethod(
                 "Deserialize", 
                 [bufferProperty], 
-                targetType,
-                invokeCode = (fun args -> Expr.callStaticGeneric [targetType] [args.[0]] <@@ deserialize<Template> x @@>),
+                targetType.Type,
+                invokeCode = (fun args -> Expr.callStaticGeneric [targetType.Type] [args.[0]] <@@ deserialize<Template> x @@>),
                 isStatic = true)
                 
         //deserializeMethod.SetMethodAttrs(MethodAttributes.Static ||| MethodAttributes.Public)
@@ -326,7 +326,9 @@ module TypeGeneration =
              //providedType.AddMember <| createConstructor typeInfo providedType
         
              let staticSerializeMethod = createSerializeMethod typeInfo
+             let staticDeserializeMethod = createDeserializeMethod typeInfo
              providedType.AddMember staticSerializeMethod
+             providedType.AddMember staticDeserializeMethod
              
              providedType.AddInterfaceImplementation typeof<IMessage>
              
