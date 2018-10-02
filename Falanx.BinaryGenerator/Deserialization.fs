@@ -113,7 +113,7 @@ module Deserialization =
         let value = deserializeField propertyDescriptor field
         let list = Expr.PropertyGet(this, propertyDescriptor.ProvidedProperty)
         let addMethod = list.Type.GetMethod("Add")
-        let test = Expr.callStaticGeneric [propertyDescriptor.Type.RuntimeType] [list] <@@ isNull x @@>
+        let test = Expr.callStaticGeneric [propertyDescriptor.Type.RuntimeType] [list] <@@ Microsoft.FSharp.Core.Operators.isNull x @@>
         let instantiate = Expr.DefaultValue propertyDescriptor.Type.RuntimeType
         let set = Expr.FieldSet(this, propertyDescriptor.ProvidedField.Value, instantiate)
         Expr.sequence
