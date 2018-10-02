@@ -90,7 +90,7 @@
   <Target Name="FalanxSdkGenerateCode"
           DependsOnTargets="$(FalanxSdkGenerateCodeDependsOn)"
           AfterTargets="FalanxSdkGenerateInputCache"
-          BeforeTargets="AssignTargetPaths"
+          BeforeTargets="CoreCompile"
           Condition="'$(FalanxSdk_CodeGeneratorEnabled)' == 'true'"
           Inputs="@(FalanxSdk_CodeGenInputs);$(FalanxSdk_CodeGenInputCache)"
           Outputs="$(FalanxSdk_OutputFileName)">
@@ -124,7 +124,7 @@
   </Target>
 
   <Target Name="FalanxSdkIncludeCodegenOutputDuringDesignTimeBuild"
-          BeforeTargets="AssignTargetPaths"
+          BeforeTargets="CoreCompile"
           Condition="'$(FalanxSdk_CodeGeneratorEnabled)' != 'true' and Exists('$(FalanxSdk_OutputFileName)')">
     <ItemGroup>
       <Compile Include="$(FalanxSdk_OutputFileName)"/>
