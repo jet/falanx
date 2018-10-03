@@ -12,6 +12,7 @@ before_build:
 build_script:
   - cmd: echo vs %VersionSuffix%"
   - cmd: dotnet pack build.proj -v n
+  - cmd: dotnet test build.proj -v n
 
 artifacts:
   - path: artifact\nupkg\*.nupkg

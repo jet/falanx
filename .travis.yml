@@ -5,6 +5,7 @@ dotnet: 2.1.401
 
 script:
   - dotnet pack build.proj -v n
+  - dotnet test build.proj -v n
 
 matrix:
   include:
