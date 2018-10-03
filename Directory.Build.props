@@ -14,7 +14,7 @@
     <NupkgsDir>$([System.IO.Path]::GetFullPath("$(MSBuildThisFileDirectory)/artifact/nupkg"))</NupkgsDir>
     <MonoOrEmpty Condition=" '$(OS)' != 'Windows_NT' ">mono </MonoOrEmpty>
 
-    <Version Condition=" '$(Version)' == '' ">0.2.0$(VersionSuffix)</Version>
+    <Version Condition=" '$(Version)' == '' ">0.3.0$(VersionSuffix)</Version>
   </PropertyGroup>
 
 </Project>
