@@ -1,7 +1,0 @@
-source https://www.nuget.org/api/v2
-source ../../artifact/nupkg
-
-nuget ProtoCodec 0.1.0-alpha7
-
-# the tool
-nuget protoGenerator
