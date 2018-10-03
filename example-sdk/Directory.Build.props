@@ -4,12 +4,11 @@
     <RestorePackagesPath>$(MSBuildThisFileDirectory)packages</RestorePackagesPath>
     <RestoreSources>
       https://api.nuget.org/v3/index.json;
-      $([System.IO.Path]::GetFullPath("$(MSBuildThisFileDirectory)../artifact/nupkg"))
     </RestoreSources>
   </PropertyGroup>
 
   <PropertyGroup>
-    <FalanxVersion>0.2.0-alpha1</FalanxVersion>
+    <FalanxVersion>0.2.0</FalanxVersion>
   </PropertyGroup>
 
 </Project>

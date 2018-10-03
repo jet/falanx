@@ -4,7 +4,6 @@
     <RestorePackagesPath>$(MSBuildThisFileDirectory)packages</RestorePackagesPath>
     <RestoreSources>
       https://api.nuget.org/v3/index.json;
-      $([System.IO.Path]::GetFullPath("$(MSBuildThisFileDirectory)../artifact/nupkg"))
     </RestoreSources>
   </PropertyGroup>
 
