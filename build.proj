@@ -4,6 +4,7 @@
 
   <Target Name="Restore">
     <Exec Command="$(MonoOrEmpty)paket.exe restore" WorkingDirectory=".paket" ConsoleToMSBuild="true" />
+    <Exec Command="dotnet restore" WorkingDirectory="tools" ConsoleToMSBuild="true" />
   </Target>
 
   <Target Name="Build" DependsOnTargets="Restore">
@@ -18,6 +19,8 @@
     <Exec Command='dotnet pack Falanx.Generator -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
     <Exec Command='dotnet pack Falanx.BinaryGenerator -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
     <Exec Command='dotnet pack Falanx.Sdk -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
+    <Exec Command='dotnet pack Falanx.Tool -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
+    <Exec Command='dotnet dotnet mergenupkg --source "$(RepoRootDir)/Falanx.Sdk.$(Version).nupkg" --other "$(RepoRootDir)/Falanx.Tool.$(Version).nupkg" --tools' WorkingDirectory="tools" />
   </Target>
 
   <Target Name="Test">
