@@ -1,0 +1,8 @@
+<Project>
+
+  <PropertyGroup>
+    <FalanxSdk_GeneratorExeHost>dotnet </FalanxSdk_GeneratorExeHost>
+    <FalanxSdk_GeneratorExe>falanx2</FalanxSdk_GeneratorExe>
+  </PropertyGroup>
+
+</Project>
