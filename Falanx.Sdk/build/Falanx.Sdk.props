@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <FalanxSdk_GeneratorExeHost>dotnet </FalanxSdk_GeneratorExeHost>
-    <FalanxSdk_GeneratorExe>falanx2</FalanxSdk_GeneratorExe>
+    <FalanxSdk_GeneratorExe>$(MSBuildThisFileDirectory)../tools/netcoreapp2.1/any/falanx.dll</FalanxSdk_GeneratorExe>
   </PropertyGroup>
 
 </Project>
