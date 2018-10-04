@@ -20,7 +20,7 @@
     <Exec Command='dotnet pack Falanx.BinaryGenerator -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
     <Exec Command='dotnet pack Falanx.Sdk -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
     <Exec Command='dotnet pack Falanx.Tool -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
-    <Exec Command='dotnet dotnet mergenupkg --source "$(RepoRootDir)/Falanx.Sdk.$(Version).nupkg" --other "$(RepoRootDir)/Falanx.Tool.$(Version).nupkg" --tools' WorkingDirectory="tools" />
+    <Exec Command='dotnet mergenupkg --source "$(NupkgsDir)/Falanx.Sdk.$(Version).nupkg" --other "$(NupkgsDir)/Falanx.Tool.$(Version).nupkg" --tools' WorkingDirectory="tools" />
   </Target>
 
   <Target Name="Test">
