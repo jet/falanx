@@ -11,7 +11,6 @@
   <ItemGroup>
     <PackageReference Include="Falanx.BinaryCodec" Version="$(FalanxVersion)" />
     <PackageReference Include="Falanx.Sdk" Version="$(FalanxVersion)" PrivateAssets="All" />
-    <DotNetCliToolReference Include="dotnet-Falanx.BinaryGenerator" Version="$(FalanxVersion)" />
   </ItemGroup>
 
 </Project>

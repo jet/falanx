@@ -5,7 +5,7 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <DotNetCliToolReference Include="dotnet-mergenupkg" Version="2.3.*" />
+    <DotNetCliToolReference Include="dotnet-mergenupkg" Version="2.4.*" />
   </ItemGroup>
 
 </Project>

@@ -20,11 +20,11 @@
     <Exec Command='dotnet pack Falanx.BinaryGenerator -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
     <Exec Command='dotnet pack Falanx.Sdk -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
     <Exec Command='dotnet pack Falanx.Tool -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
-    <Exec Command='dotnet mergenupkg --source "$(NupkgsDir)/Falanx.Sdk.$(Version).nupkg" --other "$(NupkgsDir)/Falanx.Tool.$(Version).nupkg" --tools' WorkingDirectory="tools" />
+    <Exec Command='dotnet mergenupkg --source "$(NupkgsDir)/Falanx.Sdk.$(Version).nupkg" --other "$(NupkgsDir)/Falanx.Tool.$(Version).nupkg" --tools --only-files' WorkingDirectory="tools" />
   </Target>
 
   <Target Name="Test">
-    <Exec Command='dotnet run -p test/example-sdk/example2/l1' WorkingDirectory="$(RepoRootDir)" IgnoreStandardErrorWarningFormat="true" />
+    <Exec Command='dotnet run -v n -p test/example-sdk/example2/l1' WorkingDirectory="$(RepoRootDir)" IgnoreStandardErrorWarningFormat="true" />
   </Target>
 
   <Target Name="VSTest" DependsOnTargets="Test" />
