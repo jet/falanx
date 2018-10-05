@@ -17,3 +17,9 @@ github 7sharp9/FsAst AstCreate.fs
 github 7sharp9/FsAst PrintAstInfo.fs
 github 7sharp9/FsAst FormatFs.fs
 github 7sharp9/FsAst CreateAst.fs
+
+group MergeNupkgTool
+source https://www.nuget.org/api/v2
+frameworks: netcoreapp2.0, netstandard2.0
+
+clitool dotnet-mergenupkg ~> 2.4

@@ -676,3 +676,12 @@ GITHUB
     PrintAstInfo.fs (257e852c66fdf707cbb6aba9274223d7cc89afc0)
       Fantomas
       FSharp.Compiler.Service
+GROUP MergeNupkgTool
+RESTRICTION: || (== netcoreapp2.0) (== netstandard2.0)
+NUGET
+  remote: https://www.nuget.org/api/v2
+    dotnet-mergenupkg (2.4) - clitool: true
+      FSharp.Core (>= 4.3.4) - restriction: || (== netcoreapp2.0) (&& (== netstandard2.0) (>= netcoreapp1.0))
+      Microsoft.NETCore.App (>= 2.0) - restriction: || (== netcoreapp2.0) (&& (== netstandard2.0) (>= netcoreapp2.0))
+    FSharp.Core (4.5.2) - restriction: || (== netcoreapp2.0) (&& (== netstandard2.0) (>= netcoreapp1.0))
+    Microsoft.NETCore.App (2.1.5) - restriction: || (== netcoreapp2.0) (&& (== netstandard2.0) (>= netcoreapp2.0))
