@@ -8,7 +8,7 @@
     <AssemblyName>falanx</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\Falanx.Generator\Program.fs" />
+    <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Falanx.JsonCodec\Falanx.JsonCodec.fsproj" />
