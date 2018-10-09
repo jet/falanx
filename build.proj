@@ -4,6 +4,7 @@
 
   <Target Name="Restore">
     <Exec Command="$(MonoOrEmpty)paket.exe restore" WorkingDirectory=".paket" ConsoleToMSBuild="true" />
+    <Exec Command="dotnet restore" WorkingDirectory="tools" ConsoleToMSBuild="true" />
   </Target>
 
   <Target Name="Build" DependsOnTargets="Restore">
@@ -15,13 +16,13 @@
     <Exec Command='dotnet pack Falanx.JsonCodec -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
     <Exec Command='dotnet pack Falanx.BinaryCodec -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
     <Exec Command='dotnet pack Falanx.Ast -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
-    <Exec Command='dotnet pack Falanx.Generator -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
-    <Exec Command='dotnet pack Falanx.BinaryGenerator -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
     <Exec Command='dotnet pack Falanx.Sdk -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
+    <Exec Command='dotnet pack Falanx.Tool -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
+    <Exec Command='dotnet mergenupkg --source "$(NupkgsDir)/Falanx.Sdk.$(Version).nupkg" --other "$(NupkgsDir)/Falanx.Tool.$(Version).nupkg" --tools --only-files' WorkingDirectory="tools" />
   </Target>
 
   <Target Name="Test">
-    <Exec Command='dotnet run -p test/example-sdk/example2/l1' WorkingDirectory="$(RepoRootDir)" IgnoreStandardErrorWarningFormat="true" />
+    <Exec Command='dotnet run -v n -p test/example-sdk/example2/l1' WorkingDirectory="$(RepoRootDir)" IgnoreStandardErrorWarningFormat="true" />
   </Target>
 
   <Target Name="VSTest" DependsOnTargets="Test" />

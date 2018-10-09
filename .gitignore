@@ -1,7 +1,6 @@
 # Downloaded packages and build tools.
 /lkg
 /packages
-/Tools
 
 /tests/scripts/current
 /release
@@ -217,7 +216,6 @@ artifacts/*.nupkg
 *.cto
 *.vstman
 project.lock.json
-Tools/
 Backup/
 tests/fsharp/core/array/dont.run.peverify
 tests/fsharp/core/innerpoly/dont.run.peverify

@@ -10,8 +10,6 @@
          FalanxSdk_InputFileName;
          FalanxSdk_TargetIsCore;
          FalanxSdk_TaskAssembly;
-         FalanxSdk_GeneratorExeHost;
-         FalanxSdk_GeneratorExe;
          FalanxSdk_CodeGeneratorTargetFramework;">
 
   <PropertyGroup>
@@ -29,9 +27,6 @@
 
     <!-- Specify the assembly containing the code generator. -->
     <FalanxSdk_GeneratorAssembly Condition="'$(FalanxSdk_GeneratorAssembly)' == ''">$(FalanxSdk_CoreAssembly)</FalanxSdk_GeneratorAssembly>
-
-    <FalanxSdk_GeneratorExeHost Condition=" '$(FalanxSdk_GeneratorExe)' == '' ">dotnet </FalanxSdk_GeneratorExeHost>
-    <FalanxSdk_GeneratorExe Condition=" '$(FalanxSdk_GeneratorExe)' == '' ">Falanx.BinaryGenerator</FalanxSdk_GeneratorExe>
   </PropertyGroup>
 
   <PropertyGroup>

@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "generator": {
-      "commandName": "Project",
-      "commandLineArgs": "--inputfile ..\\..\\..\\..\\oneOf.proto --defaultnamespace test --outputfile oneOf.fs"
-    }
-  }
-}

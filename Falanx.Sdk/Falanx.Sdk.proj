@@ -12,6 +12,11 @@
   </PropertyGroup>
   
   <ItemGroup>
+    <Content Include="build\Falanx.Sdk.props">
+      <Pack>true</Pack>
+      <PackagePath>%(Identity)</PackagePath>
+      <Visible>true</Visible>
+    </Content>
     <Content Include="build\Falanx.Sdk.targets">
       <Pack>true</Pack>
       <PackagePath>%(Identity)</PackagePath>
