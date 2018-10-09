@@ -2,8 +2,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <AssemblyName>Falanx.BinaryCodec</AssemblyName>
-    <RootNamespace>Falanx.BinaryCodec</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Extensions.fs" />

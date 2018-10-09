@@ -2,8 +2,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <AssemblyName>Falanx.BinaryGenerator</AssemblyName>
-    <RootNamespace>Falanx.BinaryGenerator</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Extensions.fs" />

@@ -2,8 +2,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <AssemblyName>Falanx.JsonCodec</AssemblyName>
-    <RootNamespace>Falanx.JsonCodec</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Codec.fs" />

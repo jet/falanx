@@ -2,8 +2,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <AssemblyName>Falanx.Ast</AssemblyName>
-    <RootNamespace>Falanx.Ast</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\paket-files\7sharp9\FSharp.TypeProviders.SDK\src\ProvidedTypes.fs">
