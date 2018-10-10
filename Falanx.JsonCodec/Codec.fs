@@ -2,9 +2,6 @@ namespace Falanx.JsonCodec
 open System
 open Fleece
 open Fleece.Newtonsoft
-open Fleece.Newtonsoft.Operators
-open Fleece.Newtonsoft.Helpers
-open Fleece.Newtonsoft.ReadOnlyCollections
 open System.Collections.Generic
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Quotations.DerivedPatterns
@@ -57,40 +54,40 @@ module temp =
            
     let result2pipe =
         fun u t -> { url = u; title= t }
-        |> mapping
-        |> jfieldopt "url" (fun x -> x.url)
-        |> jfieldopt "title" (fun x -> x.title)
+        |> withFields
+        |> jfieldOpt "url" (fun x -> x.url)
+        |> jfieldOpt "title" (fun x -> x.title)
         
     let result2apply =
-        jfieldopt "title" (fun x -> x.title) 
-            (jfieldopt "url" (fun x -> x.url)
-                (mapping (fun u t -> { url = u; title= t })))
+        jfieldOpt "title" (fun x -> x.title) 
+            (jfieldOpt "url" (fun x -> x.url)
+                (withFields (fun u t -> { url = u; title= t })))
                 
     let result2applyExpression =
-        <@  jfieldopt "title" (fun x -> x.title) 
-                (jfieldopt "url" (fun x -> x.url)
-                    (mapping (fun u t -> { url = u; title= t }))) @>
+        <@  jfieldOpt "title" (fun x -> x.title) 
+                (jfieldOpt "url" (fun x -> x.url)
+                    (withFields (fun u t -> { url = u; title= t }))) @>
            
     let result2Expression =
          <@ let fieldName1 = "url"
             let fieldName2 = "title"
             let getter1 = (fun x -> x.url)
             let getter2 = (fun x -> x.title)
-            let mapper = mapping (fun u t -> { url = u; title = t })
+            let mapper = withFields (fun u t -> { url = u; title = t })
             
-            jfieldopt fieldName2 getter2
-              (jfieldopt fieldName1 getter1
+            jfieldOpt fieldName2 getter2
+              (jfieldOpt fieldName1 getter1
                   mapper) @>
                                     
-    let result2Pipe =
+    let result2Pipe = 
         <@  fun u t -> { url = u; title= t }
-            |> mapping
-            |> jfieldopt "url" (fun x -> x.url)
-            |> jfieldopt "title" (fun x -> x.title) @>
+            |> withFields
+            |> jfieldOpt "url" (fun x -> x.url)
+            |> jfieldOpt "title" (fun x -> x.title) @>
                    
     let result2PipeToMapping = 
         <@  fun u t -> { url = u; title = t }
-            |> mapping<string option -> int option -> Result2, IReadOnlyDictionary<string, JsonValue>, string, Result2, string, JToken> @>
+            |> withFields<string option -> int option -> Result2, IReadOnlyDictionary<string, JsonValue>, string, Result2, string, JToken> @>
                    
 //    let result3Apply =
 //        jfield "snippets"  (fun x -> x.snippets)
@@ -109,9 +106,9 @@ module temp =
 //            (mapping (fun u t s -> { url = u; title = t; snippets = s })))) @>
                    
     let aa = fun u t -> { url = u; title= t }
-    let bb = mapping<_,IReadOnlyDictionary<string,JsonValue>,string,_,string,JToken>
-    let cc = jfieldopt "url" (fun x -> x.url)
-    let dd = jfieldopt "title" (fun x -> x.title)
+    let bb = withFields<_,IReadOnlyDictionary<string,JsonValue>,string,_,string,JToken>
+    let cc = jfieldOpt "url" (fun x -> x.url)
+    let dd = jfieldOpt "title" (fun x -> x.title)
     let abcde = aa |> bb |> cc |> dd  
      
     let typeName (m : Type) =
@@ -210,7 +207,7 @@ module temp =
         //for a Record3 we would have a type signature like this:
         //mapping<Option<String> -> Option<String> -> Result3, IReadOnlyDictionary<String, JToken>, String, Result3, String, JToken>
         
-        let mappingMethodInfo = Expr.methoddefof <@ mapping<_,IReadOnlyDictionary<string,JsonValue>,string,_,string,JToken> @>
+        let mappingMethodInfo = Expr.methoddefof <@ withFields<_,IReadOnlyDictionary<string,JsonValue>,string,_,string,JToken> @>
         
         //get lambdas type and return
         let lambda = createLambdaRecord(typeof<Result2>)
@@ -265,7 +262,7 @@ module temp =
                 Reflection.FSharpType.MakeFunctionType(typedefof<Option<_>>.MakeGenericType(nextFieldType), recordType)
             | None -> recordType
         
-        let jfieldoptMethodInfo = Expr.methoddefof <@ jfieldopt<_,string,_> x x x @>
+        let jfieldoptMethodInfo = Expr.methoddefof <@ jfieldOpt<_,string,_> x x x @>
         //                          Record    ; fieldType; nextFieldType -> Record
         let jFieldTypeArguments = [|recordType; fieldType; remainingTypeExpression|]
         let jfieldoptMethodInfoTyped = jfieldoptMethodInfo.MakeGenericMethod jFieldTypeArguments
@@ -332,9 +329,9 @@ module temp =
         let r =
             <@
                 fun u t -> { url = u; title= t }
-                |> mapping<Option<String> -> Option<int> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken>
-                |> jfieldopt<Result2, string, Option<int> -> Result2> "url" (fun x -> x.url)
-                |> jfieldopt<Result2, int, Result2> "title" (fun x -> x.title)
+                |> withFields<Option<String> -> Option<int> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken>
+                |> jfieldOpt<Result2, string, Option<int> -> Result2> "url" (fun x -> x.url)
+                |> jfieldOpt<Result2, int, Result2> "title" (fun x -> x.title)
             @>
 
 
