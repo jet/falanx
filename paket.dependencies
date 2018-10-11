@@ -1,4 +1,6 @@
 source https://www.nuget.org/api/v2
+framework: netcoreapp2.1, netstandard2.0
+
 nuget ArgU
 nuget FSharp.Compiler.Service
 nuget FSharp.Core
