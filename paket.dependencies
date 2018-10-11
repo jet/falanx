@@ -1,5 +1,6 @@
 source https://www.nuget.org/api/v2
 framework: netcoreapp2.1, netstandard2.0
+storage: none
 
 nuget ArgU
 nuget FSharp.Compiler.Service
@@ -23,5 +24,6 @@ github 7sharp9/FsAst CreateAst.fs
 group MergeNupkgTool
 source https://www.nuget.org/api/v2
 frameworks: netcoreapp2.0, netstandard2.0
+storage: none
 
 clitool dotnet-mergenupkg ~> 2.4

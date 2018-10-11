@@ -1,3 +1,4 @@
+STORAGE: NONE
 RESTRICTION: || (== netcoreapp2.1) (== netstandard2.0)
 NUGET
   remote: https://www.nuget.org/api/v2
@@ -318,6 +319,7 @@ GITHUB
       Fantomas
       FSharp.Compiler.Service
 GROUP MergeNupkgTool
+STORAGE: NONE
 RESTRICTION: || (== netcoreapp2.0) (== netstandard2.0)
 NUGET
   remote: https://www.nuget.org/api/v2
