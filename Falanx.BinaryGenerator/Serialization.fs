@@ -95,11 +95,11 @@ module Serialization =
             //required is proto2 specific
             | Class(_scope, _name), Required ->
                 <@@ writeEmbedded x x x @@>
-                |> Expr.methoddefof
+                |> Expr.methodof
                 |> Expr.callStatic [position; buffer; Expr.Coerce(value, typeof<IMessage>)]
             | Union _, _ -> failwith "union fields should not be serialized here"
             | Enum(_scope, _name), rule ->
-                callPrimitive <@@ writeInt32 @@> prop rule position buffer value
+                callPrimitive <@@ int >> writeInt32 @@> prop rule position buffer value
             | Primitive, rule ->
                 callPrimitive (primitiveWriter prop.Type.ProtobufType) prop rule position buffer value
         with

@@ -26,7 +26,6 @@ module TypeGeneration =
     
         let typeKind, propertyType = 
             match TypeResolver.resolve scope field.Type lookup with
-            | Some(Enum(scope, name) as e, _) -> e, typeof<int>
             | Some(kind, t) -> kind, t
             | None -> failwithf "Message definition not found: %A" field.Type
         

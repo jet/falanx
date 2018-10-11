@@ -52,16 +52,21 @@ module Proto =
                for t in pt.GetNestedTypes() do
                    match t with 
                    | :? ProvidedUnion as pu ->
-                       let parent =Some(pu.DeclaringType :?> ProvidedRecord)
+                       let parent = Some(pu.DeclaringType :?> ProvidedTypeDefinition)
                        yield GenerationType.ProvidedUnion(pu, parent)
                        
                    | :? ProvidedRecord as pr ->
                        yield! loop pr (level + 1)
                        let parent =
                            if level = 0 then None
-                           else Some(pr.DeclaringType :?> ProvidedRecord)
+                           else Some(pr.DeclaringType :?> ProvidedTypeDefinition)
                        yield GenerationType.ProvidedRecord(pr, parent)
-                   | _ -> () //TODO: this would be enums or other types
+                   | pe when pe.IsEnum -> 
+                       let parent = Some(pe.DeclaringType :?> ProvidedTypeDefinition)
+                       yield GenerationType.ProvidedEnum(pe :?> _, parent)
+                   | _ -> 
+                       yield! loop t (level + 1)
+                       () //TODO: this would be enums or other types
            ]
        loop pt 0
            
@@ -107,7 +112,16 @@ module Proto =
                                  let info = SynComponentInfoRcd.Create(Ident.CreateLong parent.Name)
                                  let synModule = SynModuleDecl.CreateNestedModule(info, [union] )
                                  synModule
-                             | None -> union )
+                             | None -> union 
+                         | ProvidedEnum(pe,parent) -> 
+                             let enum = SynModuleDecl.CreateEnum(pe)
+                             match parent with 
+                             | Some parent ->
+                                 let info = SynComponentInfoRcd.Create(Ident.CreateLong parent.Name)
+                                 let synModule = SynModuleDecl.CreateNestedModule(info, [enum] )
+                                 synModule
+                             | None -> enum 
+                         )
                              
         let parseTree =
             ParsedInput.CreateImplFile(
