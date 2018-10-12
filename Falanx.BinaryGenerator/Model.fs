@@ -55,7 +55,7 @@ module Model =
           
     type GenerationType =
         //ProvidedRecords will have a parent it they are defined inside another message, top level ones will not
-        | ProvidedRecord of ProvidedRecord * parent: ProvidedTypeDefinition option
+        | ProvidedRecord of ProvidedRecord * parent: ProvidedRecord option
         //ProvidedUnions will always have a parent as they are specific to each message
-        | ProvidedUnion of ProvidedUnion * parent: ProvidedTypeDefinition option
-        | ProvidedEnum of ProvidedTypeDefinition * parent: ProvidedTypeDefinition option
+        | ProvidedUnion of ProvidedUnion * parent: ProvidedRecord option
+        | ProvidedEnum of ProvidedTypeDefinition * parent: ProvidedRecord option

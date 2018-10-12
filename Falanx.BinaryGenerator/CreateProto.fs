@@ -52,21 +52,19 @@ module Proto =
                for t in pt.GetNestedTypes() do
                    match t with 
                    | :? ProvidedUnion as pu ->
-                       let parent = Some(pu.DeclaringType :?> ProvidedTypeDefinition)
+                       let parent =Some(pu.DeclaringType :?> ProvidedRecord)
                        yield GenerationType.ProvidedUnion(pu, parent)
                        
                    | :? ProvidedRecord as pr ->
                        yield! loop pr (level + 1)
                        let parent =
                            if level = 0 then None
-                           else Some(pr.DeclaringType :?> ProvidedTypeDefinition)
+                           else Some(pr.DeclaringType :?> ProvidedRecord)
                        yield GenerationType.ProvidedRecord(pr, parent)
                    | pe when pe.IsEnum -> 
-                       let parent = Some(pe.DeclaringType :?> ProvidedTypeDefinition)
+                       let parent = Some(pe.DeclaringType :?> _)
                        yield GenerationType.ProvidedEnum(pe :?> _, parent)
-                   | _ -> 
-                       yield! loop t (level + 1)
-                       () //TODO: this would be enums or other types
+                   | _ -> () //TODO: this would be enums or other types
            ]
        loop pt 0
            
