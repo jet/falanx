@@ -95,8 +95,8 @@ module Serialization =
             //required is proto2 specific
             | Class(_scope, _name), Required ->
                 <@@ writeEmbedded x x x @@>
-                |> Expr.methoddefof
-                |> Expr.callStatic [position; buffer; Expr.Coerce(value, typeof<IMessage>)]
+                |> Expr.methodof
+                |> Expr.callStatic [position; buffer; value]
             | Union _, _ -> failwith "union fields should not be serialized here"
             | Enum(_scope, _name), rule ->
                 callPrimitive <@@ writeInt32 @@> prop rule position buffer value
@@ -118,19 +118,18 @@ module Serialization =
             let oneOfExpr = Expr.PropertyGet(this, prop.CaseProperty)
             
             let unioncasesTests =
-                 (prop.OneOfType.UnionCases, prop.Properties)
-                ||>Seq.map2 (fun puc (KeyValue(_k, v)) -> 
-                                                           let case = mkUnionCaseInfo puc.declaringType puc.tag names
-                                                           let optionValue = Expr.callStaticGeneric [puc.declaringType] [oneOfExpr] <@@ Option.get x @@>
-                                                           let testExpr = Quotations.Expr.UnionCaseTest(optionValue, case)
-
-                                                           let item = ProvidedProperty("Item", v.Type.UnderlyingType)
-                                                           item.PatchDeclaringType prop.OneOfType
-                                                           let descriptor = { v with ProvidedProperty = item; Rule = Required }
-                                                                                  
-                                                           let writerExpr = serializeProperty buffer optionValue descriptor
-                                                           testExpr, writerExpr                                                            
-                                                           )
+                (prop.OneOfType.UnionCases, prop.Properties)
+                ||> Seq.map2 
+                    (fun puc (KeyValue(_k, v)) -> 
+                        let case = mkUnionCaseInfo puc.declaringType puc.tag names
+                        let optionValue = Expr.callStaticGeneric [puc.declaringType] [oneOfExpr] <@@ Option.get x @@>
+                        let testExpr = Quotations.Expr.UnionCaseTest(optionValue, case)
+                        let item = ProvidedProperty(puc.name, v.Type.UnderlyingType)
+                        item.PatchDeclaringType puc.unionCaseType
+                        let descriptor = { v with ProvidedProperty = item; Rule = Required }
+                                               
+                        let writerExpr = serializeProperty buffer optionValue descriptor
+                        testExpr, writerExpr)
                 |> Seq.fold(fun acc (guard, writer) -> Expr.IfThenElseUnchecked(guard, writer, acc)) (Expr.Value(()))
                 
             

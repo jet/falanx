@@ -183,14 +183,16 @@ namespace Falanx.Ast
                 SynType.LongIdent liwd
         
         /// creates a union case identifier
-        let mkUciIdent range (uci : UnionCaseInfo) knownNamespaces ommitEnclosingType=
+        let mkUciIdent range (ucDeclaringType : Type) (ucName : string) knownNamespaces ommitEnclosingType=
             let ident =
-                match uci.DeclaringType.IsGenericType with
-                | true when uci.DeclaringType.GetGenericTypeDefinition().Name = typeof<int option>.GetGenericTypeDefinition().Name ->
-                        [mkIdent range uci.Name]
+                match ucDeclaringType.IsGenericType with
+                | true when ucDeclaringType.GetGenericTypeDefinition().Name = typeof<int option>.GetGenericTypeDefinition().Name ->
+                        [mkIdent range ucName]
                 | false -> 
-                        let path = getMemberPath range uci.DeclaringType knownNamespaces ommitEnclosingType
-                        path @ [mkIdent range uci.Name]
+                        let path = 
+                            let fullPath = getMemberPath range ucDeclaringType knownNamespaces ommitEnclosingType
+                            List.truncate (fullPath.Length - 1) fullPath //do not include union type
+                        path @ [mkIdent range ucName]
             
             LongIdentWithDots(ident, [range])
         
@@ -250,13 +252,23 @@ namespace Falanx.Ast
                 elif isListType instance.Type then None
                 // a property is a union case field \iff its declaring type is a proper subtype of the union type
                 elif instance.Type = propertyInfo.DeclaringType then None
-                else
-                    // create a dummy instance for declaring type to recover union case info
-                    let dummy = FormatterServices.GetUninitializedObject propertyInfo.DeclaringType
-                    let uci,_ = FSharpValue.GetUnionFields(dummy, propertyInfo.DeclaringType, true)
-                    match uci.GetFields() |> Array.tryFindIndex (fun p -> p = propertyInfo) with
-                    | Some i -> Some(instance, uci, i)
-                    | None -> None
+                else 
+                    match propertyInfo.DeclaringType with 
+                    | :? ProvidedTypeDefinition as puc -> 
+                        match puc.GetProperties() |> Seq.tryFind (fun p -> p.Name = propertyInfo.Name) with 
+                        | Some (pinfo) ->
+                            match pinfo.CustomAttributes |> Seq.tryFind (fun x -> x.AttributeType = typeof<CompilationMappingAttribute>) with 
+                            | Some attr -> 
+                                Some(instance, pinfo.DeclaringType, pinfo.Name,attr.ConstructorArguments.[2].Value :?> int)
+                            | None -> None 
+                        | None -> None 
+                    | _ -> 
+                        // create a dummy instance for declaring type to recover union case info
+                        let dummy = FormatterServices.GetUninitializedObject propertyInfo.DeclaringType
+                        let uci,_ = FSharpValue.GetUnionFields(dummy, propertyInfo.DeclaringType, true)
+                        match uci.GetFields() |> Array.tryFindIndex (fun p -> p = propertyInfo) with
+                        | Some i -> Some(instance, uci.DeclaringType, uci.Name, i)
+                        | None -> None
             | _ -> None
                                 
         let mkUnionCaseInfo (typ: Type) (tag: int) (nameMapping: int -> string) =

@@ -95,7 +95,7 @@ module Deserialization =
         let value = deserializeField propertyDescriptor field
         Expr.PropertySet(this, propertyDescriptor.ProvidedProperty, <@@  Some value @@>)
         
-    let private handleOptionalUnion (this: Expr) (propertyDescriptor: PropertyDescriptor) (providedUnion: ProvidedUnion) (field: Expr) =
+    let private handleOptionalUnion (this: Expr) (unionProp : ProvidedProperty) (propertyDescriptor: PropertyDescriptor) (providedUnion: ProvidedUnion) (field: Expr) =
         let value = deserializeField propertyDescriptor field
         //create a union constructor and feed the deserialised field into it
         let names (number:int) : string =
@@ -106,7 +106,12 @@ module Deserialization =
         | Some puc ->
             let unionCaseInfo = mkUnionCaseInfo puc.declaringType puc.tag names
             let unionCtor = Expr.NewUnionCaseUnchecked(unionCaseInfo, [value] )
-            Expr.PropertySetUnchecked(this, propertyDescriptor.ProvidedProperty, unionCtor)
+            let wrappedAsOption = 
+                let uinfo = 
+                    FSharp.Reflection.FSharpType.GetUnionCases(TypeSymbol(TypeSymbolKind.OtherGeneric(typedefof<option<_>>),[|providedUnion|])) 
+                    |> Seq.find (fun x -> x.Name = "Some")
+                Expr.NewUnionCase(uinfo,[unionCtor])
+            Expr.PropertySetUnchecked(this, unionProp, wrappedAsOption)
         | None -> failwithf "Unable to find union case by position: %i for %s"  propertyDescriptor.Position providedUnion.Name
         
     let private handleRepeated this propertyDescriptor field =
@@ -140,7 +145,7 @@ module Deserialization =
                 let oneOfHandlers = 
                     typeInfo.OneOfGroups
                     |> Seq.map (fun descriptor -> descriptor.Properties
-                                                  |> Seq.map (fun (KeyValue(_, prop)) -> prop.Position, handleOptionalUnion this prop descriptor.OneOfType))
+                                                  |> Seq.map (fun (KeyValue(_, prop)) -> prop.Position, handleOptionalUnion this descriptor.CaseProperty prop descriptor.OneOfType))
                     |> Seq.concat
                     
                 //create map handlers
