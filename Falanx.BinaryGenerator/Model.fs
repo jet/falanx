@@ -58,4 +58,4 @@ module Model =
         | ProvidedRecord of ProvidedRecord * parent: ProvidedRecord option
         //ProvidedUnions will always have a parent as they are specific to each message
         | ProvidedUnion of ProvidedUnion * parent: ProvidedRecord option
-        //|ProvidedType of ProvidedType
+        | ProvidedEnum of ProvidedTypeDefinition * parent: ProvidedRecord option

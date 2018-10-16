@@ -13,26 +13,20 @@ module Proto =
     open Model
     
     let createProvidedTypes protoDef defaultnamespace =
+        let protoFile = ProtoFile.fromString protoDef
+                                    
+        let rootScope = protoFile.Packages |> Seq.tryHead |> Option.defaultValue defaultnamespace
+    
         let provider = 
             ProvidedTypeDefinition(
                 Reflection.Assembly.GetCallingAssembly(),
-                defaultnamespace,
+                rootScope,
                 typeof<TypeContainer>.Name,
                 Some typeof<obj>, 
                 hideObjectMethods = true, 
                 isErased = false)
                 
-        let protoFile = ProtoFile.fromString protoDef
-                                    
-        let rootScope = protoFile.Packages |> Seq.tryHead |> Option.defaultValue String.Empty
-    
-        let container = 
-            if String.IsNullOrEmpty rootScope
-            then provider 
-            else
-                let root, deepest = TypeGeneration.createNamespaceContainer rootScope
-                provider.AddMember root
-                deepest
+        let container = provider 
     
         let lookup = TypeResolver.discoverTypes rootScope protoFile
         
@@ -61,6 +55,9 @@ module Proto =
                            if level = 0 then None
                            else Some(pr.DeclaringType :?> ProvidedRecord)
                        yield GenerationType.ProvidedRecord(pr, parent)
+                   | pe when pe.IsEnum -> 
+                       let parent = Some(pe.DeclaringType :?> _)
+                       yield GenerationType.ProvidedEnum(pe :?> _, parent)
                    | _ -> () //TODO: this would be enums or other types
            ]
        loop pt 0
@@ -107,13 +104,22 @@ module Proto =
                                  let info = SynComponentInfoRcd.Create(Ident.CreateLong parent.Name)
                                  let synModule = SynModuleDecl.CreateNestedModule(info, [union] )
                                  synModule
-                             | None -> union )
+                             | None -> union 
+                         | ProvidedEnum(pe,parent) -> 
+                             let enum = SynModuleDecl.CreateEnum(pe)
+                             match parent with 
+                             | Some parent ->
+                                 let info = SynComponentInfoRcd.Create(Ident.CreateLong parent.Name)
+                                 let synModule = SynModuleDecl.CreateNestedModule(info, [enum] )
+                                 synModule
+                             | None -> enum 
+                         )
                              
         let parseTree =
             ParsedInput.CreateImplFile(
                 ParsedImplFileInputRcd.CreateFs(outputFile)
                     .AddModule(
-                        SynModuleOrNamespaceRcd.CreateNamespace(Ident.CreateLong defaultnamespace)
+                        SynModuleOrNamespaceRcd.CreateNamespace(Ident.CreateLong providedTypeRoot.Namespace)
                             .AddDeclarations ( [ yield openSystem
                                                  yield openFrotoSerialization
                                                  yield openSystemCollectionsGeneric

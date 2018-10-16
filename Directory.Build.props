@@ -14,6 +14,10 @@
     <NupkgsDir>$([System.IO.Path]::GetFullPath("$(MSBuildThisFileDirectory)/artifact/nupkg"))</NupkgsDir>
     <MonoOrEmpty Condition=" '$(OS)' != 'Windows_NT' ">mono </MonoOrEmpty>
 
+    <!-- disable sourcelink on mono, to workaround https://github.com/dotnet/sourcelink/issues/155 -->
+    <EnableSourceLink Condition=" '$(OS)' != 'Windows_NT' AND '$(MSBuildRuntimeType)' != 'Core' ">false</EnableSourceLink>
+    <EnableSourceControlManagerQueries>$(EnableSourceLink)</EnableSourceControlManagerQueries>
+
     <Version Condition=" '$(Version)' == '' ">0.3.0$(VersionSuffix)</Version>
   </PropertyGroup>
 

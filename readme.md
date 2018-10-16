@@ -24,8 +24,8 @@ This is a helper project for the client to serialize and deserialize code.
 ### Falanx.BinaryGenerator
 <TODO: Write a desciption>
 
-### Falanx.Generator
-The generator is a simple command line program which uses the other projects to produce F# code from the `.proto` files.
+### Falanx.Tool
+A simple command line program which uses the other projects to produce F# code from the `.proto` files.
 
 ## Dependencies
 
@@ -56,13 +56,13 @@ This is a simple project, so there is no fake script as no elaborate build is ye
 From the root folder, to generate a `.fs` file for a specified `.proto` file:
 
 ```
-dotnet run --project Falanx.Generator/Falanx.Generator.fsproj --inputfile bundle.proto --defaultnamespace test --outputfile bundle.fs
+dotnet run --project Falanx.Tool/Falanx.Tool.fsproj --inputfile bundle.proto --defaultnamespace test --outputfile bundle.fs
 ```
 
 Command line arguments can be shown by calling with  `--help`:
 
 ```
-USAGE: dotnet-Falanx.Generator [--help] --inputfile <string> --defaultnamespace <string> --outputfile <string>
+USAGE: dotnet-Falanx.Tool [--help] --inputfile <string> --defaultnamespace <string> --outputfile <string>
 
 OPTIONS:
     --inputfile <string>  specify a proto file to input.

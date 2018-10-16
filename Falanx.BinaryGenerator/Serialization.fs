@@ -99,7 +99,22 @@ module Serialization =
                 |> Expr.callStatic [position; buffer; value]
             | Union _, _ -> failwith "union fields should not be serialized here"
             | Enum(_scope, _name), rule ->
-                callPrimitive <@@ writeInt32 @@> prop rule position buffer value
+                let intMethod = 
+                    let arg = Var("x",prop.Type.UnderlyingType)
+                    Expr.Lambda(arg, Expr.callStaticGeneric [prop.Type.UnderlyingType] [Expr.Var arg] <@int x@>)
+                let optMap = Expr.callStaticGeneric [prop.Type.UnderlyingType; typeof<int>] [intMethod; value] <@Option.map x x@>
+                match rule with 
+                | Optional -> 
+                    Expr.callStaticGeneric 
+                        [typeof<int>]
+                        [ <@@ writeInt32 @@> ;position; buffer; optMap]
+                        <@@ writeOption x x x x @@>
+                | Required -> Expr.apply <@@ writeInt32 @@> [position; buffer; optMap]
+                | Repeated -> 
+                    Expr.callStaticGeneric 
+                        [typeof<int>]
+                        [ <@@ writeInt32 @@> ;position; buffer; optMap]
+                        <@@ writeRepeated x x x x @@>
             | Primitive, rule ->
                 callPrimitive (primitiveWriter prop.Type.ProtobufType) prop rule position buffer value
         with

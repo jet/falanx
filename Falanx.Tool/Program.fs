@@ -21,7 +21,7 @@ module main =
                 | OutputFile _ -> "Specify the file name that the generated code will be written to."
     
     
-    let parser = ArgumentParser.Create<Arguments>(programName = "dotnet-Falanx.Generator")
+    let parser = ArgumentParser.Create<Arguments>(programName = "dotnet-Falanx.Tool")
     
     [<EntryPoint>]
     let main argv =
