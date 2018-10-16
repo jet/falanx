@@ -2,6 +2,8 @@ FSharp.Core
 FSharp.Compiler.Service
 Fantomas
 
+Microsoft.SourceLink.GitHub
+
 File: ProvidedTypes.fs
 File: ProvidedTypesTesting.fs
 
