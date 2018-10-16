@@ -107,15 +107,9 @@ namespace Falanx.BinaryCodec
                 |> Pack.toVarint (uint64 <| value.SerializedLength() )
                 |> value.Serialize
                 
-        /// Value is expected to be of type option<'T>. It's not possible
-        /// to use this type directly in the signature because of type providers limitations.
-        /// All optional non-generated types (i.e. primitive types and enums) should be serialized using
-        /// more strongly-typed writeOptional function
-        let writeOptionalEmbedded<'T when 'T :> IMessage> : Writer<obj> =
-            fun position buffer value ->
-                if not <| isNull value
-                then value :?> option<'T> |> Option.get |> writeEmbedded position buffer
-                
+        let writeOptionalEmbedded position buffer value =
+            value |> Option.iter (writeEmbedded position buffer)
+
         let writeUnionOptionalEmbedded unionType unionMembers =
             fun buffer value cases ->
                 match value with
