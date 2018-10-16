@@ -45,11 +45,11 @@ type ProvidedUnion(isTgt: bool, container:TypeContainer, className: string, getB
         let attrs = defaultAttributes isErased
         ProvidedUnion(false, TypeContainer.TypeToBeDecided, className, K baseType, attrs, K None, [], None, None, K [| |], nonNullable, hideObjectMethods)
         
-    override __.GetCustomAttributes(_inherit) = unionAttribs
-    override __.GetCustomAttributes(_attributeType, _inherit) = unionAttribs
+    override this.GetCustomAttributes(_inherit) = unionAttribs
+    override this.GetCustomAttributes(_attributeType, _inherit) = unionAttribs
         
     //fields is set to just one for now
-    member __.AddUnionCase(tag: int, position: int, name: string, [field]: PropertyInfo list) =
+    member this.AddUnionCase(tag: int, position: int, name: string, [field]: PropertyInfo list) =
 
         //Add tag to the `Tags` nested class
         tagsType.AddMember(ProvidedField.Literal(name, typeof<int>, tag))
