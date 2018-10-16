@@ -62,7 +62,6 @@ type Quotations() =
                 //dependencies.Append v.Type
                 let vType = sysTypeToSynType range v.Type knownNamespaces ommitEnclosingType
                 let spat = SynSimplePat.Id(mkIdent range v.Name, None, false ,false ,false, range)
-                //let untypedPat = SynSimplePats.SimplePats([spat], range)
                 let typedPat = SynSimplePats.SimplePats([SynSimplePat.Typed(spat, vType, range)], range)
                 let bodyAst = exprToAst body
                 SynExpr.Lambda(false, false, typedPat, bodyAst, range)
