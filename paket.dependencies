@@ -23,6 +23,18 @@ github 7sharp9/FsAst PrintAstInfo.fs
 github 7sharp9/FsAst FormatFs.fs
 github 7sharp9/FsAst CreateAst.fs
 
+group IntegrationTests
+source https://www.nuget.org/api/v2
+framework: netcoreapp2.1, netstandard2.0
+storage: none
+
+nuget FSharp.Core
+nuget Expecto ~> 8.4
+nuget Expecto.TestResults ~> 8.4
+nuget MedallionShell ~> 1.5
+
+github enricosada/dotnet-proj-info test/dotnet-proj-info.Tests/FileUtils.fs
+
 group MergeNupkgTool
 source https://www.nuget.org/api/v2
 frameworks: netcoreapp2.0, netstandard2.0

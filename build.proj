@@ -22,7 +22,8 @@
   </Target>
 
   <Target Name="Test">
-    <Exec Command='dotnet run -v n -p test/example-sdk/example2/l1' WorkingDirectory="$(RepoRootDir)" IgnoreStandardErrorWarningFormat="true" />
+    <Exec Command='dotnet build test/Falanx.IntegrationTests' />
+    <Exec Command='dotnet run -- "$(Version)" --fail-on-focused-tests --summary' WorkingDirectory="$(RepoRootDir)/test/Falanx.IntegrationTests" IgnoreStandardErrorWarningFormat="true" />
   </Target>
 
   <Target Name="VSTest" DependsOnTargets="Test" />

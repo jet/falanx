@@ -101,7 +101,6 @@ src/fsharp/FSharp.Compiler/*.sln
 src/fsharp/FSharp.Compiler/*.userprefs
 Debug
 Release
-Proto
 sign_temp
 .libs
 configure
@@ -240,8 +239,10 @@ msbuild.binlog
 /fcs/FSharp.Compiler.Service.netstandard/*.fsi
 paket-files/
 .idea/
-.vscode/
+.vscode/*
+!.vscode/settings.json
 /artifact/
 /example-projects/paket-dotnetsdk/hellow/Prova.fs
 /example-projects/paket-oldsdk/hellow/Prova.fs
 /example-projects/dotnetsdk/hellow/Prova.fs
+/test/testrun/

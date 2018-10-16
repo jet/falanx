@@ -1,4 +1,4 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Falanx.Ast", "Falanx.Ast\Falanx.Ast.fsproj", "{B08EA3D8-BBA3-46D0-AFAD-29598867B602}"
@@ -17,6 +17,10 @@ EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Falanx.JsonCodec", "Falanx.JsonCodec\Falanx.JsonCodec.fsproj", "{2E5DF937-250F-4C52-8EE5-3DEC728EECD9}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Falanx.Tool", "Falanx.Tool\Falanx.Tool.fsproj", "{405C41C5-09AF-423F-B9DC-54790DC83CE6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{78A0A470-D09F-40C2-B4E6-93BE30632FD9}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Falanx.IntegrationTests", "test\Falanx.IntegrationTests\Falanx.IntegrationTests.fsproj", "{2831DF0C-2114-42EB-BC4D-F542E39092A6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -44,5 +48,12 @@ Global
 		{405C41C5-09AF-423F-B9DC-54790DC83CE6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{405C41C5-09AF-423F-B9DC-54790DC83CE6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{405C41C5-09AF-423F-B9DC-54790DC83CE6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2831DF0C-2114-42EB-BC4D-F542E39092A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2831DF0C-2114-42EB-BC4D-F542E39092A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2831DF0C-2114-42EB-BC4D-F542E39092A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2831DF0C-2114-42EB-BC4D-F542E39092A6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2831DF0C-2114-42EB-BC4D-F542E39092A6} = {78A0A470-D09F-40C2-B4E6-93BE30632FD9}
 	EndGlobalSection
 EndGlobal
