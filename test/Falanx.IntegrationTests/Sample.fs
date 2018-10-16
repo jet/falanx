@@ -150,7 +150,44 @@ let tests pkgUnderTestVersion =
 
     ]
 
+  let sdkIntegrationMocks =
+    testList "sdk integration" [
+
+      testCase |> withLog "check invocation" (fun _ fs ->
+        let testDir = inDir fs "sdkint_invocation"
+        copyDirFromAssets fs ``samples2 library``.ProjDir testDir
+
+        let projPath = testDir/ (``samples2 library``.ProjectFile)
+
+        fs.mkdir_p (testDir/"mocktool")
+        copyDirFromAssets fs ``mock write args``.ProjDir (testDir/"mocktool")
+        let falanxMock = testDir/"mocktool"/``mock write args``.FileName
+        let falanxMockArgsPath = testDir/"mocktool"/"falanx-args.txt"
+
+        fs.cd testDir
+        dotnet fs ["build"; projPath; sprintf "/p:FalanxSdk_GeneratorExe=%s" falanxMock; "/p:FalanxSdk_GeneratorExeHost=" ]
+        |> ignore
+
+        Expect.isTrue (File.Exists falanxMockArgsPath) "mock should create a file who contains the args of invocation"
+
+        let expected =
+          [ sprintf """ --inputfile "%s" """ (testDir/``samples2 library``.ProtoFile)
+            sprintf """ --outputfile "%s" """ (testDir/"l1.Contracts"/"obj"/"Debug"/"netstandard2.0"/"l1.Contracts.FalanxSdk.g.fs")
+            sprintf """ --defaultnamespace "l1.Contracts" """ ]
+          |> List.map (fun s -> s.Trim())
+          |> String.concat " "
+
+        let lines =
+          File.ReadAllText falanxMockArgsPath
+          |> fun s -> s.Trim()
+
+        Expect.equal lines expected "check invocation args"
+      )
+
+    ]
+
   [ generalTests
-    sanityChecks ]
+    sanityChecks
+    sdkIntegrationMocks ]
   |> testList "suite"
   |> testSequenced
