@@ -140,8 +140,9 @@ type Quotations() =
                 //dependencies.Append t
                 let synExpr = exprToAst e
                 let synType = sysTypeToSynType range t knownNamespaces ommitEnclosingType
-                let synCoerce =
-                    if t.IsAssignableFrom e.Type then
+                let synCoerce = 
+                    // Need to manually check for interface. <interface>.IsAssignableFrom(<provided_type :> interface>) does not properly return true
+                    if (t.IsInterface && (Array.contains t (e.Type.GetInterfaces()))) || t.IsAssignableFrom e.Type then
                         SynExpr.Upcast(synExpr, synType, range)
                     else
                         SynExpr.Downcast(synExpr, synType, range)
@@ -197,7 +198,7 @@ type Quotations() =
             | NewUnionCase(uci, args) ->
                 //dependencies.Append uci.DeclaringType
                 let synTy = sysTypeToSynType range uci.DeclaringType knownNamespaces ommitEnclosingType
-                let uciCtor = SynExpr.LongIdent(false, mkUciIdent range uci knownNamespaces ommitEnclosingType, None, range)
+                let uciCtor = SynExpr.LongIdent(false, mkUciIdent range uci.DeclaringType uci.Name knownNamespaces ommitEnclosingType, None, range)
                 let synArgs = List.map exprToAst args
                 let ctorExpr =
                     match synArgs with
@@ -245,7 +246,7 @@ type Quotations() =
                             let pats = SynPat.Tuple([SynPat.Wild range ; SynPat.Wild range], range)
                             SynPat.LongIdent(uciIdent, None, None, SynConstructorArgs.Pats [pats], None, range)
                     else
-                        let uciIdent = mkUciIdent range uci knownNamespaces ommitEnclosingType
+                        let uciIdent = mkUciIdent range uci.DeclaringType uci.Name knownNamespaces ommitEnclosingType
                         let ctorArgs =
                             let fieldLength = 
                                 match uci.DeclaringType with
@@ -337,11 +338,19 @@ type Quotations() =
                 SynExpr.LetOrUse(false, false, [binding], synIdent, range)
     
             // pattern matching with union case field binding
-            | UnionCasePropertyGet(instance, uci, position) ->
+            | UnionCasePropertyGet(instance, ucType, ucName, position) ->
                 //dependencies.Append uci.DeclaringType
                 let synInstance = exprToAst instance
-                let (LongIdentWithDots(uciIdent,_)) = mkUciIdent range uci knownNamespaces ommitEnclosingType
-                SynExpr.LibraryOnlyUnionCaseFieldGet(synInstance, uciIdent, position, range)
+                let matchArg = mkIdent range "x"
+                let fail = 
+                    SynExpr.App(ExprAtomicFlag.NonAtomic,false,SynExpr.Ident(mkIdent range "failwith"), SynExpr.Const(SynConst.String("Should never hit",range),range),range)
+                let ctorPat =
+                    let uciIdent = mkUciIdent range ucType.DeclaringType ucName knownNamespaces ommitEnclosingType
+                    let namePatPairs = [(mkIdent range ucName), SynPat.Named(SynPat.Wild range, matchArg, false, None, range)]
+                    SynPat.LongIdent(uciIdent, None, None, SynConstructorArgs.NamePatPairs(namePatPairs,range), None, range)
+                let matchClause = SynMatchClause.Clause(ctorPat, None, SynExpr.Ident(matchArg), range, SequencePointInfoForTarget.SuppressSequencePointAtTarget)
+                let notMatchClause = SynMatchClause.Clause(SynPat.Wild range, None, fail, range, SequencePointInfoForTarget.SuppressSequencePointAtTarget)
+                SynExpr.Match(SequencePointInfoForBinding.SequencePointAtBinding range, synInstance, [matchClause ; notMatchClause], false, range)
                 
             | PropertyGet(instance, propertyInfo, []) ->
                 //dependencies.Append propertyInfo.DeclaringType

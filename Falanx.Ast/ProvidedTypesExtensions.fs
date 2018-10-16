@@ -59,7 +59,7 @@ type ProvidedUnion(isTgt: bool, container:TypeContainer, className: string, getB
         let unionTag = ProvidedProperty("Tag", typeof<int>, getterCode = fun _ -> Microsoft.FSharp.Quotations.Expr.Value tag)
         let fieldProp =
             let fp = field
-            let fieldProp = ProvidedProperty("Item", fp.PropertyType, getterCode = fun _ -> Unchecked.defaultof<_>)
+            let fieldProp = ProvidedProperty(fp.Name, fp.PropertyType, getterCode = fun _ -> Unchecked.defaultof<_>)
             //[CompilationMapping(SourceConstructFlags.Field, 0, 0)]
             let compilationAttributeType = typeof<CompilationMappingAttribute>
             let constructor = compilationAttributeType.TryGetConstructor([|typeof<SourceConstructFlags>; typeof<int>; typeof<int> |])
@@ -77,12 +77,12 @@ type ProvidedUnion(isTgt: bool, container:TypeContainer, className: string, getB
             
         unionCaseType.AddMember unionTag
         unionCaseType.AddMember fieldProp
-        __.AddMember unionCaseType           
+        this.AddMember unionCaseType           
         
         unionCases.Add { tag = tag
                          position = position
                          name = name
-                         declaringType = __
+                         declaringType = this
                          fields = [field]
                          unionCaseType = unionCaseType }
         
