@@ -13,26 +13,20 @@ module Proto =
     open Model
     
     let createProvidedTypes protoDef defaultnamespace =
+        let protoFile = ProtoFile.fromString protoDef
+                                    
+        let rootScope = protoFile.Packages |> Seq.tryHead |> Option.defaultValue defaultnamespace
+    
         let provider = 
             ProvidedTypeDefinition(
                 Reflection.Assembly.GetCallingAssembly(),
-                defaultnamespace,
+                rootScope,
                 typeof<TypeContainer>.Name,
                 Some typeof<obj>, 
                 hideObjectMethods = true, 
                 isErased = false)
                 
-        let protoFile = ProtoFile.fromString protoDef
-                                    
-        let rootScope = protoFile.Packages |> Seq.tryHead |> Option.defaultValue String.Empty
-    
-        let container = 
-            if String.IsNullOrEmpty rootScope
-            then provider 
-            else
-                let root, deepest = TypeGeneration.createNamespaceContainer rootScope
-                provider.AddMember root
-                deepest
+        let container = provider 
     
         let lookup = TypeResolver.discoverTypes rootScope protoFile
         
@@ -113,7 +107,7 @@ module Proto =
             ParsedInput.CreateImplFile(
                 ParsedImplFileInputRcd.CreateFs(outputFile)
                     .AddModule(
-                        SynModuleOrNamespaceRcd.CreateNamespace(Ident.CreateLong defaultnamespace)
+                        SynModuleOrNamespaceRcd.CreateNamespace(Ident.CreateLong providedTypeRoot.Namespace)
                             .AddDeclarations ( [ yield openSystem
                                                  yield openFrotoSerialization
                                                  yield openSystemCollectionsGeneric
