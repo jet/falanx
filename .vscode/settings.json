@@ -1,0 +1,9 @@
+{
+    "FSharp.excludeProjectDirectories": [
+        ".git",
+        "paket-files",
+        "test/testrun",
+        "test/examples",
+        "packages"
+    ]
+}

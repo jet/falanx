@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../paket-files/integrationtests/enricosada/dotnet-proj-info/test/dotnet-proj-info.Tests/FileUtils.fs">
+      <Paket>True</Paket>
+      <Link>paket-files/FileUtils.fs</Link>
+    </Compile>
+    <Compile Include="TestAssets.fs" />
+    <Compile Include="Sample.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
+</Project>
