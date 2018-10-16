@@ -9,8 +9,11 @@ module ProvidedTypes =
     
     let message name = ProvidedTypeDefinition(name, Some typeof<obj>, isErased = false)
     
-    let enum name = ProvidedTypeDefinition(name, Some typeof<obj>, isErased = false)
-    
+    let enum name =
+        let pt = ProvidedTypeDefinition(name, Some typeof<System.Enum>, isErased = false)
+        pt.SetEnumUnderlyingType(typeof<int>) //REVIEW: Should this be generalized for non Int32 enums?
+        pt
+
     let union name members = ProvidedTypeDefinition(name, Some typeof<obj>, isErased = false)
     
     let addEnumValues (enum: ProvidedTypeDefinition) =

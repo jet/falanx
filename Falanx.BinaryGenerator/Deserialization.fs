@@ -62,7 +62,10 @@ module Deserialization =
     let private deserializeField (property: PropertyDescriptor) (rawField: Expr) =
         match property.Type.Kind with
         | Primitive -> Expr.Application(primitiveReader property.Type.ProtobufType, rawField)
-        | Enum(_scope, _name) -> <@@ readInt32 %%rawField @@>
+        | Enum(_scope, _name) ->    
+            let enumMethodDef = Expr.methoddefof(<@enum<DayOfWeek> x@>)//
+            let enumMethod = MethodSymbol2(enumMethodDef,[|property.Type.UnderlyingType|])
+            Expr.Call(enumMethod, [ <@@ readInt32 (%%rawField) @@> ])
         | Class(_scope, _name) -> Expr.callStaticGeneric [property.Type.UnderlyingType] [rawField ] <@@ readEmbedded<Template> x @@>
         | Union _ -> failwith "Not implemented"
     

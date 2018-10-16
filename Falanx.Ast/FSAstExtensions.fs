@@ -139,3 +139,27 @@ namespace Falanx.Ast
                     SynTypeDefnSimpleReprUnionRcd.Create(unionCases) |> SynTypeDefnSimpleReprRcd.Union,
                     members = []
                 )
+
+            static member CreateEnum(pe: ProvidedTypeDefinition) =
+                let synConst =    
+                    let t = pe.GetEnumUnderlyingType()
+                    let case = 
+                        FSharp.Reflection.FSharpType.GetUnionCases(typeof<SynConst>)
+                        |> Seq.find 
+                            (fun x -> 
+                                let fs = x.GetFields()
+                                fs.Length > 0 && fs.[0].PropertyType = t
+                            )
+                    fun v -> FSharp.Reflection.FSharpValue.MakeUnion(case,[|v|]) :?> SynConst
+                let enumCases =
+                    pe.GetFields()
+                    |> Seq.filter (fun fi -> fi.IsLiteral)
+                    |> Seq.map (fun fi -> SynEnumCaseRcd.Create(Ident.Create fi.Name, synConst(fi.GetRawConstantValue())))
+                    |> Seq.toList
+        
+                SynModuleDecl.CreateSimpleType (
+                    { SynComponentInfoRcd.Create (Ident.CreateLong pe.Name) with
+                          XmlDoc = PreXmlDoc.Create (ProvidedTypeDefinition.getXmlDocs pe) },
+                    SynTypeDefnSimpleReprEnumRcd.Create(enumCases) |> SynTypeDefnSimpleReprRcd.Enum,
+                    members = []
+                )
