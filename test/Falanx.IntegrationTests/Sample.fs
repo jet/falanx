@@ -153,6 +153,40 @@ let tests pkgUnderTestVersion =
         Expect.isTrue (File.Exists outputPath) (sprintf "output assembly '%s' not found" outputPath)
       )
 
+      testCase |> withLog "can build sample3 json" (fun _ fs ->
+        let testDir = inDir fs "sanity_check_sample3_json"
+        copyDirFromAssets fs ``samples3 json``.ProjDir testDir
+
+        let projPath = testDir/ (``samples3 json``.ProjectFile)
+        let projDir = Path.GetDirectoryName projPath
+
+        Tests.skiptest "only json doesnt work yet"
+
+        fs.cd testDir
+        dotnet fs ["build"; projPath]
+        |> checkExitCodeZero
+
+        let outputPath = projDir/"bin"/"Debug"/"netcoreapp2.1"/``samples3 json``.AssemblyName + ".dll"
+        Expect.isTrue (File.Exists outputPath) (sprintf "output assembly '%s' not found" outputPath)
+      )
+
+      testCase |> withLog "can build sample4 binary+json" (fun _ fs ->
+        let testDir = inDir fs "sanity_check_sample4_binaryjson"
+        copyDirFromAssets fs ``sample4 binary+json``.ProjDir testDir
+
+        let projPath = testDir/ (``sample4 binary+json``.ProjectFile)
+        let projDir = Path.GetDirectoryName projPath
+
+        Tests.skiptest "doesnt contains a json serialization/deserialization"
+
+        fs.cd testDir
+        dotnet fs ["build"; projPath]
+        |> checkExitCodeZero
+
+        let outputPath = projDir/"bin"/"Debug"/"netcoreapp2.1"/``sample4 binary+json``.AssemblyName + ".dll"
+        Expect.isTrue (File.Exists outputPath) (sprintf "output assembly '%s' not found" outputPath)
+      )
+
     ]
 
   let sdkIntegrationMocks =
@@ -217,7 +251,7 @@ let tests pkgUnderTestVersion =
         Expect.equal lines expected "check invocation args"
       )
 
-      ftestCase |> withLog "check invocation binary+json" (fun _ fs ->
+      testCase |> withLog "check invocation binary+json" (fun _ fs ->
         let testDir = inDir fs "sdkint_invocation_binaryjson"
         copyDirFromAssets fs ``sample4 binary+json``.ProjDir testDir
 
