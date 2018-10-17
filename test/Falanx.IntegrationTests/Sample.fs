@@ -71,6 +71,8 @@ let tests pkgUnderTestVersion =
       let logger = Log.create "Tests Assets"
       let fs = FileUtils(logger)
 
+      fs.rm_rf TestRunPackagesDir
+
       // restore tool
       prepareTool fs pkgUnderTestVersion
 
