@@ -7,6 +7,8 @@ open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Quotations.DerivedPatterns
 open Microsoft.FSharp.Quotations.Patterns
 open Falanx.Ast
+open System.Runtime.CompilerServices
+open ProviderImplementation.ProvidedTypes.UncheckedQuotations
 
 [<CLIMutable>]
 type Result2 =
@@ -23,6 +25,7 @@ module Quotations =
       | Quotations.ExprShape.ShapeVar _ -> () ]
 
 module temp =
+    open FSharpPlus
     open System.Reflection
     open Newtonsoft.Json.Linq
     
@@ -50,66 +53,7 @@ module temp =
 
     let x<'T> : 'T = Unchecked.defaultof<'T>
     let knownNamespaces = ["System"; "System.Collections.Generic"; "Fleece.Newtonsoft"; "Microsoft.FSharp.Core"; "Newtonsoft.Json.Linq"] |> Set.ofList
-    let qs = ProviderImplementation.ProvidedTypes.QuotationSimplifier(true)
-           
-    let result2pipe =
-        fun u t -> { url = u; title= t }
-        |> withFields
-        |> jfieldOpt "url" (fun x -> x.url)
-        |> jfieldOpt "title" (fun x -> x.title)
-        
-    let result2apply =
-        jfieldOpt "title" (fun x -> x.title) 
-            (jfieldOpt "url" (fun x -> x.url)
-                (withFields (fun u t -> { url = u; title= t })))
-                
-    let result2applyExpression =
-        <@  jfieldOpt "title" (fun x -> x.title) 
-                (jfieldOpt "url" (fun x -> x.url)
-                    (withFields (fun u t -> { url = u; title= t }))) @>
-           
-    let result2Expression =
-         <@ let fieldName1 = "url"
-            let fieldName2 = "title"
-            let getter1 = (fun x -> x.url)
-            let getter2 = (fun x -> x.title)
-            let mapper = withFields (fun u t -> { url = u; title = t })
-            
-            jfieldOpt fieldName2 getter2
-              (jfieldOpt fieldName1 getter1
-                  mapper) @>
-                                    
-    let result2Pipe = 
-        <@  fun u t -> { url = u; title= t }
-            |> withFields
-            |> jfieldOpt "url" (fun x -> x.url)
-            |> jfieldOpt "title" (fun x -> x.title) @>
-                   
-    let result2PipeToMapping = 
-        <@  fun u t -> { url = u; title = t }
-            |> withFields<string option -> int option -> Result2, IReadOnlyDictionary<string, JsonValue>, string, Result2, string, JToken> @>
-                   
-//    let result3Apply =
-//        jfield "snippets"  (fun x -> x.snippets)
-//            (jfieldopt "title"  (fun x -> x.title)
-//              (jfieldopt "url" (fun x -> x.url)
-//                  (
-//                      mapping (fun u t s -> { url = u; title = t; snippets = s })
-//                  )
-//              )
-//            )
-//            
-//    let result3ApplyExpr = <@
-//        jfield "snippets"  (fun x -> x.snippets)
-//            (jfieldopt "title"  (fun x -> x.title)
-//            (jfieldopt "url" (fun x -> x.url)
-//            (mapping (fun u t s -> { url = u; title = t; snippets = s })))) @>
-                   
-    let aa = fun u t -> { url = u; title= t }
-    let bb = withFields<_,IReadOnlyDictionary<string,JsonValue>,string,_,string,JToken>
-    let cc = jfieldOpt "url" (fun x -> x.url)
-    let dd = jfieldOpt "title" (fun x -> x.title)
-    let abcde = aa |> bb |> cc |> dd  
+    let qs = ProviderImplementation.ProvidedTypes.QuotationSimplifier(true)                          
      
     let typeName (m : Type) =
         Microsoft.FSharp.Compiler.PrettyNaming.DemangleGenericTypeName  m.Name
@@ -185,7 +129,7 @@ module temp =
         newFunction
         
     
-    let callMapping() =
+    let callMapping (lambda:Expr) =
     
         let replaceLambdaArgs (mi: MethodInfo) (lambda:Type) =
             let lambdaReturn = getFunctionReturnType lambda
@@ -209,8 +153,6 @@ module temp =
         
         let mappingMethodInfo = Expr.methoddefof <@ withFields<_,IReadOnlyDictionary<string,JsonValue>,string,_,string,JToken> @>
         
-        //get lambdas type and return
-        let lambda = createLambdaRecord(typeof<Result2>)
         let lambdaType = lambda.Type
         
         let mappingMethodInfoFull = replaceLambdaArgs mappingMethodInfo lambdaType
@@ -231,24 +173,29 @@ module temp =
         let f = Var("f", lambdaType)
         let call = Expr.Call(mappingMethodInfoFull, [Expr.Var(f)])
         let lambda = Expr.Lambda(f, call)
-        lambda
+        lambda        
         
     let callPipeRight (arg:Expr) (func:Expr) =
         let methodInfoGeneric = Expr.methoddefof<@ (|>) @>
         let funcTypeReturn = getFunctionReturnType func.Type
-         
-        let argSimple = sprintf "%a" sprintfsimpleTypeFormatter arg.Type
-        let argReturnSimple = sprintf "%a" sprintfsimpleTypeFormatter (getFunctionReturnType arg.Type)
-        let argReturnSimple2 = sprintf "%a" sprintfsimpleTypeFormatter (getFunctionReturnType2 arg.Type)
-        
-        let funcTypeSimple = sprintf "%a" sprintfsimpleTypeFormatter func.Type
-        let funcTypeReturnSimple = sprintf "%a" sprintfsimpleTypeFormatter (getFunctionReturnType func.Type)
-        let funcTypeReturnSimple2 = sprintf "%a" sprintfsimpleTypeFormatter (getFunctionReturnType2 func.Type)
-        
-        
         let methodInfoTyped = methodInfoGeneric.MakeGenericMethod([|arg.Type; funcTypeReturn|])
         let expr = Expr.Call(methodInfoTyped, [arg; func])
         expr
+        
+
+    //this needs to be done at the Expt -> AST level to remove the extra lambda call  
+//    let callPipeRight2 (arg:Expr) (func:Expr) =
+//        let methodInfoGeneric = Expr.methoddefof<@ (|>) @>
+//        let funcTypeReturn = getFunctionReturnType func.Type
+//
+//        let methodInfoTyped = methodInfoGeneric.MakeGenericMethod([|arg.Type; funcTypeReturn|])
+//        let expr = 
+//            match func with 
+//            | Lambda(_, Call(Some obj,minfo,args)) ->  Expr.Call(methodInfoTyped, [arg; Expr.Call(obj,minfo,args |> List.truncate (args.Length - 1))])
+//            | Lambda(_, Call(None,minfo,args)) ->  Expr.CallUnchecked(methodInfoTyped, [arg; Expr.CallUnchecked(minfo,args |> List.truncate (args.Length - 1))])
+//            | _ -> Expr.Call(methodInfoTyped, [arg; func])
+//        expr
+
         
     let callJfieldopt (recordType: Type) propertyInfo (fieldType: Type ) (nextFieldType: Type option) =
         //
@@ -316,6 +263,101 @@ module temp =
             Expr.Let(decoder, Expr.TupleGet(Expr.Var codec, 0),
                 Expr.Let(encoder, Expr.TupleGet(Expr.Var codec, 1),
                     Expr.Call(jfieldoptMethodInfoTyped, [fieldName; getter; Expr.Var decoder; Expr.Var encoder]))))
+                    
+                    
+    type TypeChainCache<'a> = 
+        | Lookup of ConditionalWeakTable<Type,TypeChainCache<'a>>
+        | Value of 'a
+        member x.GetOrAdd(tl : Type list, f) = 
+            match tl with 
+            | h :: t -> 
+                match x with 
+                | Lookup d -> 
+                    let v = 
+                        let scc,v = d.TryGetValue(h)
+                        if scc then
+                            v
+                        else
+                            let v = 
+                                match t with 
+                                | [] -> f() |> Value
+                                | _ -> ConditionalWeakTable<Type,TypeChainCache<'a>>() |> Lookup
+                            d.Add(h,v)
+                            v
+                    v.GetOrAdd(t,f)
+                | Value v -> failwith "Bad type list length"
+            | [] -> 
+                match x with 
+                | Lookup d -> failwith "Bad type list length"
+                | Value v -> v
+        static member Create() = ConditionalWeakTable<Type,TypeChainCache<'a>>() |> Lookup
+    type TypeTemplate<'a,'b>() =
+        //static let cache = TypeChainCache.Create()
+        static let cache = System.Collections.Generic.Dictionary<string,TypeChainCache<_>>()
+        static member bleh ([<ReflectedDefinition(true)>] f : Expr<'a -> 'b>) = printfn "%A" f
+        static member create ([<ReflectedDefinition(false)>] f : Expr<'a -> 'b>) : string -> Type list -> ('a -> 'b)  = 
+            fun cacheName -> 
+                let cache = 
+                    let scc,v = cache.TryGetValue cacheName
+                    if scc then 
+                        v
+                    else
+                        let v = TypeChainCache.Create()
+                        cache.Add(cacheName,v)
+                        v
+                let f() =
+                    let v = 
+                        let rec extractCall e = 
+                            match e with
+                            | Patterns.Lambda(_,body) -> extractCall body
+                            | Patterns.Call(_o,minfo,_args) -> minfo
+                            | _ -> failwithf "Expression not of expected form %A" e
+                        let rec replaceMethod minfo e = 
+                            match e with
+                            | Patterns.Lambda(v,body) -> Expr.Lambda(v, replaceMethod minfo body)
+                            | Patterns.Call(Some o,_,args) -> Expr.Call(o,minfo,args)
+                            | Patterns.Call(None,_,args) -> Expr.Call(minfo,args)
+                            | _ -> failwithf "Expression not of expected form %A" e
+                        match f with
+                        | Patterns.Lambda (_,e) -> 
+                            let minfo = extractCall e
+                            let makeMethod =
+                                if minfo.IsGenericMethod then
+                                    let minfodef = minfo.GetGenericMethodDefinition()
+                                    fun types -> 
+                                        minfodef.MakeGenericMethod(types |> Seq.toArray)
+                                else
+                                    fun _ -> minfo
+                            fun types -> 
+                                let method = makeMethod types
+                                let lambda = replaceMethod method f
+                                FSharp.Linq.RuntimeHelpers.LeafExpressionConverter.EvaluateQuotation lambda :?> ('a -> 'b)
+                        | _ -> failwithf "Expression not of expected form %A" f
+                    v
+                fun types -> 
+                    cache.GetOrAdd(types, fun () -> f() types)
+                    
+    let inline callJfieldopt3< ^a,^b,^c when (OfJson or ^b) : (static member OfJson : ^b*OfJson -> (JsonValue -> ^b ParseResult)) 
+                                        and  (ToJson or ^b) : (static member ToJson : ^b*ToJson -> JsonValue) > propertyInfo =
+        let getter = 
+            let x = Var("x",typeof< ^a>)
+            <@ %%(Expr.Lambda(x, Expr.PropertyGet(Expr.Var x,propertyInfo))) : ^a -> ^b option@>
+        <@@
+            fun codec ->
+                let decode = fst codec
+                let encode = snd codec
+                Fleece.Newtonsoft.jfieldOpt "url" %getter ((decode,encode) : SplitCodec<_,_ -> ^c,_>)
+        @@>
+
+    let callJfieldoptNew (recordType: Type) propertyInfo (fieldType: Type ) (nextFieldType: Type option) =
+        let typeC =
+            match nextFieldType with 
+            | Some t -> Reflection.FSharpType.MakeFunctionType(typedefof<Option<_>>.MakeGenericType(t), recordType)
+            | None -> recordType
+        TypeTemplate.create callJfieldopt3<_,string,_> "callJfieldopt3" [recordType; fieldType; typeC] propertyInfo
+     
+
+
         
     let printerOfDoom() =
     
@@ -366,30 +408,51 @@ module temp =
 
     let tryCode() =
         printerOfDoom()
-//        let result2Pipe = result2Pipe
-//        let result2PipeToMapping = result2PipeToMapping
-//        let result2Apply = result2applyExpression
-        let lambdaRecord = createLambdaRecord typeof<Result2>
-        let mapping = callMapping()
-        let pipeLambdaToMapping =  callPipeRight lambdaRecord mapping
-        let firstJfieldOpt = callJfieldopt typeof<Result2> (Expr.propertyof<@ (x:Result2).url @>) typeof<string> (Some typeof<int>)
-        let secondJFieldOpt = callJfieldopt typeof<Result2> (Expr.propertyof<@ (x:Result2).title @>) typeof<int> None
-        
-        let pipeLambdaToMappingToFirstJFieldOpt = callPipeRight pipeLambdaToMapping firstJfieldOpt
-        
-        let pipeLambdaToMappingToFirstJFieldOptToSecondJFieldOpt = callPipeRight pipeLambdaToMappingToFirstJFieldOpt secondJFieldOpt
-        
-        let ctast, ctpt = Quotations.ToAst( pipeLambdaToMappingToFirstJFieldOptToSecondJFieldOpt, knownNamespaces = knownNamespaces )
-        let code = Fantomas.CodeFormatter.FormatAST(ctpt, "test", None, Fantomas.FormatConfig.FormatConfig.Default)
-        code                              
-    
-//    let test = <@ jfieldopt<Result,string,_> x x @>
-//    let testS = qs.SimplifyQuotation test
-//    let simplified = qs.TranslateExpression testS
-//    let ctast, ctpt = Quotations.ToAst(simplified, knownNamespaces = knownNamespaces )
-//    let code = Fantomas.CodeFormatter.FormatAST(ctpt, "test", None, Fantomas.FormatConfig.FormatConfig.Default)
 
-       
+        let recordType = typeof<Result2>
+        let lambdaRecord = createLambdaRecord recordType
+        let mapping = callMapping lambdaRecord
+        let pipeLambdaToMapping =  callPipeRight lambdaRecord mapping
+        
+        let recordFields = Reflection.FSharpType.GetRecordFields(recordType) |> Array.toList
+        
+        
+        let createRecordJFieldOpts recordFields =
+            let final = recordFields |> List.last
+            let pairs = recordFields |> List.pairwise
+            let optionType (o: Type) =
+                o.GetGenericArguments().[0]
+            
+            let jFieldOptions =
+                pairs
+                |> List.map (fun (first, second) -> callJfieldopt recordType first (optionType first.PropertyType) (Some (optionType second.PropertyType)))
+            let finalJField = callJfieldopt recordType final (optionType final.PropertyType) None
+            
+            [ yield! jFieldOptions
+              yield finalJField ]
+                
+            
+            
+        let jFieldOpts = createRecordJFieldOpts recordFields
+        let allPipedFunctions = [yield lambdaRecord; yield mapping; yield! jFieldOpts]
+        let foldedFunctions =
+            allPipedFunctions |> List.reduce callPipeRight
+                         
+
+//        let firstJfieldOpt = callJfieldopt recordType (Expr.propertyof<@ (x:Result2).url @>) typeof<string> (Some typeof<int>)
+//        let secondJFieldOpt = callJfieldopt recordType (Expr.propertyof<@ (x:Result2).title @>) typeof<int> None
+//        
+//        let pipeLambdaToMappingToFirstJFieldOpt = callPipeRight pipeLambdaToMapping firstJfieldOpt
+//        let pipeLambdaToMappingToFirstJFieldOptToSecondJFieldOpt = callPipeRight pipeLambdaToMappingToFirstJFieldOpt secondJFieldOpt
+//        
+//        let qs = ProviderImplementation.ProvidedTypes.QuotationSimplifier(true)
+//        let simplified = qs.Simplify pipeLambdaToMappingToFirstJFieldOptToSecondJFieldOpt
+        
+        let ctast, ctpt = Quotations.ToAst( foldedFunctions, knownNamespaces = knownNamespaces )
+        let code = Fantomas.CodeFormatter.FormatAST(ctpt, "test", None, Fantomas.FormatConfig.FormatConfig.Default)
+        //FsAst.PrintAstInfo.printAstInfo "/Users/dave.thomas/codec.fs"
+        code                              
+           
 module test =
 
 
