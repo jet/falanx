@@ -140,29 +140,24 @@ let tests pkgUnderTestVersion =
 
       testCase |> withLog "can build sample2" (fun _ fs ->
         let testDir = inDir fs "sanity_check_sample2"
-        copyDirFromAssets fs ``samples2 library``.ProjDir testDir
+        copyDirFromAssets fs ``samples2 binary``.ProjDir testDir
 
-        let projPath = testDir/ (``samples2 library``.ProjectFile)
+        let projPath = testDir/ (``samples2 binary``.ProjectFile)
         let projDir = Path.GetDirectoryName projPath
 
         fs.cd testDir
         dotnet fs ["build"; projPath]
         |> checkExitCodeZero
 
-        let outputPath = projDir/"bin"/"Debug"/"netcoreapp2.1"/``samples2 library``.AssemblyName + ".dll"
+        let outputPath = projDir/"bin"/"Debug"/"netcoreapp2.1"/``samples2 binary``.AssemblyName + ".dll"
         Expect.isTrue (File.Exists outputPath) (sprintf "output assembly '%s' not found" outputPath)
       )
 
     ]
 
   let sdkIntegrationMocks =
-    testList "sdk integration" [
 
-      testCase |> withLog "check invocation" (fun _ fs ->
-        let testDir = inDir fs "sdkint_invocation"
-        copyDirFromAssets fs ``samples2 library``.ProjDir testDir
-
-        let projPath = testDir/ (``samples2 library``.ProjectFile)
+    let dotnetBuildWithFalanxArgsMock (fs: FileUtils) testDir projPath =
 
         fs.mkdir_p (testDir/"mocktool")
         copyDirFromAssets fs ``mock write args``.ProjDir (testDir/"mocktool")
@@ -170,22 +165,54 @@ let tests pkgUnderTestVersion =
         let falanxMockArgsPath = testDir/"mocktool"/"falanx-args.txt"
 
         fs.cd testDir
+
         dotnet fs ["build"; projPath; sprintf "/p:FalanxSdk_GeneratorExe=%s" falanxMock; "/p:FalanxSdk_GeneratorExeHost=" ]
         |> ignore
 
         Expect.isTrue (File.Exists falanxMockArgsPath) "mock should create a file who contains the args of invocation"
 
+        let lines =
+          File.ReadAllText falanxMockArgsPath
+          |> fun s -> s.Trim()
+
+        lines
+
+    ftestList "sdk integration" [
+
+      testCase |> withLog "check invocation binary" (fun _ fs ->
+        let testDir = inDir fs "sdkint_invocation_binary"
+        copyDirFromAssets fs ``samples2 binary``.ProjDir testDir
+
+        let projPath = testDir/ (``samples2 binary``.ProjectFile)
+
+        let lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
+
         let expected =
-          [ sprintf """ --inputfile "%s" """ (testDir/``samples2 library``.ProtoFile)
+          [ sprintf """ --inputfile "%s" """ (testDir/``samples2 binary``.ProtoFile)
             sprintf """ --outputfile "%s" """ (testDir/"l1.Contracts"/"obj"/"Debug"/"netstandard2.0"/"l1.Contracts.FalanxSdk.g.fs")
             sprintf """ --defaultnamespace "l1.Contracts" """
             sprintf """ --serializer binary """ ]
           |> List.map (fun s -> s.Trim())
           |> String.concat " "
 
-        let lines =
-          File.ReadAllText falanxMockArgsPath
-          |> fun s -> s.Trim()
+        Expect.equal lines expected "check invocation args"
+      )
+
+      testCase |> withLog "check invocation json" (fun _ fs ->
+        let testDir = inDir fs "sdkint_invocation_json"
+        copyDirFromAssets fs ``samples3 json``.ProjDir testDir
+
+        let projPath = testDir/ (``samples3 json``.ProjectFile)
+
+        let lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
+
+        let expected =
+          [ sprintf """ --inputfile "%s" """ (testDir/``samples3 json``.ProtoFile)
+            sprintf """ --outputfile "%s" """ (testDir/"l1.Contracts"/"obj"/"Debug"/"netstandard2.0"/"l1.Contracts.FalanxSdk.g.fs")
+            sprintf """ --defaultnamespace "l1.Contracts" """
+            sprintf """ --serializer json """ ]
+          |> List.map (fun s -> s.Trim())
+          |> String.concat " "
 
         Expect.equal lines expected "check invocation args"
       )

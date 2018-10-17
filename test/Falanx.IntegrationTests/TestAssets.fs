@@ -8,8 +8,14 @@ type TestAssetProjInfo =
     AssemblyName: string
     ProtoFile: string }
 
-let ``samples2 library`` =
+let ``samples2 binary`` =
   { ProjDir = "sample2"
+    ProjectFile = "l1"/"l1.fsproj"
+    AssemblyName = "l1"
+    ProtoFile = "proto"/"bundle.proto" }
+
+let ``samples3 json`` =
+  { ProjDir = "sample3 json"
     ProjectFile = "l1"/"l1.fsproj"
     AssemblyName = "l1"
     ProtoFile = "proto"/"bundle.proto" }
