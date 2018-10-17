@@ -10,8 +10,6 @@ module Proto =
     open Froto.Parser.ClassModel
     open FsAst
     open ProviderImplementation.ProvidedTypes
-    open Model
-    open System.Security.Claims
     
     let createProvidedTypes protoDef defaultnamespace =
         let protoFile = ProtoFile.fromString protoDef
