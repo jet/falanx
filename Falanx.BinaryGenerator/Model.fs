@@ -52,10 +52,3 @@ module Model =
           Properties: PropertyDescriptor list
           OneOfGroups: OneOfDescriptor list
           Maps: MapDescriptor list }
-          
-    type GenerationType =
-        //ProvidedRecords will have a parent it they are defined inside another message, top level ones will not
-        | ProvidedRecord of ProvidedRecord * parent: ProvidedRecord option
-        //ProvidedUnions will always have a parent as they are specific to each message
-        | ProvidedUnion of ProvidedUnion * parent: ProvidedRecord option
-        | ProvidedEnum of ProvidedTypeDefinition * parent: ProvidedRecord option

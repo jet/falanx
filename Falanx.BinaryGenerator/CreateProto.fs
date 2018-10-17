@@ -11,6 +11,7 @@ module Proto =
     open FsAst
     open ProviderImplementation.ProvidedTypes
     open Model
+    open System.Security.Claims
     
     let createProvidedTypes protoDef defaultnamespace =
         let protoFile = ProtoFile.fromString protoDef
@@ -40,40 +41,10 @@ module Proto =
             |> Seq.iter container.AddMember
         provider
     
-    let extractGeneratedTypes (pt: ProvidedTypeDefinition) =
-       let rec loop (pt: Type) level =
-           [
-               for t in pt.GetNestedTypes() do
-                   match t with 
-                   | :? ProvidedUnion as pu ->
-                       let parent =Some(pu.DeclaringType :?> ProvidedRecord)
-                       yield GenerationType.ProvidedUnion(pu, parent)
-                       
-                   | :? ProvidedRecord as pr ->
-                       yield! loop pr (level + 1)
-                       let parent =
-                           if level = 0 then None
-                           else Some(pr.DeclaringType :?> ProvidedRecord)
-                       yield GenerationType.ProvidedRecord(pr, parent)
-                   | pe when pe.IsEnum -> 
-                       let parent = 
-                           match pe.DeclaringType with 
-                           | :? ProvidedRecord as pr -> Some pr
-                           | _ -> None
-                       yield GenerationType.ProvidedEnum(pe :?> _, parent)
-                   | _ -> () //TODO: this would be enums or other types
-           ]
-       loop pt 0
-           
-                
     let createFSharpDefinitions(protoDef: string, outputFile, defaultnamespace) =    
         let config = TypeProviderConfig.makeConfig "resoultionfolder" "runtimeAssembly.dll" []
         use typeProviderForNamespaces = new TypeProviderForNamespaces(config)
         let providedTypeRoot = createProvidedTypes protoDef defaultnamespace
-        //typeProviderForNamespaces.AddNamespace("", [provided] )
-                
-        let providedTypes = extractGeneratedTypes providedTypeRoot            
-        //TODO: support enum types: enum types x.Field :?> Provided.Literal?
                 
         let openSystem = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "System")
         let openFrotoSerialization = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "Froto.Serialization")
@@ -95,28 +66,25 @@ module Proto =
               "Microsoft.FSharp.Text" ]
             |> Set.ofSeq
             
-        let synTypes =
-            providedTypes
-            |> List.map (function
-                         | ProvidedRecord(pr, parent) ->
-                             SynModuleDecl.CreateRecord(pr, typeof<TypeContainer>, knownNamespaces)
-                         | ProvidedUnion(pu, parent) ->
-                             let union = SynModuleDecl.CreateUnion(pu, typeof<TypeContainer>, knownNamespaces)
-                             match parent with 
-                             | Some parent ->
-                                 let info = SynComponentInfoRcd.Create(Ident.CreateLong parent.Name)
-                                 let synModule = SynModuleDecl.CreateNestedModule(info, [union] )
-                                 synModule
-                             | None -> union 
-                         | ProvidedEnum(pe,parent) -> 
-                             let enum = SynModuleDecl.CreateEnum(pe)
-                             match parent with 
-                             | Some parent ->
-                                 let info = SynComponentInfoRcd.Create(Ident.CreateLong parent.Name)
-                                 let synModule = SynModuleDecl.CreateNestedModule(info, [enum] )
-                                 synModule
-                             | None -> enum 
-                         )
+        let synTypes =   
+            let rec loop (pt: Type) =
+                [
+                    for t in pt.GetNestedTypes() do
+                        match t with 
+                        | :? ProvidedUnion as pu ->
+                            yield SynModuleDecl.CreateUnion(pu, typeof<TypeContainer>, knownNamespaces)
+                        | :? ProvidedRecord as pr ->
+                            match loop t with 
+                            | [] -> ()
+                            | children -> 
+                                let info = SynComponentInfoRcd.Create(Ident.CreateLong t.Name)
+                                yield SynModuleDecl.CreateNestedModule(info, children)
+                            yield SynModuleDecl.CreateRecord(pr, typeof<TypeContainer>, knownNamespaces)
+                        | :? ProvidedTypeDefinition as pe when pe.IsEnum -> 
+                            yield SynModuleDecl.CreateEnum(pe)
+                        | _ -> () 
+                ]
+            loop providedTypeRoot
                              
         let parseTree =
             ParsedInput.CreateImplFile(
