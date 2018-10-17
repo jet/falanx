@@ -1,10 +1,7 @@
 <Project TreatAsLocalProperty="
-         FalanxSdk_ArgsFile;
          FalanxSdk_CodeGenDirectory;
          FalanxSdk_CodeGeneratorEnabled;
-         FalanxSdk_CoreAssembly;
          FalanxSdk_DotNetHost;
-         FalanxSdk_GeneratorAssembly;
          FalanxSdk_MSBuildIsCore;
          FalanxSdk_OutputFileName;
          FalanxSdk_InputFileName;
@@ -24,9 +21,6 @@
     <!-- When the MSBuild host is full-framework, we defer to PATH for dotnet -->
     <FalanxSdk_DotNetHost Condition="'$(FalanxSdk_MSBuildIsCore)' != 'true'">dotnet</FalanxSdk_DotNetHost>
     <FalanxSdk_DotNetHost Condition="'$(DotNetHost)' != ''">$(DotNetHost)</FalanxSdk_DotNetHost>
-
-    <!-- Specify the assembly containing the code generator. -->
-    <FalanxSdk_GeneratorAssembly Condition="'$(FalanxSdk_GeneratorAssembly)' == ''">$(FalanxSdk_CoreAssembly)</FalanxSdk_GeneratorAssembly>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -35,7 +29,6 @@
     <FalanxSdk_CodeGenDirectory Condition="'$(FalanxSdk_CodeGenDirectory)' == ''">$(ProjectDir)$(IntermediateOutputPath)</FalanxSdk_CodeGenDirectory>
     <FalanxSdk_OutputFileName>$(FalanxSdk_CodeGenDirectory)$(TargetName).FalanxSdk.g.fs</FalanxSdk_OutputFileName>
     <FalanxSdk_CodeGeneratorEnabled Condition=" '$(DesignTimeBuild)' != 'true'">true</FalanxSdk_CodeGeneratorEnabled>
-    <FalanxSdk_ArgsFile>$(FalanxSdk_CodeGenDirectory)$(TargetName).FalanxSdk.g.args.txt</FalanxSdk_ArgsFile>
     <FalanxSdkGenerateCodeDependsOn>$(FalanxSdkGenerateCodeDependsOn);ResolveReferences;FalanxSdkGenerateInputCache</FalanxSdkGenerateCodeDependsOn>
     <FalanxSdk_InputFileName>@(ProtoFile -> '%(FullPath)')</FalanxSdk_InputFileName>
   </PropertyGroup>
@@ -90,27 +83,18 @@
           Inputs="@(FalanxSdk_CodeGenInputs);$(FalanxSdk_CodeGenInputCache)"
           Outputs="$(FalanxSdk_OutputFileName)">
 
+    <PropertyGroup>
+      <_FalanxSdk_InputFileName>$(FalanxSdk_InputFileName)</_FalanxSdk_InputFileName>
+    </PropertyGroup>
+
     <ItemGroup>
-      <FalanxSdk_CodeGenArgs Include="WaitForDebugger" Condition="'$(FalanxSdkCodeGenWaitForDebugger)' != ''" />
-      <FalanxSdk_CodeGenArgs Include="LogLevel:$(FalanxSdkCodeGenLogLevel)" />
-      <FalanxSdk_CodeGenArgs Include="ProjectPath:$(MSBuildProjectFullPath)"/>
-      <FalanxSdk_CodeGenArgs Include="ProjectGuid:$(ProjectGuid)"/>
-      <FalanxSdk_CodeGenArgs Include="AssemblyName:$(AssemblyName)"/>
-      <FalanxSdk_CodeGenArgs Include="OutputType:$(OutputType)"/>
-      <FalanxSdk_CodeGenArgs Include="TargetPath:$(TargetPath)"/>
-      <FalanxSdk_CodeGenArgs Include="CodeGenOutputFile:$(FalanxSdk_OutputFileName)"/>
-      <FalanxSdk_CodeGenArgs Include="@(Compile -> 'Compile:%(FullPath)')"/>
-      <FalanxSdk_CodeGenArgs Include="@(ReferencePath -> 'Reference:%(FullPath)')"/>
-      <FalanxSdk_CodeGenArgs Include="DefineConstants:$(DefineConstants.Replace(';',','))"/>
+      <FalanxSdk_CodeGenArgs Include='--inputfile "$(_FalanxSdk_InputFileName)"' />
+      <FalanxSdk_CodeGenArgs Include='--outputfile "$(FalanxSdk_OutputFileName)"' />
+      <FalanxSdk_CodeGenArgs Include='--defaultnamespace "$(RootNamespace)"' />
     </ItemGroup>
 
-    <Message Text="[FalanxSdk.CodeGenerator] - CodeGen executable=$(FalanxSdk_GeneratorAssembly)" Importance="Low" />
-    <Message Text="[FalanxSdk.CodeGenerator] - CodeGen arguments=@(FalanxSdk_CodeGenArgs -> '%(Identity)')" Importance="Low"/>
-    <Message Text="[FalanxSdk.CodeGenerator] - CodeGen arguments file=$(FalanxSdk_ArgsFile)" Importance="Low"/>
-    <WriteLinesToFile Overwrite="true" File="$(FalanxSdk_ArgsFile)" Lines="@(FalanxSdk_CodeGenArgs)"/>
-
     <!-- Use dotnet to execute the process. -->
-    <Exec Command="$(FalanxSdk_GeneratorExeHost)&quot;$(FalanxSdk_GeneratorExe)&quot; --inputfile &quot;$(FalanxSdk_InputFileName)&quot; --outputfile &quot;$(FalanxSdk_OutputFileName)&quot; --defaultnamespace &quot;$(RootNamespace)&quot;" Outputs="$(FalanxSdk_OutputFileName)" />
+    <Exec Command="$(FalanxSdk_GeneratorExeHost)&quot;$(FalanxSdk_GeneratorExe)&quot; @(FalanxSdk_CodeGenArgs -> '%(Identity)', ' ')" Outputs="$(FalanxSdk_OutputFileName)" />
 
     <ItemGroup>
       <Compile Include="$(FalanxSdk_OutputFileName)" Condition="Exists('$(FalanxSdk_OutputFileName)')" />
