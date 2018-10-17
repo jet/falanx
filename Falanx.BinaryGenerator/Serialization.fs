@@ -85,7 +85,7 @@ module Serialization =
             | Class(_scope, _name), Optional -> 
                 Expr.callStaticGeneric 
                     [prop.Type.UnderlyingType] 
-                    [position; buffer; Expr.box value]  
+                    [position; buffer; value]  
                     <@@ writeOptionalEmbedded x x x @@>
             | Class(_scope, _name), Repeated ->
                 Expr.callStaticGeneric

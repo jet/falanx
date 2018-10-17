@@ -12,27 +12,32 @@ namespace Falanx.Ast
         open Falanx.Ast.ProvidedTypesExtension
         
         type SynType with
-            static member CreateFromType(typ: Type, ?ommitEnclosingType, ?knownNamespaces) =             
+            static member CreateFromType(typ: Type, ?ommitEnclosingType, ?knownNamespaces, ?isPostfix) =       
+                let isPostfix = defaultArg isPostfix true
                 if typ.IsGenericType then
                     let genericParams =
-                        let genericArgs = typ.GetGenericArguments()
-                        genericArgs
-                        |> Seq.map (fun gt -> 
-                                              let name = TypeHelpers.FormatType(false,false, gt, ommitEnclosingType = ommitEnclosingType, ?knownNamespaces = knownNamespaces)
-                                              name
-                                              |> LongIdentWithDots.CreateString
-                                              |> SynType.CreateLongIdent ) |> Seq.toList
+                        typ.GetGenericArguments()
+                        |> Seq.map 
+                            (fun gt -> 
+                                if gt.IsGenericType then 
+                                    SynType.CreateFromType(gt, ?ommitEnclosingType = ommitEnclosingType, ?knownNamespaces = knownNamespaces, isPostfix = false)
+                                else
+                                    let name = TypeHelpers.FormatType(false,false, gt, ommitEnclosingType = ommitEnclosingType, ?knownNamespaces = knownNamespaces)
+                                    name
+                                    |> LongIdentWithDots.CreateString
+                                    |> SynType.CreateLongIdent ) 
+                        |> Seq.toList
                         
                     let genericType =
-                        TypeHelpers.FormatType(false ,true, typ.GetGenericTypeDefinition(), ommitEnclosingType = ommitEnclosingType)
+                        TypeHelpers.FormatType(false ,true, typ.GetGenericTypeDefinition(), ommitEnclosingType = ommitEnclosingType, ?knownNamespaces = knownNamespaces)
                         |> LongIdentWithDots.CreateString
                         |> SynType.CreateLongIdent
                     
-                    SynType.CreateApp(genericType, genericParams, true)
+                    SynType.CreateApp(genericType, genericParams, isPostfix)
                     
                 else
                     SynType.CreateLongIdent(LongIdentWithDots.CreateString (TypeHelpers.FormatType(false,false, typ, ommitEnclosingType = ommitEnclosingType, ?knownNamespaces = knownNamespaces) ) )
-                    
+                   
         type SynMemberDefn with
                 static member  CreateFromProvidedMethod (pm:ProvidedMethod, ?ommitEnclosingType : Type, ?knownNamespaces: _ Set) =
                     let ident =

@@ -56,7 +56,10 @@ module Proto =
                            else Some(pr.DeclaringType :?> ProvidedRecord)
                        yield GenerationType.ProvidedRecord(pr, parent)
                    | pe when pe.IsEnum -> 
-                       let parent = Some(pe.DeclaringType :?> _)
+                       let parent = 
+                           match pe.DeclaringType with 
+                           | :? ProvidedRecord as pr -> Some pr
+                           | _ -> None
                        yield GenerationType.ProvidedEnum(pe :?> _, parent)
                    | _ -> () //TODO: this would be enums or other types
            ]
