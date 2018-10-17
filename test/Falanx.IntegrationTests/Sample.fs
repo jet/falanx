@@ -22,8 +22,11 @@ let NugetOrgV3Url = "https://api.nuget.org/v3/index.json"
 let checkExitCodeZero (cmd: Command) =
     Expect.equal 0 cmd.Result.ExitCode "command finished with exit code non-zero."
 
-let dotnet (fs: FileUtils) args =
+let dotnetCmd (fs: FileUtils) args =
     fs.shellExecRun "dotnet" args
+
+let dotnet (fs: FileUtils) args =
+    fs.shellExecRun "dotnet" (args @ ["/bl"])
 
 let renderNugetConfig clear feeds =
     [ yield "<configuration>"
@@ -52,7 +55,7 @@ let prepareTool (fs: FileUtils) pkgUnderTestVersion =
         "</Project>" ])
 
     fs.mkdir_p (TestRunDirToolDir/"bin")
-    dotnet fs ["tool"; "install"; "Falanx.Tool"; "--version"; pkgUnderTestVersion; "--tool-path"; (TestRunDirToolDir/"bin"); "--configfile"; (TestRunDirToolDir/"nuget"/"nuget.config") ]
+    dotnetCmd fs ["tool"; "install"; "Falanx.Tool"; "--version"; pkgUnderTestVersion; "--tool-path"; (TestRunDirToolDir/"bin"); "--configfile"; (TestRunDirToolDir/"nuget"/"nuget.config") ]
     |> checkExitCodeZero
 
 let falanx (fs: FileUtils) args =
