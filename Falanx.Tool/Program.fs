@@ -1,5 +1,4 @@
-﻿// Learn more about F# at http://fsharp.org
-namespace Falanx.Generator
+﻿namespace Falanx.Generator
 open System
 open System.IO
 open Argu
@@ -12,6 +11,7 @@ module main =
         | [<Mandatory>] InputFile of string
         | [<Mandatory>] DefaultNamespace of string
         | [<Mandatory>] OutputFile of string
+        | Serializer of SerializationFormats
     with
         interface IArgParserTemplate with
             member s.Usage =
@@ -19,19 +19,26 @@ module main =
                 | InputFile _ -> "specify a proto file to input."
                 | DefaultNamespace _ -> "specify a default namespace to use for code generation."
                 | OutputFile _ -> "Specify the file name that the generated code will be written to."
+                | Serializer _ -> "serialization format. default binary"
+    and SerializationFormats =
+        | Binary
+        | Json
     
-    
-    let parser = ArgumentParser.Create<Arguments>(programName = "dotnet-Falanx.Tool")
+    let parser = ArgumentParser.Create<Arguments>(programName = "falanx")
     
     [<EntryPoint>]
     let main argv =
         try
             let code = temp.tryCode()
-                        
+
             let results = parser.Parse argv
             let inputFile = results.GetResult InputFile
             let outputFile = results.GetResult OutputFile
             let defaultNamespace = results.GetResult DefaultNamespace
+            let _serializer =
+                match results.GetResults Serializer with
+                | [] -> [Binary]
+                | l -> l
             let protoDef = IO.File.ReadAllText inputFile
             printfn "Generating code for: %s" inputFile
             Proto.createFSharpDefinitions(protoDef, outputFile, defaultNamespace)

@@ -1,0 +1,7 @@
+<Project>
+
+  <PropertyGroup>
+    <FalanxSdkSerializer>binary</FalanxSdkSerializer>
+  </PropertyGroup>
+
+</Project>

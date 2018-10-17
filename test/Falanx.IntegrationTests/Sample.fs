@@ -178,7 +178,8 @@ let tests pkgUnderTestVersion =
         let expected =
           [ sprintf """ --inputfile "%s" """ (testDir/``samples2 library``.ProtoFile)
             sprintf """ --outputfile "%s" """ (testDir/"l1.Contracts"/"obj"/"Debug"/"netstandard2.0"/"l1.Contracts.FalanxSdk.g.fs")
-            sprintf """ --defaultnamespace "l1.Contracts" """ ]
+            sprintf """ --defaultnamespace "l1.Contracts" """
+            sprintf """ --serializer binary """ ]
           |> List.map (fun s -> s.Trim())
           |> String.concat " "
 
