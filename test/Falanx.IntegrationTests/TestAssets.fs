@@ -20,6 +20,12 @@ let ``samples3 json`` =
     AssemblyName = "l1"
     ProtoFile = "proto"/"bundle.proto" }
 
+let ``sample4 binary+json`` =
+  { ProjDir = "sample4 binaryjson"
+    ProjectFile = "l1"/"l1.fsproj"
+    AssemblyName = "l1"
+    ProtoFile = "proto"/"bundle.proto" }
+
 type FalanxMock =
   { ProjDir: string
     FileName: string }

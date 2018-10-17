@@ -177,7 +177,7 @@ let tests pkgUnderTestVersion =
 
         lines
 
-    ftestList "sdk integration" [
+    testList "sdk integration" [
 
       testCase |> withLog "check invocation binary" (fun _ fs ->
         let testDir = inDir fs "sdkint_invocation_binary"
@@ -211,6 +211,26 @@ let tests pkgUnderTestVersion =
             sprintf """ --outputfile "%s" """ (testDir/"l1.Contracts"/"obj"/"Debug"/"netstandard2.0"/"l1.Contracts.FalanxSdk.g.fs")
             sprintf """ --defaultnamespace "l1.Contracts" """
             sprintf """ --serializer json """ ]
+          |> List.map (fun s -> s.Trim())
+          |> String.concat " "
+
+        Expect.equal lines expected "check invocation args"
+      )
+
+      ftestCase |> withLog "check invocation binary+json" (fun _ fs ->
+        let testDir = inDir fs "sdkint_invocation_binaryjson"
+        copyDirFromAssets fs ``sample4 binary+json``.ProjDir testDir
+
+        let projPath = testDir/ (``sample4 binary+json``.ProjectFile)
+
+        let lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
+
+        let expected =
+          [ sprintf """ --inputfile "%s" """ (testDir/``sample4 binary+json``.ProtoFile)
+            sprintf """ --outputfile "%s" """ (testDir/"l1.Contracts"/"obj"/"Debug"/"netstandard2.0"/"l1.Contracts.FalanxSdk.g.fs")
+            sprintf """ --defaultnamespace "l1.Contracts" """
+            sprintf """ --serializer json """
+            sprintf """ --serializer binary """ ]
           |> List.map (fun s -> s.Trim())
           |> String.concat " "
 

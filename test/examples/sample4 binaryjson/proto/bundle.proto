@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+message BundleRequest {
+  int32 martId = 1;
+  string member_id = 2;
+  string channel_type = 3;
+  repeated string retail_skus = 4;
+
+}

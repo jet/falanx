@@ -91,7 +91,7 @@
       <FalanxSdk_CodeGenArgs Include='--inputfile "$(_FalanxSdk_InputFileName)"' />
       <FalanxSdk_CodeGenArgs Include='--outputfile "$(FalanxSdk_OutputFileName)"' />
       <FalanxSdk_CodeGenArgs Include='--defaultnamespace "$(RootNamespace)"' />
-      <FalanxSdk_CodeGenArgs Include='--serializer $(FalanxSdkSerializer)' Condition=" '$(FalanxSdkSerializer)' != '' " />
+      <FalanxSdk_CodeGenArgs Include='--serializer %(FalanxSdkSerializer.Identity)' />
     </ItemGroup>
 
     <!-- Use dotnet to execute the process. -->

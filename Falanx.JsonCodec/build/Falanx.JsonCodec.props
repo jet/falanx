@@ -1,7 +1,7 @@
 <Project>
 
-  <PropertyGroup>
-    <FalanxSdkSerializer>json</FalanxSdkSerializer>
-  </PropertyGroup>
+  <ItemGroup>
+    <FalanxSdkSerializer Include="json" />
+  </ItemGroup>
 
 </Project>
