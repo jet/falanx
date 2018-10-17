@@ -122,7 +122,7 @@ module Proto =
             ParsedInput.CreateImplFile(
                 ParsedImplFileInputRcd.CreateFs(outputFile)
                     .AddModule(
-                        SynModuleOrNamespaceRcd.CreateNamespace(Ident.CreateLong providedTypeRoot.Namespace)
+                        {SynModuleOrNamespaceRcd.CreateNamespace(Ident.CreateLong providedTypeRoot.Namespace) with IsRecursive = true}
                             .AddDeclarations ( [ yield openSystem
                                                  yield openFrotoSerialization
                                                  yield openSystemCollectionsGeneric
