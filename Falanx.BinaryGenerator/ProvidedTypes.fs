@@ -5,7 +5,7 @@ module ProvidedTypes =
     open Microsoft.FSharp.Quotations
     open Falanx.Ast
     open Falanx.Ast.Prelude
-    open Extensions
+    open Falanx.Ast.Expr
     
     let message name = ProvidedTypeDefinition(name, Some typeof<obj>, isErased = false)
     

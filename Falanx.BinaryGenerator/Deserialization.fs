@@ -33,10 +33,10 @@ module Deserialization =
     open Model
     open Falanx.Ast
     open Falanx.Ast.Prelude
+    open Falanx.Ast.Expr
     open Falanx.Ast.ProvidedTypesExtension
     open Falanx.BinaryCodec
     open Falanx.BinaryCodec.Primitives
-    open Extensions
     open Utils
     
     let private primitiveReader typ =

@@ -13,6 +13,7 @@ namespace Falanx.Ast
         open ProviderImplementation.ProvidedTypes
         open ProviderImplementation.ProvidedTypes.UncheckedQuotations
         
+        let x<'T> : 'T = Unchecked.defaultof<'T>
         let private onlyVar = function Var v -> Some v | _ -> None
         
         /// Get FieldInfo from expression

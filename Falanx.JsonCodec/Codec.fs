@@ -15,6 +15,12 @@ type Result2 =
     { mutable url : string option 
       mutable title : int option }
       
+[<CLIMutable>]
+type Result3 =
+    { mutable url : string option 
+      mutable title : int option
+      mutable snippets : ResizeArray<string> }
+      
 module Quotations =
     let rec traverseForCall q = [
       match q with
@@ -78,11 +84,6 @@ module temp =
             sprintf "(%i, %s)" types.Length str
         else    
             generic t
-                           
-//    let recordCreation() =
-//        // NewRecord (Result2, u, t)
-//        let recordType = typeof<Result2>
-//        Expr.NewRecord(recordType, [ <@ None: Option<string> @>; <@ None: Option<string> @> ])
     
     let createLambdaRecord recordType =
         //Lambda (u, Lambda (t, NewRecord (Result2, u, t))
@@ -370,10 +371,12 @@ module temp =
       
         let r =
             <@
-                fun u t -> { url = u; title= t }
-                |> withFields<Option<String> -> Option<int> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken>
-                |> jfieldOpt<Result2, string, Option<int> -> Result2> "url" (fun x -> x.url)
-                |> jfieldOpt<Result2, int, Result2> "title" (fun x -> x.title)
+                fun u t s -> { url = u; title= t; snippets = s }
+                |> withFields
+                |> jfieldOpt "url" (fun x -> x.url)
+                |> jfieldOpt "title" (fun x -> x.title)
+                |> jfield "snippets"  (fun x -> x.snippets)
+                
             @>
 
 
