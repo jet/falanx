@@ -80,8 +80,6 @@ module TypeResolver =
         processFile file scope
         |> Map.ofSeq
         
-
-        
     let resolveScalar = function
         | "double" -> Some typeof<proto_double>
         | "float" -> Some typeof<proto_float>
@@ -135,4 +133,3 @@ module TypeResolver =
         
     let resolvePType scope targetType (lookup: TypesLookup) = 
         resolve scope (ptypeToString targetType) lookup
-    
