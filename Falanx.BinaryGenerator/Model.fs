@@ -5,7 +5,7 @@ module Model =
     open ProviderImplementation.ProvidedTypes
     open Froto.Serialization.Encoding
     open Froto.Parser.ClassModel
-    open Falanx.Ast.ProvidedTypesExtension
+    open Falanx.Ast
     
     type ProtobufType = string
     

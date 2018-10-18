@@ -4,7 +4,6 @@ type TypeContainer = class end
     
 module Proto =
     open Falanx.Ast
-    open Falanx.Ast.ProvidedTypesExtension
     open System
     open Microsoft.FSharp.Compiler.Ast
     open Froto.Parser.ClassModel

@@ -4,11 +4,10 @@ open System
 open Falanx.BinaryCodec
 open Model
 open ProviderImplementation.ProvidedTypes
-open ProvidedTypes
+open Falanx.Ast
 open Froto.Parser.ClassModel
 open Froto.Parser.Ast
 open Falanx.Ast.Prelude
-open Falanx.Ast.ProvidedTypesExtension
 
 type internal TypesLookup = Map<string, TypeKind * ProvidedTypeDefinition>
 
@@ -63,7 +62,7 @@ module TypeResolver =
                 //global enums
                 let enums =
                     file.Enums
-                    |> Seq.map (fun protoEmum -> scope +.+ protoEmum.Name, (TypeKind.Enum(scope, protoEmum.Name), ProvidedTypes.enum protoEmum.Name))
+                    |> Seq.map (fun protoEmum -> scope +.+ protoEmum.Name, (TypeKind.Enum(scope, protoEmum.Name), ProvidedTypeDefinition.mkEnum protoEmum.Name))
                 
                 yield!
                     file.Messages
@@ -73,7 +72,7 @@ module TypeResolver =
                             match kind with
                             | Union(_scope, name, _unionFields) -> ProvidedUnion(name, Some typeof<obj>, isErased = false) :> ProvidedTypeDefinition
                             | Class(scope, name) -> ProvidedRecord(name, Some typeof<obj>, isErased = false) :> _
-                            | Enum(scope, name) -> ProvidedTypes.enum name
+                            | Enum(scope, name) -> ProvidedTypeDefinition.mkEnum name
                             | Primitive -> invalidOpf "Primitive type '%s' does not require custom Type" fullName
                         fullName, (kind, ty))
                     |> Seq.append enums

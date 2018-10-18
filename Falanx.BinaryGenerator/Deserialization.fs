@@ -34,7 +34,6 @@ module Deserialization =
     open Falanx.Ast
     open Falanx.Ast.Prelude
     open Falanx.Ast.Expr
-    open Falanx.Ast.ProvidedTypesExtension
     open Falanx.BinaryCodec
     open Falanx.BinaryCodec.Primitives
     open Utils
@@ -63,7 +62,7 @@ module Deserialization =
         match property.Type.Kind with
         | Primitive -> Expr.Application(primitiveReader property.Type.ProtobufType, rawField)
         | Enum(_scope, _name) ->    
-            let enumMethodDef = Expr.methoddefof(<@enum<DayOfWeek> x@>)//
+            let enumMethodDef = Expr.methoddefof(<@ enum<DayOfWeek> x @>)
             let enumMethod = MethodSymbol2(enumMethodDef,[|property.Type.UnderlyingType|])
             Expr.Call(enumMethod, [ <@@ readInt32 (%%rawField) @@> ])
         | Class(_scope, _name) -> Expr.callStaticGeneric [property.Type.UnderlyingType] [rawField ] <@@ readEmbedded<Template> x @@>
