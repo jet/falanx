@@ -206,8 +206,8 @@ let tests pkgUnderTestVersion =
         Expect.isTrue (File.Exists falanxMockArgsPath) "mock should create a file who contains the args of invocation"
 
         let lines =
-          File.ReadAllText falanxMockArgsPath
-          |> fun s -> s.Trim()
+          File.ReadLines falanxMockArgsPath
+          |> List.ofSeq
 
         lines
 
@@ -222,12 +222,14 @@ let tests pkgUnderTestVersion =
         let lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
 
         let expected =
-          [ sprintf """ --inputfile "%s" """ (testDir/``samples2 binary``.ProtoFile)
-            sprintf """ --outputfile "%s" """ (testDir/"l1.Contracts"/"obj"/"Debug"/"netstandard2.0"/"l1.Contracts.FalanxSdk.g.fs")
-            sprintf """ --defaultnamespace "l1.Contracts" """
-            sprintf """ --serializer binary """ ]
-          |> List.map (fun s -> s.Trim())
-          |> String.concat " "
+          [ "--inputfile"
+            (testDir/``samples2 binary``.ProtoFile)
+            "--outputfile"
+            (testDir/"l1.Contracts"/"obj"/"Debug"/"netstandard2.0"/"l1.Contracts.FalanxSdk.g.fs")
+            "--defaultnamespace"
+            "l1.Contracts"
+            "--serializer"
+            "binary" ]
 
         Expect.equal lines expected "check invocation args"
       )
@@ -241,12 +243,14 @@ let tests pkgUnderTestVersion =
         let lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
 
         let expected =
-          [ sprintf """ --inputfile "%s" """ (testDir/``samples3 json``.ProtoFile)
-            sprintf """ --outputfile "%s" """ (testDir/"l1.Contracts"/"obj"/"Debug"/"netstandard2.0"/"l1.Contracts.FalanxSdk.g.fs")
-            sprintf """ --defaultnamespace "l1.Contracts" """
-            sprintf """ --serializer json """ ]
-          |> List.map (fun s -> s.Trim())
-          |> String.concat " "
+          [ "--inputfile"
+            (testDir/``samples3 json``.ProtoFile)
+            "--outputfile"
+            (testDir/"l1.Contracts"/"obj"/"Debug"/"netstandard2.0"/"l1.Contracts.FalanxSdk.g.fs")
+            "--defaultnamespace"
+            "l1.Contracts"
+            "--serializer"
+            "json" ]
 
         Expect.equal lines expected "check invocation args"
       )
@@ -260,13 +264,16 @@ let tests pkgUnderTestVersion =
         let lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
 
         let expected =
-          [ sprintf """ --inputfile "%s" """ (testDir/``sample4 binary+json``.ProtoFile)
-            sprintf """ --outputfile "%s" """ (testDir/"l1.Contracts"/"obj"/"Debug"/"netstandard2.0"/"l1.Contracts.FalanxSdk.g.fs")
-            sprintf """ --defaultnamespace "l1.Contracts" """
-            sprintf """ --serializer json """
-            sprintf """ --serializer binary """ ]
-          |> List.map (fun s -> s.Trim())
-          |> String.concat " "
+          [ "--inputfile"
+            (testDir/``sample4 binary+json``.ProtoFile)
+            "--outputfile"
+            (testDir/"l1.Contracts"/"obj"/"Debug"/"netstandard2.0"/"l1.Contracts.FalanxSdk.g.fs")
+            "--defaultnamespace"
+            "l1.Contracts"
+            "--serializer"
+            "json"
+            "--serializer"
+            "binary" ]
 
         Expect.equal lines expected "check invocation args"
       )
