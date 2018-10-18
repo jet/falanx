@@ -1,20 +1,17 @@
-namespace Falanx.BinaryGenerator
+namespace Falanx.BinaryCodec
 module Serialization =
-    open Froto.Parser.Ast
     open System
     open System.Reflection
     open Microsoft.FSharp.Quotations
     open ProviderImplementation.ProvidedTypes.UncheckedQuotations
     open Froto.Parser.ClassModel
-    open Froto.Serialization
     open Falanx.Core.Model
-    open Falanx.BinaryCodec
     open Falanx.BinaryCodec.Primitives
     open Falanx.Ast.Expr
     open ProviderImplementation.ProvidedTypes
     open Falanx.Ast
     open Falanx.Ast.Utils
-    
+    open Froto.Serialization
             
     let primitiveWriter = function
         | "double" -> <@@ writeDouble @@>
@@ -183,3 +180,34 @@ module Serialization =
         [properties; oneOfs; maps]
         |> List.choose (function Some exprs -> Some (Expr.sequence exprs) | None -> None)
         |> Expr.sequence
+        
+    let createSerializeMethod typeInfo =
+        let serialize =
+            ProvidedMethod(
+                "Serialize",
+                [ ProvidedParameter("m", typeInfo.Type)
+                  ProvidedParameter("buffer", typeof<ZeroCopyBuffer>) ],
+                typeof<ZeroCopyBuffer>,
+                invokeCode = (fun args -> createSerializeExpr typeInfo args.[0] args.[1]),
+                isStatic = true )
+        serialize
+        
+    let createInstanceSerializeMethod typeInfo (staticSerialize: MethodInfo) =
+        let serialize =
+            ProvidedMethod(
+                "Serialize",
+                [ ProvidedParameter("buffer", typeof<ZeroCopyBuffer>) ],
+                typeof<unit>,
+                invokeCode = (fun args -> Expr.Call(staticSerialize, [args.[0]; args.[1]]) ),
+                isStatic = false )
+        serialize
+        
+    let createSerializedLength (typeInfo: TypeDescriptor) =
+        let serializedLength =
+                 ProvidedMethod(
+                     "SerializedLength",
+                     [ ],
+                     typeof<uint32>,
+                     invokeCode = (fun args -> Expr.callStaticGeneric [typeInfo.Type] [args.[0]] <@@ serializedLength<Template> x @@>),
+                     isStatic = false )
+        serializedLength

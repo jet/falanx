@@ -1,18 +1,16 @@
-namespace Falanx.BinaryGenerator
+namespace Falanx.BinaryCodec
 open FSharp.Quotations
 open ProviderImplementation.ProvidedTypes
 open ProviderImplementation.ProvidedTypes.UncheckedQuotations
 open System
-open System.Reflection
 open Froto.Parser.ClassModel
 open Froto.Serialization.Encoding
 open Falanx.Core.Model
 open Falanx.Ast
-open Falanx.Ast.Prelude
 open Falanx.Ast.Expr
-open Falanx.BinaryCodec
 open Falanx.BinaryCodec.Primitives
 open Utils
+open Froto.Serialization
                                  
 /// Contains an implementation of deserialization methods for types generated from ProtoBuf messages
 module Deserialization =
@@ -150,3 +148,23 @@ module Deserialization =
         | ex ->
             printfn "Failed to generate Deserialize method for type %s. Details: %O" typeInfo.Type.Name ex
             reraise()
+            
+    let createReadFromMethod typeInfo = 
+        let readFrom = 
+            ProvidedMethod(
+                "ReadFrom",
+                [ProvidedParameter("buffer", typeof<ZeroCopyBuffer>)],
+                typeof<Void>,
+                invokeCode = (fun args -> readFrom typeInfo args.[0] args.[1]))
+        readFrom
+        
+    let createDeserializeMethod targetType =
+        let deserializeMethod =
+            let bufferProperty = ProvidedParameter("buffer", typeof<ZeroCopyBuffer>)
+            ProvidedMethod(
+                "Deserialize", 
+                [bufferProperty], 
+                targetType.Type,
+                invokeCode = (fun args -> Expr.callStaticGeneric [targetType.Type] [args.[0]] <@@ deserialize<Template> x @@>),
+                isStatic = true)
+        deserializeMethod

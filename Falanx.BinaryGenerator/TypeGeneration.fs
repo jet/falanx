@@ -44,73 +44,7 @@ module TypeGeneration =
             { ProtobufType = field.Type
               Kind = typeKind
               RuntimeType = propertyType } }
-                        
-    let private createSerializeMethod typeInfo =
-        let serialize =
-            ProvidedMethod(
-                "Serialize",
-                [ ProvidedParameter("m", typeInfo.Type)
-                  ProvidedParameter("buffer", typeof<ZeroCopyBuffer>) ],
-                typeof<ZeroCopyBuffer>,
-                invokeCode = (fun args -> Serialization.createSerializeExpr typeInfo args.[0] args.[1]),
-                isStatic = true )
-    
-        //serialize.SetMethodAttrs(MethodAttributes.Virtual ||| MethodAttributes.Public)
-    
-        serialize
-        
-    let private createInstanceSerializeMethod typeInfo (staticSerialize: MethodInfo) =
-        let serialize =
-            ProvidedMethod(
-                "Serialize",
-                [ ProvidedParameter("buffer", typeof<ZeroCopyBuffer>) ],
-                typeof<unit>,
-                invokeCode = (fun args -> Expr.Call(staticSerialize, [args.[0]; args.[1]]) ),
-                isStatic = false )
-    
-        //serialize.SetMethodAttrs(MethodAttributes.Virtual ||| MethodAttributes.Public)
-    
-        serialize
-        
-    let private createSerializedLength (typeInfo: TypeDescriptor) =
-        let serializedLength =
-                 ProvidedMethod(
-                     "SerializedLength",
-                     [ ],
-                     typeof<uint32>,
-                     invokeCode = (fun args -> Expr.callStaticGeneric [typeInfo.Type] [args.[0]] <@@ serializedLength<Template> x @@>),
-                     isStatic = false )
-         
-             //serialize.SetMethodAttrs(MethodAttributes.Virtual ||| MethodAttributes.Public)
-         
-        serializedLength       
-    
-    let private createReadFromMethod typeInfo = 
-        let readFrom = 
-            ProvidedMethod(
-                "ReadFrom",
-                [ProvidedParameter("buffer", typeof<ZeroCopyBuffer>)],
-                typeof<Void>,
-                invokeCode = (fun args -> Deserialization.readFrom typeInfo args.[0] args.[1]))
-    
-        //readFrom.SetMethodAttrs(MethodAttributes.Virtual)
-    
-        readFrom
-        
-    let private createDeserializeMethod targetType =
-        let deserializeMethod =
-            let bufferProperty = ProvidedParameter("buffer", typeof<ZeroCopyBuffer>)
-            ProvidedMethod(
-                "Deserialize", 
-                [bufferProperty], 
-                targetType.Type,
-                invokeCode = (fun args -> Expr.callStaticGeneric [targetType.Type] [args.[0]] <@@ deserialize<Template> x @@>),
-                isStatic = true)
-                
-        //deserializeMethod.SetMethodAttrs(MethodAttributes.Static ||| MethodAttributes.Public)
-        
-        deserializeMethod
-              
+                     
     let createEnum scope lookup (enum: ProtoEnum) =
         let _, providedEnum = 
             TypeResolver.resolveNonScalar scope enum.Name lookup
@@ -323,22 +257,22 @@ module TypeGeneration =
         
              //providedType.AddMember <| createConstructor typeInfo providedType
         
-             let staticSerializeMethod = createSerializeMethod typeInfo
-             let staticDeserializeMethod = createDeserializeMethod typeInfo
+             let staticSerializeMethod = Falanx.BinaryCodec.Serialization.createSerializeMethod typeInfo
+             let staticDeserializeMethod = Falanx.BinaryCodec.Deserialization.createDeserializeMethod typeInfo
              providedType.AddMember staticSerializeMethod
              providedType.AddMember staticDeserializeMethod
              
              providedType.AddInterfaceImplementation typeof<IMessage>
              
-             let serializeMethod = createInstanceSerializeMethod typeInfo staticSerializeMethod
+             let serializeMethod = Falanx.BinaryCodec.Serialization.createInstanceSerializeMethod typeInfo staticSerializeMethod
              providedType.AddMember serializeMethod
              providedType.DefineMethodOverride(serializeMethod, typeof<IMessage>.GetMethod("Serialize"))
              
-             let readFromMethod = createReadFromMethod typeInfo
+             let readFromMethod = Falanx.BinaryCodec.Deserialization.createReadFromMethod typeInfo
              providedType.AddMember readFromMethod
              providedType.DefineMethodOverride(readFromMethod, typeof<IMessage>.GetMethod("ReadFrom"))
              
-             let serializedLengthMethod = createSerializedLength typeInfo
+             let serializedLengthMethod = Falanx.BinaryCodec.Serialization.createSerializedLength typeInfo
              providedType.AddMember serializedLengthMethod
              providedType.DefineMethodOverride(serializedLengthMethod, typeof<IMessage>.GetMethod("SerializedLength"))
              
