@@ -112,7 +112,7 @@ module ProvidedUnion =
     let tryGetUnionCaseByTag tag (uc:ProvidedUnion) =
         apply uc (fun uc -> uc.tag = tag)
         
-    let tryGetUnionCaseByName name (uc:ProvidedUnion) =
+    let tryGetUnionCaseByName (name : string) (uc:ProvidedUnion) =
         apply uc (fun uc -> uc.name = name)
         
     let tryGetUnionCaseByPosition position (uc:ProvidedUnion) =

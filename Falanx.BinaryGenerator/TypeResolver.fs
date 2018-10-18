@@ -2,7 +2,7 @@ namespace Falanx.BinaryGenerator
 
 open System
 open Falanx.BinaryCodec
-open Model
+open Falanx.Core.Model
 open ProviderImplementation.ProvidedTypes
 open Falanx.Ast
 open Froto.Parser.ClassModel

@@ -1,14 +1,13 @@
-namespace Falanx.BinaryGenerator
+namespace Falanx.Core
 module Model =
     open Froto.Parser.Ast
     open System
     open ProviderImplementation.ProvidedTypes
-    open Froto.Serialization.Encoding
     open Froto.Parser.ClassModel
     open Falanx.Ast
     
     type ProtobufType = string
-    
+
     type TypeKind = 
         | Primitive
         | Class of scope: string * name : string
