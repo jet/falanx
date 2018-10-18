@@ -1,14 +1,7 @@
 FSharp.Core
 FSharp.Compiler.Service
 Fantomas
-
 Microsoft.SourceLink.GitHub
-
-File: ProvidedTypes.fs
-File: ProvidedTypesTesting.fs
-
-File: AstRcd.fs
-File: AstCreate.fs
-File: PrintAstInfo.fs
-File: FormatFs.fs
-File: CreateAst.fs
+FSAst
+File:ProvidedTypes.fs
+File:ProvidedTypesTesting.fs

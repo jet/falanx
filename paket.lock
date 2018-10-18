@@ -5,7 +5,7 @@ NUGET
     Argu (5.1)
       FSharp.Core (>= 4.3.2)
       System.Configuration.ConfigurationManager (>= 4.4)
-    Fantomas (2.8)
+    Fantomas (2.9)
       FSharp.Compiler.Service (>= 23.0.3)
     Fleece.NewtonsoftJson (0.7)
       FSharp.Core (>= 4.3.4)
@@ -18,6 +18,9 @@ NUGET
       FParsec (>= 1.0.3)
       FSharp.Core (>= 4.5.2)
     Froto.Serialization (0.6.2)
+      FSharp.Core (>= 4.5.2)
+    FsAst (0.1.1)
+      Fantomas (>= 2.9)
       FSharp.Core (>= 4.5.2)
     FSharp.Compiler.Service (25.0.1)
       FSharp.Core (>= 4.1.18)
@@ -175,11 +178,11 @@ NUGET
       System.Resources.ResourceManager (>= 4.3)
       System.Runtime (>= 4.3)
       System.Runtime.Extensions (>= 4.3)
-    System.Memory (4.5.1) - restriction: || (&& (== netcoreapp2.1) (< netcoreapp2.0)) (&& (== netcoreapp2.1) (>= uap10.1)) (== netstandard2.0)
+    System.Memory (4.5.1) - restriction: == netstandard2.0
       System.Buffers (>= 4.4) - restriction: || (&& (== netcoreapp2.1) (>= monotouch)) (&& (== netcoreapp2.1) (>= net461)) (&& (== netcoreapp2.1) (< netcoreapp2.0)) (&& (== netcoreapp2.1) (< netstandard1.1)) (&& (== netcoreapp2.1) (< netstandard2.0)) (&& (== netcoreapp2.1) (>= xamarinios)) (&& (== netcoreapp2.1) (>= xamarinmac)) (&& (== netcoreapp2.1) (>= xamarintvos)) (&& (== netcoreapp2.1) (>= xamarinwatchos)) (== netstandard2.0)
       System.Numerics.Vectors (>= 4.4) - restriction: || (&& (== netcoreapp2.1) (>= net461)) (&& (== netcoreapp2.1) (< netcoreapp2.0)) (== netstandard2.0)
       System.Runtime.CompilerServices.Unsafe (>= 4.5) - restriction: || (&& (== netcoreapp2.1) (>= monotouch)) (&& (== netcoreapp2.1) (>= net461)) (&& (== netcoreapp2.1) (< netcoreapp2.0)) (&& (== netcoreapp2.1) (< netstandard1.1)) (&& (== netcoreapp2.1) (< netstandard2.0)) (&& (== netcoreapp2.1) (>= uap10.1)) (&& (== netcoreapp2.1) (>= xamarinios)) (&& (== netcoreapp2.1) (>= xamarinmac)) (&& (== netcoreapp2.1) (>= xamarintvos)) (&& (== netcoreapp2.1) (>= xamarinwatchos)) (== netstandard2.0)
-    System.Numerics.Vectors (4.5) - restriction: || (&& (== netcoreapp2.1) (>= net461)) (&& (== netcoreapp2.1) (< netcoreapp2.0)) (&& (== netcoreapp2.1) (>= uap10.1)) (== netstandard2.0)
+    System.Numerics.Vectors (4.5) - restriction: == netstandard2.0
     System.Reflection (4.3)
       Microsoft.NETCore.Platforms (>= 1.1)
       Microsoft.NETCore.Targets (>= 1.1)
@@ -212,7 +215,7 @@ NUGET
     System.Runtime (4.3)
       Microsoft.NETCore.Platforms (>= 1.1)
       Microsoft.NETCore.Targets (>= 1.1)
-    System.Runtime.CompilerServices.Unsafe (4.5.1) - restriction: || (&& (== netcoreapp2.1) (>= monotouch)) (&& (== netcoreapp2.1) (>= net461)) (&& (== netcoreapp2.1) (< netcoreapp2.0)) (&& (== netcoreapp2.1) (< netstandard1.1)) (&& (== netcoreapp2.1) (< netstandard2.0)) (&& (== netcoreapp2.1) (>= uap10.1)) (&& (== netcoreapp2.1) (>= xamarinios)) (&& (== netcoreapp2.1) (>= xamarinmac)) (&& (== netcoreapp2.1) (>= xamarintvos)) (&& (== netcoreapp2.1) (>= xamarinwatchos)) (== netstandard2.0)
+    System.Runtime.CompilerServices.Unsafe (4.5.2) - restriction: == netstandard2.0
     System.Runtime.Extensions (4.3)
       Microsoft.NETCore.Platforms (>= 1.1)
       Microsoft.NETCore.Targets (>= 1.1)
@@ -280,7 +283,7 @@ NUGET
       System.Memory (>= 4.5) - restriction: == netstandard2.0
     System.Security.Permissions (4.5)
       System.Security.AccessControl (>= 4.5)
-    System.Security.Principal.Windows (4.5)
+    System.Security.Principal.Windows (4.5.1)
       Microsoft.NETCore.Platforms (>= 2.0) - restriction: || (== netcoreapp2.1) (&& (== netstandard2.0) (>= netcoreapp2.0))
     System.Text.Encoding (4.3)
       Microsoft.NETCore.Platforms (>= 1.1)
@@ -307,22 +310,6 @@ GITHUB
   remote: 7sharp9/FSharp.TypeProviders.SDK
     src/ProvidedTypes.fs (c62b5fa53be06f53fa04724ee2e4f5a905f92fa6)
     src/ProvidedTypesTesting.fs (c62b5fa53be06f53fa04724ee2e4f5a905f92fa6)
-  remote: 7sharp9/FsAst
-    AstCreate.fs (257e852c66fdf707cbb6aba9274223d7cc89afc0)
-      Fantomas
-      FSharp.Compiler.Service
-    AstRcd.fs (257e852c66fdf707cbb6aba9274223d7cc89afc0)
-      Fantomas
-      FSharp.Compiler.Service
-    CreateAst.fs (257e852c66fdf707cbb6aba9274223d7cc89afc0)
-      Fantomas
-      FSharp.Compiler.Service
-    FormatFs.fs (257e852c66fdf707cbb6aba9274223d7cc89afc0)
-      Fantomas
-      FSharp.Compiler.Service
-    PrintAstInfo.fs (257e852c66fdf707cbb6aba9274223d7cc89afc0)
-      Fantomas
-      FSharp.Compiler.Service
 GROUP IntegrationTests
 STORAGE: NONE
 RESTRICTION: || (== netcoreapp2.1) (== netstandard2.0)
