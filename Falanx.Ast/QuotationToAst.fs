@@ -92,7 +92,11 @@ type Quotations() =
     
             | Application(left, right) ->
                 let synLeft = exprToAst left
-                let synRight = exprToAst right
+                let synRight = 
+                    let astRight = exprToAst right
+                    match right with 
+                    | (Value _ | Var _) -> astRight
+                    | _ -> SynExpr.Paren(astRight, range, None, range)
                 SynExpr.App(ExprAtomicFlag.NonAtomic, false, synLeft, synRight, range)
     
             | Sequential(left, right) ->
