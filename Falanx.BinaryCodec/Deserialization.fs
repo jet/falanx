@@ -4,20 +4,18 @@ open ProviderImplementation.ProvidedTypes
 open ProviderImplementation.ProvidedTypes.UncheckedQuotations
 open System
 open System.Reflection
+open Froto.Parser.ClassModel
+open Froto.Serialization.Encoding
+open Falanx.Core.Model
+open Falanx.Ast
+open Falanx.Ast.Prelude
+open Falanx.Ast.Expr
+open Falanx.BinaryCodec
+open Falanx.BinaryCodec.Primitives
+open Utils
                                  
 /// Contains an implementation of deserialization methods for types generated from ProtoBuf messages
 module Deserialization =
-    
-    open System.Linq.Expressions
-    open Froto.Parser.ClassModel
-    open Froto.Serialization.Encoding
-    open Model
-    open Falanx.Ast
-    open Falanx.Ast.Prelude
-    open Falanx.Ast.Expr
-    open Falanx.BinaryCodec
-    open Falanx.BinaryCodec.Primitives
-    open Utils
     
     let private primitiveReader typ =
         match typ with
@@ -85,7 +83,7 @@ module Deserialization =
             match providedUnion |> ProvidedUnion.tryGetUnionCaseByTag number with
             | Some unionCase -> unionCase.name
             | _ -> ""
-        match providedUnion |> ProvidedUnion.tryGetUnionCaseByPosition propertyDescriptor.Position with 
+        match providedUnion |> ProvidedUnion.tryGetUnionCaseByPosition (int propertyDescriptor.Position) with 
         | Some puc ->
             let unionCaseInfo = mkUnionCaseInfo puc.declaringType puc.tag names
             let unionCtor = Expr.NewUnionCaseUnchecked(unionCaseInfo, [value] )
@@ -143,7 +141,7 @@ module Deserialization =
                 |> List.fold
                     (fun acc (pos, handler) ->
                         Expr.IfThenElse(
-                            samePosition field pos,
+                            samePosition field (int pos),
                             handler field,
                             acc))
                     (Expr.Value(())))

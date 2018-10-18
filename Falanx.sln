@@ -22,6 +22,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{78A0A470-D
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Falanx.IntegrationTests", "test\Falanx.IntegrationTests\Falanx.IntegrationTests.fsproj", "{2831DF0C-2114-42EB-BC4D-F542E39092A6}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Falanx.Core", "Falanx.Core\Falanx.Core.fsproj", "{79853D4E-FEBA-4D53-BBF7-3B134AFCD6DD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -52,6 +54,10 @@ Global
 		{2831DF0C-2114-42EB-BC4D-F542E39092A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2831DF0C-2114-42EB-BC4D-F542E39092A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2831DF0C-2114-42EB-BC4D-F542E39092A6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{79853D4E-FEBA-4D53-BBF7-3B134AFCD6DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79853D4E-FEBA-4D53-BBF7-3B134AFCD6DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{79853D4E-FEBA-4D53-BBF7-3B134AFCD6DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79853D4E-FEBA-4D53-BBF7-3B134AFCD6DD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{2831DF0C-2114-42EB-BC4D-F542E39092A6} = {78A0A470-D09F-40C2-B4E6-93BE30632FD9}

@@ -7,7 +7,7 @@ module Serialization =
     open ProviderImplementation.ProvidedTypes.UncheckedQuotations
     open Froto.Parser.ClassModel
     open Froto.Serialization
-    open Model
+    open Falanx.Core.Model
     open Falanx.BinaryCodec
     open Falanx.BinaryCodec.Primitives
     open Falanx.Ast.Expr

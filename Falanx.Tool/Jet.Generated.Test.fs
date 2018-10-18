@@ -1,4 +1,4 @@
-namespace Jet.Generated
+namespace rec Jet.Generated
 
 open System
 open Froto.Serialization
@@ -14,10 +14,10 @@ type BundleRequest =
       mutable retailSkus : string ResizeArray }
     
     static member Serialize(m : BundleRequest, buffer : ZeroCopyBuffer) =
-        Primitives.writeOption<Int32> (Primitives.writeInt32) (1) (buffer) (m.martId)
-        Primitives.writeOption<String> (Primitives.writeString) (2) (buffer) (m.memberId)
-        Primitives.writeOption<String> (Primitives.writeString) (3) (buffer) (m.channelType)
-        Primitives.writeRepeated<String> (Primitives.writeString) (4) (buffer) (m.retailSkus)
+        Primitives.writeOption<Int32> (Primitives.writeInt32) (1u) (buffer) (m.martId)
+        Primitives.writeOption<String> (Primitives.writeString) (2u) (buffer) (m.memberId)
+        Primitives.writeOption<String> (Primitives.writeString) (3u) (buffer) (m.channelType)
+        Primitives.writeRepeated<String> (Primitives.writeString) (4u) (buffer) (m.retailSkus)
     
     static member Deserialize(buffer : ZeroCopyBuffer) = Primitives.deserialize<BundleRequest> (buffer)
     interface IMessage with

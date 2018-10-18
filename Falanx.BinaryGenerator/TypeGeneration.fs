@@ -5,7 +5,7 @@ module TypeGeneration =
     open System.Reflection
     open Falanx.BinaryCodec
     open Falanx.BinaryCodec.Primitives
-    open Model
+    open Falanx.Core.Model
     open Froto.Parser.Ast
     open Froto.Parser.ClassModel
     open Froto.Serialization
@@ -38,7 +38,7 @@ module TypeGeneration =
     
         { ProvidedProperty = property
           ProvidedField = Some backingField
-          Position = field.Position
+          Position = uint32 field.Position
           Rule = field.Rule
           Type = 
             { ProtobufType = field.Type
@@ -224,7 +224,7 @@ module TypeGeneration =
                     
                 let propertyInfo =
                     { ProvidedProperty = unionCaseProperty
-                      Position = int position
+                      Position = position
                       Rule = Optional
                       ProvidedField = None
                       Type = { Kind = kind; ProtobufType = TypeResolver.ptypeToString ptype; RuntimeType = propertyType }
@@ -311,7 +311,7 @@ module TypeGeneration =
                  message.Parts
                  |> Seq.choose (function
                                 | TMap(name, keyTy, valueTy, position, _) ->
-                                    Some(createMapDescriptor nestedScope lookup name keyTy valueTy (int position))
+                                    Some(createMapDescriptor nestedScope lookup name keyTy valueTy position)
                                 | _ -> None)
                  |> List.ofSeq
         
