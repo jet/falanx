@@ -10,7 +10,7 @@ module Serialization =
     open Model
     open Falanx.BinaryCodec
     open Falanx.BinaryCodec.Primitives
-    open Extensions
+    open Falanx.Ast.Expr
     open ProviderImplementation.ProvidedTypes
     open Falanx.Ast
     open Falanx.Ast.Utils

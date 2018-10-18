@@ -10,11 +10,11 @@ module TypeGeneration =
     open Froto.Parser.ClassModel
     open Froto.Serialization
     open Microsoft.FSharp.Quotations
-    open Extensions
     open ProviderImplementation.ProvidedTypes
     open Falanx.Ast
     open Falanx.Ast.Prelude
     open Falanx.Ast.ProvidedTypesExtension
+    open Falanx.Ast.Expr
 
     let applyRule rule (fieldType: Type) = 
         match rule with

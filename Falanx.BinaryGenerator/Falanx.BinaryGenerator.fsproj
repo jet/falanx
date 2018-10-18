@@ -9,7 +9,6 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Extensions.fs" />
     <Compile Include="Model.fs" />
     <Compile Include="Naming.fs" />
     <Compile Include="Deserialization.fs" />
