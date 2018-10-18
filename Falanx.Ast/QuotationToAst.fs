@@ -253,7 +253,7 @@ type Quotations() =
                         let ctorArgs =
                             let fieldLength = 
                                 match uci.DeclaringType with
-                                | :? ProvidedTypesExtension.ProvidedUnion as pu ->
+                                | :? ProvidedUnion as pu ->
                                     //TODO: add logic to providedUnion to figure out the number of fields in the particular unionCase
                                     //At the moment we are only supporting 1 field with proto3 implementation
                                     1

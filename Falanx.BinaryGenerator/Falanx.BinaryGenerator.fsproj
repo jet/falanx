@@ -10,10 +10,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Model.fs" />
-    <Compile Include="Naming.fs" />
     <Compile Include="Deserialization.fs" />
     <Compile Include="Serialization.fs" />
-    <Compile Include="ProvidedTypes.fs" />
     <Compile Include="TypeResolver.fs" />
     <Compile Include="TypeGeneration.fs" />
     <Compile Include="CreateProto.fs" />

@@ -165,7 +165,7 @@ namespace Falanx.Ast
                     |> List.map(fun et -> false, sysTypeToSynType range et knownNamespaces ommitEnclosingType)
         
                 SynType.Tuple(telems, range)
-            elif t.GetType().Name <> typeof<ProvidedTypesExtension.ProvidedUnion>.Name && FSharpType.IsFunction t then
+            elif t.GetType().Name <> typeof<ProvidedUnion>.Name && FSharpType.IsFunction t then
                 let dom, cod = FSharpType.GetFunctionElements t
                 let synDom = sysTypeToSynType range dom knownNamespaces ommitEnclosingType
                 let synCod = sysTypeToSynType range cod knownNamespaces ommitEnclosingType
@@ -237,7 +237,7 @@ namespace Falanx.Ast
                 SynExpr.App(ExprAtomicFlag.NonAtomic, false, innerApp, synParam, range)
         
         let isUnion (instance:Expr) =
-            if instance.Type.GetType().Name = typeof<ProvidedTypesExtension.ProvidedUnion>.Name then true else
+            if instance.Type.GetType().Name = typeof<ProvidedUnion>.Name then true else
             FSharpType.IsUnion instance.Type
         
         

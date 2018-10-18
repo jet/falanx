@@ -127,7 +127,7 @@ module Serialization =
         | Union(_scope, _name, fields) ->
             
             let names (number:int) : string =
-                match prop.OneOfType |> ProvidedTypesExtension.ProvidedUnion.tryGetUnionCaseByTag number with
+                match prop.OneOfType |> ProvidedUnion.tryGetUnionCaseByTag number with
                 | Some unionCase -> unionCase.name
                 | _ -> ""
             let oneOfExpr = Expr.PropertyGet(this, prop.CaseProperty)

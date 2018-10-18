@@ -13,7 +13,6 @@ module TypeGeneration =
     open ProviderImplementation.ProvidedTypes
     open Falanx.Ast
     open Falanx.Ast.Prelude
-    open Falanx.Ast.ProvidedTypesExtension
     open Falanx.Ast.Expr
 
     let applyRule rule (fieldType: Type) = 
@@ -34,8 +33,8 @@ module TypeGeneration =
     
         let property, backingField = 
             match field.Rule with
-            | Repeated -> ProvidedTypes.propertyWithField propertyType propertyName true
-            | _ -> ProvidedTypes.propertyWithField propertyType propertyName false
+            | Repeated -> ProvidedTypeDefinition.mkPropertyWithField propertyType propertyName true
+            | _ -> ProvidedTypeDefinition.mkPropertyWithField propertyType propertyName false
     
         { ProvidedProperty = property
           ProvidedField = Some backingField
@@ -121,7 +120,7 @@ module TypeGeneration =
         
         enum.Items
         |> Seq.map (fun item -> Naming.upperSnakeToPascal item.Name, item.Value)
-        |> ProvidedTypes.addEnumValues providedEnum
+        |> ProvidedTypeDefinition.addEnumValues providedEnum
         
         providedEnum 
         
@@ -155,7 +154,7 @@ module TypeGeneration =
         
         let mapType = Expr.makeGenericType [ keyType; valueType] typedefof<proto_map<_, _>>
     
-        let property, field = ProvidedTypes.propertyWithField mapType (Naming.snakeToPascal name) true
+        let property, field = ProvidedTypeDefinition.mkPropertyWithField mapType (Naming.snakeToPascal name) true
         
         { KeyType = 
             { ProtobufType = keyTypeName
@@ -205,7 +204,7 @@ module TypeGeneration =
        
         let propertyType = applyRule ProtoFieldRule.Optional unionType
         let propertyName = Naming.snakeToCamel name                
-        let caseProperty, caseField = ProvidedTypes.propertyWithField propertyType propertyName false
+        let caseProperty, caseField = ProvidedTypeDefinition.mkPropertyWithField propertyType propertyName false
    
         let propertyDescriptors = 
             members
@@ -219,7 +218,7 @@ module TypeGeneration =
                 
                 //in this instance we dont need the backing field
                 let caseName = Naming.snakeToPascalSnake name
-                let unionCaseProperty, _unionCaseField = ProvidedTypes.propertyWithField propertyType caseName false
+                let unionCaseProperty, _unionCaseField = ProvidedTypeDefinition.mkPropertyWithField propertyType caseName false
                 //We snakeToPascal here to keep union cases named correctly for the compiler
                 unionType.AddUnionCase(i, int position, caseName, [unionCaseProperty] )
                     

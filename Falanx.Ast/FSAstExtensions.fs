@@ -9,7 +9,6 @@ namespace Falanx.Ast
         open ProviderImplementation.ProvidedTypes
         open Utils
         open Prelude
-        open Falanx.Ast.ProvidedTypesExtension
         
         type SynType with
             static member CreateFromType(typ: Type, ?ommitEnclosingType, ?knownNamespaces, ?isPostfix) =       

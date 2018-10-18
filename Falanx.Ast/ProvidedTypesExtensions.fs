@@ -1,11 +1,10 @@
-namespace Falanx.Ast.ProvidedTypesExtension
+namespace Falanx.Ast
 open System
-open System.Collections.Generic
 open System.Reflection
 open ProviderImplementation.ProvidedTypes
 open Microsoft.FSharp.Core.CompilerServices
 open Falanx.Ast.Reflection
-                
+      
 type ProvidedUnionCase =
     { tag : int 
       name : string
@@ -87,8 +86,7 @@ type ProvidedUnion(isTgt: bool, container:TypeContainer, className: string, getB
                          unionCaseType = unionCaseType }
         
     member __.UnionCases = unionCases.ToArray()
-
-      
+ 
 type ProvidedRecord(isTgt: bool, container:TypeContainer, className: string, getBaseType: (unit -> Type option), attrs: TypeAttributes, getEnumUnderlyingType, staticParams, staticParamsApply, backingDataSource, customAttributesData, nonNullable, hideObjectMethods) =
     inherit ProvidedTypeDefinition(isTgt, container, className, getBaseType, attrs,  getEnumUnderlyingType, staticParams, staticParamsApply, backingDataSource, customAttributesData, nonNullable, hideObjectMethods)
     static let defaultAttributes isErased = 

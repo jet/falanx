@@ -1,4 +1,4 @@
-namespace Falanx.BinaryGenerator
+namespace Falanx.Ast
 
 [<RequireQualifiedAccess>]
 module Naming =
