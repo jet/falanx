@@ -4,26 +4,7 @@ open ProviderImplementation.ProvidedTypes
 open ProviderImplementation.ProvidedTypes.UncheckedQuotations
 open System
 open System.Reflection
-        
-type ExprExtensions =
-
-    static member reflectiveCast t (e:Expr) =
-        let expr = typeof<Expr>
-        let meth = expr.GetMethod("Cast")
-        //let genericMeth = ProvidedTypeBuilder.MakeGenericMethod(meth, [ t ])
-        let genericMeth = meth.MakeGenericMethod([|t|])
-        let result = genericMeth.Invoke(null, [|e|])
-        let expr = result :?> Expr
-        expr
-                
-    static member cast<'a> (e:Expr) =
-        let expr = typeof<Expr>
-        let meth = expr.GetMethod("Cast")
-        let genericMeth = meth.MakeGenericMethod([|typeof<'a>|])
-        let result = genericMeth.Invoke(null, [|e|])
-        let expr = result :?> Expr
-        expr
-                          
+                                 
 /// Contains an implementation of deserialization methods for types generated from ProtoBuf messages
 module Deserialization =
     
