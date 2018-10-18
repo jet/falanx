@@ -52,7 +52,7 @@ module TypeGeneration =
                 [ ProvidedParameter("m", typeInfo.Type)
                   ProvidedParameter("buffer", typeof<ZeroCopyBuffer>) ],
                 typeof<ZeroCopyBuffer>,
-                invokeCode = (fun args -> Serialization.createSerializeExpt typeInfo args.[0] args.[1]),
+                invokeCode = (fun args -> Serialization.createSerializeExpr typeInfo args.[0] args.[1]),
                 isStatic = true )
     
         //serialize.SetMethodAttrs(MethodAttributes.Virtual ||| MethodAttributes.Public)

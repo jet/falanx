@@ -158,7 +158,7 @@ module Serialization =
         | _ -> failwith "only oneOf types are serializable here"
                                 
     
-    let createSerializeExpt (typeInfo: TypeDescriptor) this bufferExpr=
+    let createSerializeExpr (typeInfo: TypeDescriptor) this bufferExpr=
         
         let properties =
             if typeInfo.Properties |> List.isEmpty then None else 
