@@ -1,4 +1,4 @@
-namespace Falanx.BinaryGenerator
+namespace Falanx.Proto.Generator
 
 type TypeContainer = class end
     

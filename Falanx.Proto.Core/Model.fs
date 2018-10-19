@@ -1,4 +1,4 @@
-namespace Falanx.Core
+namespace Falanx.Proto.Core
 module Model =
     open Froto.Parser.Ast
     open System

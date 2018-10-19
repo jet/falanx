@@ -1,4 +1,4 @@
-namespace Falanx.BinaryCodec
+namespace Falanx.Proto.Codec.Binary
 open System
 open System.IO
 open Froto.Serialization

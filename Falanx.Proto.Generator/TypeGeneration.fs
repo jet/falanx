@@ -1,19 +1,15 @@
-namespace Falanx.BinaryGenerator
+namespace Falanx.Proto.Generator
 
 module TypeGeneration =
     open System
     open System.Reflection
-    open Falanx.BinaryCodec
-    open Falanx.BinaryCodec.Primitives
-    open Falanx.Core.Model
+    open Falanx.Proto.Codec.Binary
+    open Falanx.Proto.Core.Model
     open Froto.Parser.Ast
     open Froto.Parser.ClassModel
-    open Froto.Serialization
-    open Microsoft.FSharp.Quotations
     open ProviderImplementation.ProvidedTypes
     open Falanx.Ast
     open Falanx.Ast.Prelude
-    open Falanx.Ast.Expr
 
     let applyRule rule (fieldType: Type) = 
         match rule with
@@ -102,33 +98,33 @@ module TypeGeneration =
           ProvidedProperty = property
           ProvidedField = field }   
               
-    let private createConstructor (typeDescriptor: TypeDescriptor) (providedType:ProvidedTypeDefinition) =
-        // constructor should set default values to fields: repeated fields should be initialized with empty collections
-        // and required string fiels - with ""
-    
-        let pc =
-            ProvidedConstructor([], invokeCode = fun args ->
-                let this = args.[0]
-                let initializeRepeatedFields =
-                    let repeated = typeDescriptor.Properties |> Seq.filter (fun prop -> prop.Rule = Repeated)
-                    repeated
-                    |> Seq.map (fun prop -> 
-                        Expr.FieldSet(args.[0], prop.ProvidedField.Value, Expr.callStaticGeneric [prop.Type.RuntimeType] [] <@@ create<_>() @@>))
-        
-                let initializeMapFields = 
-                    typeDescriptor.Maps
-                    |> Seq.map (fun map -> 
-                        Expr.FieldSet(args.[0], map.ProvidedField, Expr.callStaticGeneric [map.ProvidedProperty.PropertyType] [] <@@ create<_>() @@>))
-        
-                let initializeRequiredStringFields = 
-                    typeDescriptor.Properties
-                    |> Seq.filter (fun prop -> prop.Rule = Required && prop.Type.RuntimeType = typeof<proto_string>)
-                    |> Seq.map (fun prop -> Expr.FieldSet(args.[0], prop.ProvidedField.Value, Expr.Value(String.Empty)))
-                
-                [initializeRepeatedFields; initializeMapFields; initializeRequiredStringFields]
-                |> Seq.concat
-                |> Expr.sequence)
-        pc 
+//    let private createConstructor (typeDescriptor: TypeDescriptor) (providedType:ProvidedTypeDefinition) =
+//        // constructor should set default values to fields: repeated fields should be initialized with empty collections
+//        // and required string fiels - with ""
+//    
+//        let pc =
+//            ProvidedConstructor([], invokeCode = fun args ->
+//                let this = args.[0]
+//                let initializeRepeatedFields =
+//                    let repeated = typeDescriptor.Properties |> Seq.filter (fun prop -> prop.Rule = Repeated)
+//                    repeated
+//                    |> Seq.map (fun prop -> 
+//                        Expr.FieldSet(args.[0], prop.ProvidedField.Value, Expr.callStaticGeneric [prop.Type.RuntimeType] [] <@@ create<_>() @@>))
+//        
+//                let initializeMapFields = 
+//                    typeDescriptor.Maps
+//                    |> Seq.map (fun map -> 
+//                        Expr.FieldSet(args.[0], map.ProvidedField, Expr.callStaticGeneric [map.ProvidedProperty.PropertyType] [] <@@ create<_>() @@>))
+//        
+//                let initializeRequiredStringFields = 
+//                    typeDescriptor.Properties
+//                    |> Seq.filter (fun prop -> prop.Rule = Required && prop.Type.RuntimeType = typeof<proto_string>)
+//                    |> Seq.map (fun prop -> Expr.FieldSet(args.[0], prop.ProvidedField.Value, Expr.Value(String.Empty)))
+//                
+//                [initializeRepeatedFields; initializeMapFields; initializeRequiredStringFields]
+//                |> Seq.concat
+//                |> Expr.sequence)
+//        pc 
                
     let createOneOfDescriptor scope (typesLookup: TypesLookup) (name: string) (members: POneOfStatement list) = 
         let unionKind, unionType = 
@@ -166,26 +162,18 @@ module TypeGeneration =
     
                 i, propertyInfo)
             
-//                  [CompilationMapping(SourceConstructFlags.UnionCase, 0)]
-//                  public static T NewFirst_Name(string item)
-//                  {
-//                      return new First_Name(item);
-//                  }
-//          
-//                  [CompilationMapping(SourceConstructFlags.UnionCase, 1)]
-//                  public static T NewLast_Name(string item)
-//                  {
-//                      return new Last_Name(item);
-//                  }
-        let constructors =
-            propertyDescriptors
-            |> List.iter (fun (tag, propertyDescriptor) ->
-                let name = "New" + propertyDescriptor.ProvidedProperty.Name
-                let typ = propertyDescriptor.ProvidedProperty.PropertyType
-                let unionCase = unionType |> ProvidedUnion.tryGetUnionCaseByTag tag |> Option.get
-                let pm = ProvidedMethod(name,  [ProvidedParameter("item", typ)], unionCase.unionCaseType, invokeCode = (fun [instance; param] -> <@@ Expr.NewObject(null, [param]) @@>), isStatic = true)
-                unionType.AddMember pm
-                )
+        //Union type internals information
+        // [CompilationMapping(SourceConstructFlags.UnionCase, 0)]
+        // public static T NewFirst_Name(string item)
+        // {
+        //     return new First_Name(item);
+        // }
+        //
+        // [CompilationMapping(SourceConstructFlags.UnionCase, 1)]
+        // public static T NewLast_Name(string item)
+        // {
+        //     return new Last_Name(item);
+        // }
 
         //create Tags so FSharp.Reflection thinks this is a real union
         // public static class Tags
@@ -255,30 +243,25 @@ module TypeGeneration =
         
              let typeInfo = { Type = providedType; Properties = properties; OneOfGroups = oneOfDescriptors; Maps = maps }
         
-             //providedType.AddMember <| createConstructor typeInfo providedType
-        
-             let staticSerializeMethod = Falanx.BinaryCodec.Serialization.createSerializeMethod typeInfo
-             let staticDeserializeMethod = Falanx.BinaryCodec.Deserialization.createDeserializeMethod typeInfo
+             let staticSerializeMethod = Falanx.Proto.Codec.Binary.Serialization.createSerializeMethod typeInfo
+             let staticDeserializeMethod = Falanx.Proto.Codec.Binary.Deserialization.createDeserializeMethod typeInfo
              providedType.AddMember staticSerializeMethod
              providedType.AddMember staticDeserializeMethod
              
              providedType.AddInterfaceImplementation typeof<IMessage>
              
-             let serializeMethod = Falanx.BinaryCodec.Serialization.createInstanceSerializeMethod typeInfo staticSerializeMethod
+             let serializeMethod = Falanx.Proto.Codec.Binary.Serialization.createInstanceSerializeMethod typeInfo staticSerializeMethod
              providedType.AddMember serializeMethod
              providedType.DefineMethodOverride(serializeMethod, typeof<IMessage>.GetMethod("Serialize"))
              
-             let readFromMethod = Falanx.BinaryCodec.Deserialization.createReadFromMethod typeInfo
+             let readFromMethod = Falanx.Proto.Codec.Binary.Deserialization.createReadFromMethod typeInfo
              providedType.AddMember readFromMethod
              providedType.DefineMethodOverride(readFromMethod, typeof<IMessage>.GetMethod("ReadFrom"))
              
-             let serializedLengthMethod = Falanx.BinaryCodec.Serialization.createSerializedLength typeInfo
+             let serializedLengthMethod = Falanx.Proto.Codec.Binary.Serialization.createSerializedLength typeInfo
              providedType.AddMember serializedLengthMethod
              providedType.DefineMethodOverride(serializedLengthMethod, typeof<IMessage>.GetMethod("SerializedLength"))
-             
-             //This is not currently working due to new() and IMessage requirements
-             //providedType.AddMember <| createDeserializeMethod providedType
-             
+                          
              providedType
          with
          | ex ->

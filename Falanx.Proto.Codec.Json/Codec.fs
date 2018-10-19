@@ -1,4 +1,4 @@
-namespace Falanx.JsonCodec
+namespace Falanx.Proto.Codec.Json
 open System
 open Fleece
 open Fleece.Newtonsoft

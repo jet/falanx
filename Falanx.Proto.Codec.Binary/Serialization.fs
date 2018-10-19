@@ -1,12 +1,12 @@
-namespace Falanx.BinaryCodec
+namespace Falanx.Proto.Codec.Binary
 module Serialization =
     open System
     open System.Reflection
     open Microsoft.FSharp.Quotations
     open ProviderImplementation.ProvidedTypes.UncheckedQuotations
     open Froto.Parser.ClassModel
-    open Falanx.Core.Model
-    open Falanx.BinaryCodec.Primitives
+    open Falanx.Proto.Core.Model
+    open Falanx.Proto.Codec.Binary.Primitives
     open Falanx.Ast.Expr
     open ProviderImplementation.ProvidedTypes
     open Falanx.Ast
