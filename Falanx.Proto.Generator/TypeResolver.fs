@@ -1,8 +1,8 @@
-namespace Falanx.BinaryGenerator
+namespace Falanx.Proto.Generator
 
 open System
-open Falanx.BinaryCodec
-open Falanx.Core.Model
+open Falanx.Proto.Codec.Binary
+open Falanx.Proto.Core.Model
 open ProviderImplementation.ProvidedTypes
 open Falanx.Ast
 open Froto.Parser.ClassModel

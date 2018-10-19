@@ -1,16 +1,16 @@
-namespace Falanx.BinaryCodec
+namespace Falanx.Proto.Codec.Binary
 open FSharp.Quotations
 open ProviderImplementation.ProvidedTypes
 open ProviderImplementation.ProvidedTypes.UncheckedQuotations
 open System
 open Froto.Parser.ClassModel
 open Froto.Serialization.Encoding
-open Falanx.Core.Model
+open Falanx.Proto.Core.Model
 open Falanx.Ast
 open Falanx.Ast.Expr
-open Falanx.BinaryCodec.Primitives
 open Utils
 open Froto.Serialization
+open Falanx.Proto.Codec.Binary.Primitives
                                  
 /// Contains an implementation of deserialization methods for types generated from ProtoBuf messages
 module Deserialization =

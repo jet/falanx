@@ -16,8 +16,8 @@
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Falanx.JsonCodec\Falanx.JsonCodec.fsproj" />
-    <ProjectReference Include="..\Falanx.BinaryGenerator\Falanx.BinaryGenerator.fsproj" />
+    <ProjectReference Include="..\Falanx.Proto.Codec.Json\Falanx.Proto.Codec.Json.fsproj" />
+    <ProjectReference Include="..\Falanx.Proto.Generator\Falanx.Proto.Generator.fsproj" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

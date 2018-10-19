@@ -16,7 +16,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Falanx.Ast\Falanx.Ast.fsproj" />
-    <ProjectReference Include="..\Falanx.Core\Falanx.Core.fsproj" />
+    <ProjectReference Include="..\Falanx.Proto.Core\Falanx.Proto.Core.fsproj" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

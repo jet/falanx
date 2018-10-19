@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Falanx.Ast", "Falanx.Ast\Falanx.Ast.fsproj", "{B08EA3D8-BBA3-46D0-AFAD-29598867B602}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Falanx.BinaryCodec", "Falanx.BinaryCodec\Falanx.BinaryCodec.fsproj", "{0AB8DCF4-3F95-4828-AF62-01F2AE6BD230}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Falanx.Proto.Codec.Binary", "Falanx.Proto.Codec.Binary\Falanx.Proto.Codec.Binary.fsproj", "{0AB8DCF4-3F95-4828-AF62-01F2AE6BD230}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Falanx.BinaryGenerator", "Falanx.BinaryGenerator\Falanx.BinaryGenerator.fsproj", "{4B5A54E7-7269-44EC-A205-E651B2FFE04F}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Falanx.Proto.Generator", "Falanx.Proto.Generator\Falanx.Proto.Generator.fsproj", "{4B5A54E7-7269-44EC-A205-E651B2FFE04F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2F38C19C-607D-4B48-A479-4304245351DD}"
 	ProjectSection(SolutionItems) = preProject
@@ -14,7 +14,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		searchResponse.proto = searchResponse.proto
 	EndProjectSection
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Falanx.JsonCodec", "Falanx.JsonCodec\Falanx.JsonCodec.fsproj", "{2E5DF937-250F-4C52-8EE5-3DEC728EECD9}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Falanx.Proto.Codec.Json", "Falanx.Proto.Codec.Json\Falanx.Proto.Codec.Json.fsproj", "{2E5DF937-250F-4C52-8EE5-3DEC728EECD9}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Falanx.Tool", "Falanx.Tool\Falanx.Tool.fsproj", "{405C41C5-09AF-423F-B9DC-54790DC83CE6}"
 EndProject
@@ -22,7 +22,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{78A0A470-D
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Falanx.IntegrationTests", "test\Falanx.IntegrationTests\Falanx.IntegrationTests.fsproj", "{2831DF0C-2114-42EB-BC4D-F542E39092A6}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Falanx.Core", "Falanx.Core\Falanx.Core.fsproj", "{79853D4E-FEBA-4D53-BBF7-3B134AFCD6DD}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Falanx.Proto.Core", "Falanx.Proto.Core\Falanx.Proto.Core.fsproj", "{79853D4E-FEBA-4D53-BBF7-3B134AFCD6DD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
