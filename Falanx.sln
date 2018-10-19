@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Falanx.Ast", "Falanx.Ast\Falanx.Ast.fsproj", "{B08EA3D8-BBA3-46D0-AFAD-29598867B602}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Falanx.Machinery", "Falanx.Machinery\Falanx.Machinery.fsproj", "{B08EA3D8-BBA3-46D0-AFAD-29598867B602}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Falanx.Proto.Codec.Binary", "Falanx.Proto.Codec.Binary\Falanx.Proto.Codec.Binary.fsproj", "{0AB8DCF4-3F95-4828-AF62-01F2AE6BD230}"
 EndProject

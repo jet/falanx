@@ -1,4 +1,4 @@
-namespace Falanx.Ast
+namespace Falanx.Machinery
     module Expr =
         open Prelude
         open System

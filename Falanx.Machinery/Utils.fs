@@ -1,4 +1,4 @@
-namespace Falanx.Ast
+namespace Falanx.Machinery
     module Utils =
         open System
         open System.Collections.Generic

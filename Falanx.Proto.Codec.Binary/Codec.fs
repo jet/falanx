@@ -97,7 +97,7 @@ namespace Falanx.Proto.Codec.Binary
             | None -> ()
             
         let writeOption (writer: Writer<'a>) position buffer value =
-            Option.iter (writer (position: int) (buffer: ZeroCopyBuffer)) value
+            Option.iter (writer (position: FieldNum) (buffer: ZeroCopyBuffer)) value
         
         
         let writeEmbedded position buffer (value: IMessage) =

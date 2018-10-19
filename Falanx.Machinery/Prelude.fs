@@ -1,4 +1,4 @@
-namespace Falanx.Ast
+namespace Falanx.Machinery
 module Prelude =
     open System
     open System.IO
