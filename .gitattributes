@@ -1,0 +1,8 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Custom
+*.sln    text eol=crlf
+
+# Unix scripts
+test/examples/mock1/falanx-mock    text eol=lf
