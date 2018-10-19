@@ -6,8 +6,8 @@ open System
 open Froto.Parser.ClassModel
 open Froto.Serialization.Encoding
 open Falanx.Proto.Core.Model
-open Falanx.Ast
-open Falanx.Ast.Expr
+open Falanx.Machinery
+open Falanx.Machinery.Expr
 open Utils
 open Froto.Serialization
 open Falanx.Proto.Codec.Binary.Primitives

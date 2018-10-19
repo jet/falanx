@@ -6,7 +6,7 @@ open System.Collections.Generic
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Quotations.DerivedPatterns
 open Microsoft.FSharp.Quotations.Patterns
-open Falanx.Ast
+open Falanx.Machinery
 open System.Runtime.CompilerServices
 open ProviderImplementation.ProvidedTypes.UncheckedQuotations
 

@@ -4,10 +4,10 @@ open System
 open Falanx.Proto.Codec.Binary
 open Falanx.Proto.Core.Model
 open ProviderImplementation.ProvidedTypes
-open Falanx.Ast
+open Falanx.Machinery
 open Froto.Parser.ClassModel
 open Froto.Parser.Ast
-open Falanx.Ast.Prelude
+open Falanx.Machinery.Prelude
 
 type internal TypesLookup = Map<string, TypeKind * ProvidedTypeDefinition>
 

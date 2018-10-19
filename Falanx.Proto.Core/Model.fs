@@ -4,7 +4,7 @@ module Model =
     open System
     open ProviderImplementation.ProvidedTypes
     open Froto.Parser.ClassModel
-    open Falanx.Ast
+    open Falanx.Machinery
     
     type ProtobufType = string
 
