@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/jet/falanx.svg?branch=master)](https://travis-ci.org/jet/falanx)
 [![Build status](https://ci.appveyor.com/api/projects/status/rgnou677cvs890nt/branch/master?svg=true)](https://ci.appveyor.com/project/Jet/falanx/branch/master)
 
-# Falanx Proto3 code generation
+# Falanx code generation
 
 This repository contains the code generator to generate F# source (.fs files) from `proto3` source.  The general concepts are as follows:
 
