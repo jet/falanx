@@ -6,10 +6,9 @@ module Serialization =
     open Froto.Parser.ClassModel
     open Falanx.Proto.Core.Model
     open Falanx.Proto.Codec.Binary.Primitives
-    open Falanx.Ast.Expr
+    open Falanx.Machinery.Expr
     open ProviderImplementation.ProvidedTypes
-    open Falanx.Ast
-    open Falanx.Ast.Utils
+    open Falanx.Machinery
     open Froto.Serialization
             
     let primitiveWriter = function
@@ -132,7 +131,7 @@ module Serialization =
                 (prop.OneOfType.UnionCases, prop.Properties)
                 ||> Seq.map2 
                     (fun puc (KeyValue(_k, v)) -> 
-                        let case = mkUnionCaseInfo puc.declaringType puc.tag names
+                        let case = Utils.mkUnionCaseInfo puc.declaringType puc.tag names
                         let optionValue = Expr.callStaticGeneric [puc.declaringType] [oneOfExpr] <@@ Option.get x @@>
                         let testExpr = Quotations.Expr.UnionCaseTest(optionValue, case)
                         let item = ProvidedProperty(puc.name, v.Type.UnderlyingType)

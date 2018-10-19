@@ -8,8 +8,8 @@ module TypeGeneration =
     open Froto.Parser.Ast
     open Froto.Parser.ClassModel
     open ProviderImplementation.ProvidedTypes
-    open Falanx.Ast
-    open Falanx.Ast.Prelude
+    open Falanx.Machinery
+    open Falanx.Machinery.Prelude
 
     let applyRule rule (fieldType: Type) = 
         match rule with

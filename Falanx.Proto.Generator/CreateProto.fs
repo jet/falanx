@@ -3,7 +3,7 @@ namespace Falanx.Proto.Generator
 type TypeContainer = class end
     
 module Proto =
-    open Falanx.Ast
+    open Falanx.Machinery
     open System
     open Microsoft.FSharp.Compiler.Ast
     open Froto.Parser.ClassModel
