@@ -1,9 +1,6 @@
 namespace Falanx.Proto.Codec.Binary
-open System
-open System.IO
 open Froto.Serialization
 open Froto.Serialization.Encoding.WireFormat
-open System.Runtime.CompilerServices
 
 [<RequireQualifiedAccess>]
 module ZeroCopyBuffer =

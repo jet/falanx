@@ -1,6 +1,5 @@
 namespace Falanx.Proto.Codec.Binary
 module Serialization =
-    open System
     open System.Reflection
     open Microsoft.FSharp.Quotations
     open ProviderImplementation.ProvidedTypes.UncheckedQuotations
