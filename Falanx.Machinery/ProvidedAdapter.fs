@@ -1,9 +1,9 @@
-namespace Falanx.Ast
+namespace Falanx.Machinery
 open System
 open Microsoft.FSharp.Quotations
 open ProviderImplementation.ProvidedTypes
-open Falanx.Ast.Prelude
-open Falanx.Ast.Expr
+open Falanx.Machinery.Prelude
+open Falanx.Machinery.Expr
 
 [<RequireQualifiedAccess>]
 module ProvidedMethod =

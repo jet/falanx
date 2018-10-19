@@ -14,7 +14,7 @@
     <Compile Include="CreateProto.fs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Falanx.Ast\Falanx.Ast.fsproj" />
+    <ProjectReference Include="..\Falanx.Machinery\Falanx.Machinery.fsproj" />
     <ProjectReference Include="..\Falanx.Proto.Codec.Binary\Falanx.Proto.Codec.Binary.fsproj" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />

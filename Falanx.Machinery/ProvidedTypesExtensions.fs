@@ -1,9 +1,9 @@
-namespace Falanx.Ast
+namespace Falanx.Machinery
 open System
 open System.Reflection
 open ProviderImplementation.ProvidedTypes
 open Microsoft.FSharp.Core.CompilerServices
-open Falanx.Ast.Reflection
+open Falanx.Machinery.Reflection
       
 type ProvidedUnionCase =
     { tag : int 
