@@ -26,7 +26,7 @@ let dotnetCmd (fs: FileUtils) args =
     fs.shellExecRun "dotnet" args
 
 let dotnet (fs: FileUtils) args =
-    fs.shellExecRun "dotnet" (args @ ["/bl"])
+    fs.shellExecRun "dotnet" (args @ ["/v:n"; "/bl"])
 
 let renderNugetConfig clear feeds =
     [ yield "<configuration>"
