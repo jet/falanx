@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProtoFile Include="..\proto\bundle.proto" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Falanx.JsonCodec" Version="$(FalanxVersion)" />
+    <PackageReference Include="Falanx.Sdk" Version="$(FalanxVersion)" PrivateAssets="All" />
+  </ItemGroup>
+
+</Project>

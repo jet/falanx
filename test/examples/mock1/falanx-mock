@@ -1,0 +1,11 @@
+#!/bin/bash
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+if [ -f $SCRIPT_DIR/falanx-args.txt ] ; then
+    rm $SCRIPT_DIR/falanx-args.txt
+fi
+
+for ARG in "$@"
+do
+    echo $ARG >> $SCRIPT_DIR/falanx-args.txt
+done

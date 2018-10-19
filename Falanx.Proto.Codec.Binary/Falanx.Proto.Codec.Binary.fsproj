@@ -18,5 +18,12 @@
     <ProjectReference Include="..\Falanx.Machinery\Falanx.Machinery.fsproj" />
     <ProjectReference Include="..\Falanx.Proto.Core\Falanx.Proto.Core.fsproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="build\Falanx.BinaryCodec.props">
+      <Pack>true</Pack>
+      <PackagePath>%(Identity)</PackagePath>
+      <Visible>true</Visible>
+    </Content>
+  </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
