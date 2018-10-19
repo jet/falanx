@@ -1,10 +1,10 @@
-namespace Falanx.Core
+namespace Falanx.Proto.Core
 module Model =
     open Froto.Parser.Ast
     open System
     open ProviderImplementation.ProvidedTypes
     open Froto.Parser.ClassModel
-    open Falanx.Ast
+    open Falanx.Machinery
     
     type ProtobufType = string
 
