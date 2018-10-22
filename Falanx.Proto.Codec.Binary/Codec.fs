@@ -91,12 +91,12 @@ namespace Falanx.Proto.Codec.Binary
         let writeBytes: Writer<proto_bytes> = write Encode.fromBytes
         
         /// Serializes optional field using provided function to handle inner value if present
-        let writeOptional (writeInner: Writer<'T>) position buffer value =
+        let writeOptional (writeInner: Writer<'T>) (position: FieldNum) buffer value =
             match value with
             | Some(v) -> writeInner position buffer v
             | None -> ()
             
-        let writeOption (writer: Writer<'a>) position buffer value =
+        let writeOption (writer: Writer<'a>) (position: FieldNum) buffer value =
             Option.iter (writer (position: FieldNum) (buffer: ZeroCopyBuffer)) value
         
         
