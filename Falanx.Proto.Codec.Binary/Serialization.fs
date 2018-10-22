@@ -73,7 +73,7 @@ module Serialization =
     
     let serializeProperty buffer this (prop: PropertyDescriptor) =
         let value = Expr.PropertyGetUnchecked(this, prop.ProvidedProperty)
-        let position = Expr.Value(prop.Position)
+        let position = Expr.Value(int prop.Position)
         
         try
             match prop.Type.Kind, prop.Rule with
