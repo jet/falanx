@@ -1,7 +1,0 @@
-<Project>
-
-  <ItemGroup>
-    <FalanxSdkSerializer Include="json" />
-  </ItemGroup>
-
-</Project>
