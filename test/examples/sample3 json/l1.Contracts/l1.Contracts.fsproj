@@ -9,7 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Falanx.JsonCodec" Version="$(FalanxVersion)" />
+    <PackageReference Include="Falanx.Proto.Codec.Json" Version="$(FalanxVersion)" />
     <PackageReference Include="Falanx.Sdk" Version="$(FalanxVersion)" PrivateAssets="All" />
   </ItemGroup>
 
