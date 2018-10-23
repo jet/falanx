@@ -15,7 +15,7 @@
     <ProjectReference Include="..\Falanx.Machinery\Falanx.Machinery.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="build\Falanx.JsonCodec.props">
+    <Content Include="build\Falanx.Proto.Codec.Json.props">
       <Pack>true</Pack>
       <PackagePath>%(Identity)</PackagePath>
       <Visible>true</Visible>

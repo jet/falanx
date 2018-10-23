@@ -19,7 +19,7 @@
     <ProjectReference Include="..\Falanx.Proto.Core\Falanx.Proto.Core.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="build\Falanx.BinaryCodec.props">
+    <Content Include="build\Falanx.Proto.Codec.Binary.props">
       <Pack>true</Pack>
       <PackagePath>%(Identity)</PackagePath>
       <Visible>true</Visible>
