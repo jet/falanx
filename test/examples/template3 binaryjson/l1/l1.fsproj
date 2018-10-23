@@ -6,6 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="BinaryExample.fs" />
+    <Compile Include="JsonExample.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

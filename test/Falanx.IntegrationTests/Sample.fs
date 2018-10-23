@@ -68,6 +68,20 @@ let copyDirFromAssets (fs: FileUtils) source outDir =
 
     fs.cp_r path outDir
 
+let copyExampleWithTemplate (fs: FileUtils) (template: TestAssetProjInfo) (example: TestAssetExampleInfo) outDir =
+    fs.mkdir_p outDir
+
+    // copy all the template files
+    fs.cp_r (ExamplesDir/template.ProjDir) outDir
+
+    // copy the example .fs file in the program dir
+    for fileName in example.FileNames do
+      fs.cp (ExamplesDir/example.ExampleDir/fileName) (outDir/template.AssemblyName)
+
+    // copy the example proto
+    fs.mkdir_p (outDir/template.ProtoFile |> Path.GetDirectoryName)
+    fs.cp (ExamplesDir/example.ExampleDir/example.ProtoFile) (outDir/template.ProtoFile)
+
 let tests pkgUnderTestVersion =
  
   let prepareTestsAssets = lazy(
@@ -135,56 +149,52 @@ let tests pkgUnderTestVersion =
       )
     ]
 
+  let buildExampleWithTemplate fs template sample testDir =
+      // copy the template and add the sample
+      testDir
+      |> copyExampleWithTemplate fs template sample
+
+      let projPath = testDir/ (template.ProjectFile)
+      let projDir = Path.GetDirectoryName projPath
+
+      // should build correctly
+      fs.cd testDir
+      dotnet fs ["build"; projPath]
+      |> checkExitCodeZero
+
+      // should run correctly
+      let outputPath = projDir/"bin"/"Debug"/"netcoreapp2.1"/template.AssemblyName + ".dll"
+      Expect.isTrue (File.Exists outputPath) (sprintf "output assembly '%s' not found" outputPath)
+
+      dotnet fs [outputPath]
+      |> checkExitCodeZero
+
   let sanityChecks =
     testList "sanity check of projects" [
 
-      testCase |> withLog "can build sample2" (fun _ fs ->
+      testCase |> withLog "can build sample2 binary" (fun _ fs ->
         let testDir = inDir fs "sanity_check_sample2"
-        copyDirFromAssets fs ``samples2 binary``.ProjDir testDir
 
-        let projPath = testDir/ (``samples2 binary``.ProjectFile)
-        let projDir = Path.GetDirectoryName projPath
-
-        fs.cd testDir
-        dotnet fs ["build"; projPath]
-        |> checkExitCodeZero
-
-        let outputPath = projDir/"bin"/"Debug"/"netcoreapp2.1"/``samples2 binary``.AssemblyName + ".dll"
-        Expect.isTrue (File.Exists outputPath) (sprintf "output assembly '%s' not found" outputPath)
+        testDir
+        |> buildExampleWithTemplate fs ``template1 binary`` ``sample2 binary``
       )
 
       testCase |> withLog "can build sample3 json" (fun _ fs ->
         let testDir = inDir fs "sanity_check_sample3_json"
-        copyDirFromAssets fs ``samples3 json``.ProjDir testDir
-
-        let projPath = testDir/ (``samples3 json``.ProjectFile)
-        let projDir = Path.GetDirectoryName projPath
 
         Tests.skiptest "only json doesnt work yet"
 
-        fs.cd testDir
-        dotnet fs ["build"; projPath]
-        |> checkExitCodeZero
-
-        let outputPath = projDir/"bin"/"Debug"/"netcoreapp2.1"/``samples3 json``.AssemblyName + ".dll"
-        Expect.isTrue (File.Exists outputPath) (sprintf "output assembly '%s' not found" outputPath)
+        testDir
+        |> buildExampleWithTemplate fs ``template2 json`` ``sample3 json``
       )
 
       testCase |> withLog "can build sample4 binary+json" (fun _ fs ->
         let testDir = inDir fs "sanity_check_sample4_binaryjson"
-        copyDirFromAssets fs ``sample4 binary+json``.ProjDir testDir
-
-        let projPath = testDir/ (``sample4 binary+json``.ProjectFile)
-        let projDir = Path.GetDirectoryName projPath
 
         Tests.skiptest "doesnt contains a json serialization/deserialization"
 
-        fs.cd testDir
-        dotnet fs ["build"; projPath]
-        |> checkExitCodeZero
-
-        let outputPath = projDir/"bin"/"Debug"/"netcoreapp2.1"/``sample4 binary+json``.AssemblyName + ".dll"
-        Expect.isTrue (File.Exists outputPath) (sprintf "output assembly '%s' not found" outputPath)
+        testDir
+        |> buildExampleWithTemplate fs ``template3 binary+json`` ``sample4 binary+json``
       )
 
     ]
@@ -215,15 +225,15 @@ let tests pkgUnderTestVersion =
 
       testCase |> withLog "check invocation binary" (fun _ fs ->
         let testDir = inDir fs "sdkint_invocation_binary"
-        copyDirFromAssets fs ``samples2 binary``.ProjDir testDir
+        copyDirFromAssets fs ``template1 binary``.ProjDir testDir
 
-        let projPath = testDir/ (``samples2 binary``.ProjectFile)
+        let projPath = testDir/ (``template1 binary``.ProjectFile)
 
         let lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
 
         let expected =
           [ "--inputfile"
-            (testDir/``samples2 binary``.ProtoFile)
+            (testDir/``template1 binary``.ProtoFile)
             "--outputfile"
             (testDir/"l1.Contracts"/"obj"/"Debug"/"netstandard2.0"/"l1.Contracts.FalanxSdk.g.fs")
             "--defaultnamespace"
@@ -236,15 +246,15 @@ let tests pkgUnderTestVersion =
 
       testCase |> withLog "check invocation json" (fun _ fs ->
         let testDir = inDir fs "sdkint_invocation_json"
-        copyDirFromAssets fs ``samples3 json``.ProjDir testDir
+        copyDirFromAssets fs ``template2 json``.ProjDir testDir
 
-        let projPath = testDir/ (``samples3 json``.ProjectFile)
+        let projPath = testDir/ (``template2 json``.ProjectFile)
 
         let lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
 
         let expected =
           [ "--inputfile"
-            (testDir/``samples3 json``.ProtoFile)
+            (testDir/``template2 json``.ProtoFile)
             "--outputfile"
             (testDir/"l1.Contracts"/"obj"/"Debug"/"netstandard2.0"/"l1.Contracts.FalanxSdk.g.fs")
             "--defaultnamespace"
@@ -257,15 +267,15 @@ let tests pkgUnderTestVersion =
 
       testCase |> withLog "check invocation binary+json" (fun _ fs ->
         let testDir = inDir fs "sdkint_invocation_binaryjson"
-        copyDirFromAssets fs ``sample4 binary+json``.ProjDir testDir
+        copyDirFromAssets fs ``template3 binary+json``.ProjDir testDir
 
-        let projPath = testDir/ (``sample4 binary+json``.ProjectFile)
+        let projPath = testDir/ (``template3 binary+json``.ProjectFile)
 
         let lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
 
         let expected =
           [ "--inputfile"
-            (testDir/``sample4 binary+json``.ProtoFile)
+            (testDir/``template3 binary+json``.ProtoFile)
             "--outputfile"
             (testDir/"l1.Contracts"/"obj"/"Debug"/"netstandard2.0"/"l1.Contracts.FalanxSdk.g.fs")
             "--defaultnamespace"
