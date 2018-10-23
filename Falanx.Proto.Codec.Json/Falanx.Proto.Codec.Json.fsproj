@@ -10,8 +10,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Codec.fs" />
-    <Compile Include="Deserialization.fs" />
-    <Compile Include="Serialization.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Falanx.Machinery\Falanx.Machinery.fsproj" />
