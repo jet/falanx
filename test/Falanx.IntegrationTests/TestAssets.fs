@@ -8,20 +8,20 @@ type TestAssetProjInfo =
     AssemblyName: string
     ProtoFile: string }
 
-let ``samples2 binary`` =
-  { ProjDir = "sample2"
+let ``template1 binary`` =
+  { ProjDir = "template1"
     ProjectFile = "l1"/"l1.fsproj"
     AssemblyName = "l1"
     ProtoFile = "proto"/"bundle.proto" }
 
-let ``samples3 json`` =
-  { ProjDir = "sample3 json"
+let ``template2 json`` =
+  { ProjDir = "template2 json"
     ProjectFile = "l1"/"l1.fsproj"
     AssemblyName = "l1"
     ProtoFile = "proto"/"bundle.proto" }
 
-let ``sample4 binary+json`` =
-  { ProjDir = "sample4 binaryjson"
+let ``template3 binary+json`` =
+  { ProjDir = "template3 binaryjson"
     ProjectFile = "l1"/"l1.fsproj"
     AssemblyName = "l1"
     ProtoFile = "proto"/"bundle.proto" }
@@ -33,3 +33,23 @@ type FalanxMock =
 let ``mock write args`` =
   { ProjDir = "mock1"
     FileName = "falanx-mock" }
+
+type TestAssetExampleInfo =
+  { ExampleDir: string
+    FileNames: string list
+    ProtoFile: string }
+
+let ``sample2 binary`` =
+  { ExampleDir = "sample2 binary"
+    FileNames = ["BinaryExample.fs"]
+    ProtoFile = "bundle.proto" }
+
+let ``sample3 json`` =
+  { ExampleDir = "sample3 json"
+    FileNames = ["JsonExample.fs"]
+    ProtoFile = "bundle.proto" }
+
+let ``sample4 binary+json`` =
+  { ExampleDir = "sample4 binaryjson"
+    FileNames = ["BinaryExample.fs"; "JsonExample.fs"]
+    ProtoFile = "bundle.proto" }
