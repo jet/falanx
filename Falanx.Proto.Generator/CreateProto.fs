@@ -46,16 +46,16 @@ module Proto =
         let openSystem = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "System")
         let openFrotoSerialization = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "Froto.Serialization")
         let openSystemCollectionsGeneric = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "System.Collections.Generic")
-        let openBinaryCodec = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "Falanx.BinaryCodec")
-        let openBinaryCodecPrimitive = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "Falanx.BinaryCodec.Primitives")
+        let openBinaryCodec = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "Falanx.Proto.Codec.Binary")
+        let openBinaryCodecPrimitive = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "Falanx.Proto.Codec.Binary.Primitives")
         
         let knownNamespaces =
             [ providedTypeRoot.Namespace
               "System"
               "Froto.Serialization"
               "System.Collections.Generic"
-              "Falanx.BinaryCodec"
-              "Falanx.BinaryCodec.Primitives"
+              "Falanx.Proto.Codec.Binary"
+              "Falanx.Proto.Codec.Binary.Primitives"
               "Microsoft.FSharp.Core"
               "Microsoft.FSharp.Core.Operators"
               "Microsoft.FSharp.Collections"
