@@ -10,6 +10,10 @@ module TypeGeneration =
     open ProviderImplementation.ProvidedTypes
     open Falanx.Machinery
     open Falanx.Machinery.Prelude
+    
+    type Codec =
+        | Binary
+        | Json
 
     let applyRule rule (fieldType: Type) = 
         match rule with
@@ -191,7 +195,7 @@ module TypeGeneration =
           CaseProperty = caseProperty
           CaseField = caseField }        
             
-    let rec createType scope (lookup: TypesLookup) (message: ProtoMessage) : ProvidedTypeDefinition = 
+    let rec createType scope (lookup: TypesLookup) (codecs: Codec Set) (message: ProtoMessage) : ProvidedTypeDefinition = 
          try
              let _kind, providedType = 
                  match TypeResolver.resolveNonScalar scope message.Name lookup with
@@ -205,7 +209,7 @@ module TypeGeneration =
              |> Seq.iter providedType.AddMember
              
              message.Messages
-             |> Seq.map (createType nestedScope lookup)
+             |> Seq.map (createType nestedScope lookup codecs)
              |> Seq.iter providedType.AddMember
              
              let oneOfDescriptors = 

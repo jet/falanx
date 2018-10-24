@@ -3,6 +3,7 @@ open System
 open System.IO
 open Argu
 open Falanx.Proto.Generator
+open Falanx.Proto.Generator.TypeGeneration
 open Falanx.Proto.Codec.Json
 
 module main =
@@ -11,7 +12,7 @@ module main =
         | [<Mandatory>] InputFile of string
         | [<Mandatory>] DefaultNamespace of string
         | [<Mandatory>] OutputFile of string
-        | Serializer of SerializationFormats
+        | Serializer of Codec
     with
         interface IArgParserTemplate with
             member s.Usage =
@@ -20,9 +21,7 @@ module main =
                 | DefaultNamespace _ -> "specify a default namespace to use for code generation."
                 | OutputFile _ -> "Specify the file name that the generated code will be written to."
                 | Serializer _ -> "serialization format. default binary"
-    and SerializationFormats =
-        | Binary
-        | Json
+
     
     let parser = ArgumentParser.Create<Arguments>(programName = "falanx")
     
@@ -35,13 +34,13 @@ module main =
             let inputFile = results.GetResult InputFile
             let outputFile = results.GetResult OutputFile
             let defaultNamespace = results.GetResult DefaultNamespace
-            let _serializer =
+            let codecs =
                 match results.GetResults Serializer with
-                | [] -> [Binary]
-                | l -> l
+                | [] -> Set.singleton Binary
+                | l -> l |> Set.ofList
             let protoDef = IO.File.ReadAllText inputFile
             printfn "Generating code for: %s" inputFile
-            Proto.createFSharpDefinitions(protoDef, outputFile, defaultNamespace)
+            Proto.createFSharpDefinitions(protoDef, outputFile, defaultNamespace, codecs)
         with
         | :? FileNotFoundException as fnf ->
             printfn "ERROR: inputfile %s doesn not exist\n%s" fnf.FileName (parser.PrintUsage())

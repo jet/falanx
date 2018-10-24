@@ -4,21 +4,22 @@ type TypeContainer = class end
     
 module Proto =
     open Falanx.Machinery
+    open Falanx.Proto.Generator.TypeGeneration
     open System
     open Microsoft.FSharp.Compiler.Ast
     open Froto.Parser.ClassModel
     open FsAst
     open ProviderImplementation.ProvidedTypes
     
-    let createProvidedTypes protoDef defaultnamespace =
+    let createProvidedTypes protoDef defaultnamespace (codecs: Codec Set) =
         let protoFile = ProtoFile.fromString protoDef
                                     
-        let rootScope = protoFile.Packages |> Seq.tryHead |> Option.defaultValue defaultnamespace
+        let scope = protoFile.Packages |> Seq.tryHead |> Option.defaultValue defaultnamespace
     
         let provider = 
             ProvidedTypeDefinition(
                 Reflection.Assembly.GetCallingAssembly(),
-                rootScope,
+                scope,
                 typeof<TypeContainer>.Name,
                 Some typeof<obj>, 
                 hideObjectMethods = true, 
@@ -26,22 +27,22 @@ module Proto =
                 
         let container = provider 
     
-        let lookup = TypeResolver.discoverTypes rootScope protoFile
+        let typelookup = TypeResolver.discoverTypes scope protoFile
         
         protoFile.Enums
-        |> Seq.map (TypeGeneration.createEnum rootScope lookup)
+        |> Seq.map (TypeGeneration.createEnum scope typelookup)
         |> Seq.iter container.AddMember
         
         let generatedTypes =
             protoFile.Messages
-            |> Seq.map (TypeGeneration.createType rootScope lookup)
+            |> Seq.map (TypeGeneration.createType scope typelookup codecs)
             |> Seq.iter container.AddMember
         provider
     
-    let createFSharpDefinitions(protoDef: string, outputFile, defaultnamespace) =    
+    let createFSharpDefinitions(protoDef: string, outputFile, defaultnamespace, codecs: Codec Set) =    
         let config = TypeProviderConfig.makeConfig "resoultionfolder" "runtimeAssembly.dll" []
         use typeProviderForNamespaces = new TypeProviderForNamespaces(config)
-        let providedTypeRoot = createProvidedTypes protoDef defaultnamespace
+        let providedTypeRoot = createProvidedTypes protoDef defaultnamespace codecs
                 
         let openSystem = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "System")
         let openFrotoSerialization = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "Froto.Serialization")
