@@ -1,11 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
-    <PackAsTool>true</PackAsTool>
-    <PackageId>Falanx.Tool</PackageId>
-    <AssemblyName>falanx</AssemblyName>
+    <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(EnableSourceLink)' == 'true' ">
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -13,11 +9,17 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Program.fs" />
+    <Compile Include="Codec.fs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Falanx.Proto.Codec.Json\Falanx.Proto.Codec.Json.fsproj" />
-    <ProjectReference Include="..\Falanx.Proto.Generator\Falanx.Proto.Generator.fsproj" />
+    <ProjectReference Include="..\Falanx.Machinery\Falanx.Machinery.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="build\Falanx.Proto.Codec.Json.props">
+      <Pack>true</Pack>
+      <PackagePath>%(Identity)</PackagePath>
+      <Visible>true</Visible>
+    </Content>
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

@@ -2,8 +2,8 @@
 open System
 open System.IO
 open Argu
-open Falanx.BinaryGenerator
-open Falanx.JsonCodec
+open Falanx.Proto.Generator
+open Falanx.Proto.Codec.Json
 
 module main =
 

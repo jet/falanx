@@ -1,0 +1,7 @@
+FSharp.Core
+FSharp.Compiler.Service
+Fantomas
+Microsoft.SourceLink.GitHub
+FSAst
+File:ProvidedTypes.fs
+File:ProvidedTypesTesting.fs
