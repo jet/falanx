@@ -117,3 +117,8 @@ module ProvidedUnion =
         
     let tryGetUnionCaseByPosition position (uc:ProvidedUnion) =
         apply uc (fun uc -> uc.position = position)
+        
+        
+module ProvidedRecord =
+    let getRecordFields (providedRecord: ProvidedRecord) =
+        [] : PropertyInfo list

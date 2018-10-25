@@ -268,7 +268,10 @@ module TypeGeneration =
                                  let serializedLengthMethod = Falanx.Proto.Codec.Binary.Serialization.createSerializedLength typeInfo
                                  providedType.AddMember serializedLengthMethod
                                  providedType.DefineMethodOverride(serializedLengthMethod, typeof<IMessage>.GetMethod("SerializedLength"))
-                          | Json -> ())
+                          | Json ->
+                              let jsonObjCodec = Falanx.Proto.Codec.Json.temp.tryCode typeInfo
+                              providedType.AddMember jsonObjCodec
+                         )
                           
              providedType
          with

@@ -1,14 +1,22 @@
 namespace Falanx.Proto.Codec.Json
 open System
+open System.Reflection
+open System.Collections.Generic
 open Fleece
 open Fleece.Newtonsoft
-open System.Collections.Generic
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Quotations.DerivedPatterns
 open Microsoft.FSharp.Quotations.Patterns
 open Falanx.Machinery
 open System.Runtime.CompilerServices
 open ProviderImplementation.ProvidedTypes.UncheckedQuotations
+open Falanx.Proto.Core.Model
+
+open Froto.Parser.ClassModel
+open Falanx.Proto.Core.Model
+open Falanx.Machinery.Expr
+open ProviderImplementation.ProvidedTypes
+
 
 [<CLIMutable>]
 type Result2 =
@@ -85,12 +93,11 @@ module temp =
         else    
             generic t
     
-    let createLambdaRecord recordType =
+    let createLambdaRecord (recordType: ProvidedRecord) =
         //Lambda (u, Lambda (t, NewRecord (Result2, u, t))
-        let recordFields = Reflection.FSharpType.GetRecordFields(recordType)
+        let recordFields = ProvidedRecord.getRecordFields recordType
         let recordVars =
             recordFields
-            |> List.ofArray
             |> List.map(fun pi -> Var(pi.Name, pi.PropertyType))
 
         let thing = 
@@ -409,16 +416,15 @@ module temp =
         ()   
         //printfn "%A" (loop r)
 
-    let tryCode() =
+    let tryCode (typeDescriptor: TypeDescriptor) =
         printerOfDoom()
 
-        let recordType = typeof<Result2>
+        let recordType = typeDescriptor.Type :?> ProvidedRecord
         let lambdaRecord = createLambdaRecord recordType
         let mapping = callMapping lambdaRecord
-        let pipeLambdaToMapping =  callPipeRight lambdaRecord mapping
+        let pipeLambdaToMapping = callPipeRight lambdaRecord mapping
         
         let recordFields = Reflection.FSharpType.GetRecordFields(recordType) |> Array.toList
-        
         
         let createRecordJFieldOpts recordFields =
             let final = recordFields |> List.last
@@ -456,13 +462,22 @@ module temp =
         //FsAst.PrintAstInfo.printAstInfo "/Users/dave.thomas/codec.fs"
         code                              
            
-module test =
+//        type Person = { 
+//            name : string * string
+//            age : int option
+//            children: Person list }
+//            with
+//            static member JsonObjCodec : Codec<IReadOnlyDictionary<string,JsonValue>,Person> =
+//                fun f l a c -> { name = (f, l); age = a; children = c }
+//                |> withFields
+//                |> jfield    "firstName" (fun x -> fst x.name)
+//                |> jfield    "lastName"  (fun x -> snd x.name)
+//                |> jfieldOpt "age"       (fun x -> x.age)
+//                |> jfield    "children"  (fun x -> x.children)
 
-
-    let test() =
-
-        //let original = {url = Some "John"}
-        //let serialized = sprintf "%s" (string (toJson original))
-        //let deserialized = parseJson<Result> serialized
-        //original, serialized, deserialized
-        ()
+        let signatureType =
+            let def = typedefof<Codec<IReadOnlyDictionary<string,JsonValue>,_>>
+            def.MakeGenericType [|typeof<IReadOnlyDictionary<string,JsonValue>>; typeDescriptor.Type :> _ |]
+            
+        let createJsonObjCodec = ProvidedMethod("JsonObjCodec", [], signatureType, invokeCode = (fun args -> foldedFunctions), isStatic = true )
+        createJsonObjCodec
