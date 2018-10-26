@@ -89,6 +89,9 @@ type ProvidedUnion(isTgt: bool, container:TypeContainer, className: string, getB
  
 type ProvidedRecord(isTgt: bool, container:TypeContainer, className: string, getBaseType: (unit -> Type option), attrs: TypeAttributes, getEnumUnderlyingType, staticParams, staticParamsApply, backingDataSource, customAttributesData, nonNullable, hideObjectMethods) =
     inherit ProvidedTypeDefinition(isTgt, container, className, getBaseType, attrs,  getEnumUnderlyingType, staticParams, staticParamsApply, backingDataSource, customAttributesData, nonNullable, hideObjectMethods)
+    
+    let recordAttribs = [|yield box <| CompilationMappingAttribute(SourceConstructFlags.RecordType) |]
+    
     static let defaultAttributes isErased = 
              TypeAttributes.Public ||| TypeAttributes.Class ||| TypeAttributes.Sealed ||| enum (if isErased then int32 TypeProviderTypeAttributes.IsErased else 0)
 
@@ -106,6 +109,9 @@ type ProvidedRecord(isTgt: bool, container:TypeContainer, className: string, get
         let hideObjectMethods = defaultArg hideObjectMethods false
         let attrs = defaultAttributes isErased
         ProvidedRecord(false, TypeContainer.TypeToBeDecided, className, K baseType, attrs, K None, [], None, None, K [| |], nonNullable, hideObjectMethods)
+        
+    override this.GetCustomAttributes(_inherit) = recordAttribs
+    override this.GetCustomAttributes(_attributeType, _inherit) = recordAttribs
 
 module ProvidedUnion =
     let inline private apply (uc: ProvidedUnion) f = uc.UnionCases |> Seq.tryFind f
@@ -121,4 +127,6 @@ module ProvidedUnion =
         
 module ProvidedRecord =
     let getRecordFields (providedRecord: ProvidedRecord) =
-        [] : PropertyInfo list
+        providedRecord.GetProperties()
+        |> Array.choose (function :? ProvidedProperty as pp -> Some pp | _ -> None)
+        |> Array.toList

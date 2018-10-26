@@ -35,7 +35,7 @@ module Proto =
         
         let generatedTypes =
             protoFile.Messages
-            |> Seq.map (TypeGeneration.createType scope typelookup codecs)
+            |> Seq.map (TypeGeneration.createType container scope typelookup codecs)
             |> Seq.iter container.AddMember
         provider
     

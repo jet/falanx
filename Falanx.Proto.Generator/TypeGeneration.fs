@@ -195,7 +195,7 @@ module TypeGeneration =
           CaseProperty = caseProperty
           CaseField = caseField }        
             
-    let rec createType scope (lookup: TypesLookup) (codecs: Codec Set) (message: ProtoMessage) : ProvidedTypeDefinition = 
+    let rec createType (container: ProvidedTypeDefinition) scope (lookup: TypesLookup) (codecs: Codec Set) (message: ProtoMessage) : ProvidedTypeDefinition = 
          try
              let _kind, providedType = 
                  match TypeResolver.resolveNonScalar scope message.Name lookup with
@@ -203,13 +203,14 @@ module TypeGeneration =
                  | None -> failwithf "Type '%s' is not defined" message.Name
                   
              let nestedScope = scope +.+ message.Name
+             providedType.PatchDeclaringType container
              
              message.Enums
              |> Seq.map (createEnum nestedScope lookup)
              |> Seq.iter providedType.AddMember
              
              message.Messages
-             |> Seq.map (createType nestedScope lookup codecs)
+             |> Seq.map (createType providedType nestedScope lookup codecs)
              |> Seq.iter providedType.AddMember
              
              let oneOfDescriptors = 

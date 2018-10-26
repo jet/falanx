@@ -101,11 +101,11 @@ module temp =
             |> List.map(fun pi -> Var(pi.Name, pi.PropertyType))
 
         let thing = 
-            List.foldBack (fun v acc -> Expr.Lambda(v,acc)) recordVars (Expr.NewRecord(recordType, recordVars |> List.map (Expr.Var) ))
+            List.foldBack (fun v acc -> Expr.Lambda(v,acc)) recordVars (Expr.NewRecordUnchecked(recordType, recordVars |> List.map (Expr.Var) ))
         thing
               
-    let  getFunctionReturnType typ =
-        let rec loop typ = 
+    let  getFunctionReturnType (typ: Type) =
+        let rec loop (typ: Type) = 
             if FSharp.Reflection.FSharpType.IsFunction typ then
                 let domain, range = FSharp.Reflection.FSharpType.GetFunctionElements typ
                 loop range
@@ -141,12 +141,13 @@ module temp =
     
         let replaceLambdaArgs (mi: MethodInfo) (lambda:Type) =
             let lambdaReturn = getFunctionReturnType lambda
-            mi.MakeGenericMethod([|lambda
-                                   typeof<IReadOnlyDictionary<string,JsonValue>>
-                                   typeof<string>
-                                   lambdaReturn
-                                   typeof<string>
-                                   typeof<JToken>|])
+            ProviderImplementation.ProvidedTypes.ProvidedTypeBuilder.MakeGenericMethod(mi, [lambda; typeof<IReadOnlyDictionary<string,JsonValue>>; typeof<string>; lambdaReturn; typeof<string>; typeof<JToken>] )
+//            mi.MakeGenericMethod([|lambda
+//                                   typeof<IReadOnlyDictionary<string,JsonValue>>
+//                                   typeof<string>
+//                                   lambdaReturn
+//                                   typeof<string>
+//                                   typeof<JToken>|])
 
         //mapping f: 'a -> ('b -> Result<'a,'c>) * ('d -> IReadOnlyDictionary<'e,'f>)
         
@@ -179,7 +180,7 @@ module temp =
         //System.Tuple`2[FSharpFunc`2[IReadOnlyDictionary`2[String, JToken],FSharpResult`2[FSharpFunc`2[FSharpOption`1[String], FSharpFunc`2[FSharpOption`1[String],Result2]],String]],FSharpFunc`2[Result3,IReadOnlyDictionary`2[JToken]]]
 
         let f = Var("f", lambdaType)
-        let call = Expr.Call(mappingMethodInfoFull, [Expr.Var(f)])
+        let call = Expr.CallUnchecked(mappingMethodInfoFull, [Expr.Var(f)])
         let lambda = Expr.Lambda(f, call)
         lambda        
         
@@ -187,7 +188,7 @@ module temp =
         let methodInfoGeneric = Expr.methoddefof<@ (|>) @>
         let funcTypeReturn = getFunctionReturnType func.Type
         let methodInfoTyped = methodInfoGeneric.MakeGenericMethod([|arg.Type; funcTypeReturn|])
-        let expr = Expr.Call(methodInfoTyped, [arg; func])
+        let expr = Expr.CallUnchecked(methodInfoTyped, [arg; func])
         expr
         
 
@@ -362,12 +363,9 @@ module temp =
             match nextFieldType with 
             | Some t -> Reflection.FSharpType.MakeFunctionType(typedefof<Option<_>>.MakeGenericType(t), recordType)
             | None -> recordType
-        TypeTemplate.create callJfieldopt3<_,string,_> "callJfieldopt3" [recordType; fieldType; typeC] propertyInfo
-     
-
-
+        TypeTemplate.create callJfieldopt3<_,string,_> "callJfieldopt3" [recordType; fieldType; typeC] propertyInfo  
         
-    let printerOfDoom() =
+    let quotationsTypePrinter() =
     
         let rec traverseQuotation f q = 
           let q = defaultArg (f q) q
@@ -414,17 +412,15 @@ module temp =
         
 
         ()   
-        //printfn "%A" (loop r)
 
     let tryCode (typeDescriptor: TypeDescriptor) =
-        printerOfDoom()
 
         let recordType = typeDescriptor.Type :?> ProvidedRecord
         let lambdaRecord = createLambdaRecord recordType
         let mapping = callMapping lambdaRecord
         let pipeLambdaToMapping = callPipeRight lambdaRecord mapping
         
-        let recordFields = Reflection.FSharpType.GetRecordFields(recordType) |> Array.toList
+        let recordFields = ProvidedRecord.getRecordFields recordType
         
         let createRecordJFieldOpts recordFields =
             let final = recordFields |> List.last
