@@ -197,6 +197,13 @@ let tests pkgUnderTestVersion =
         |> buildExampleWithTemplate fs ``template3 binary+json`` ``sample4 binary+json``
       )
 
+      testCase |> withLog "can build sample5 pkg" (fun _ fs ->
+        let testDir = inDir fs "sanity_check_sample5"
+
+        testDir
+        |> buildExampleWithTemplate fs ``template1 binary`` ``sample5 pkg``
+      )
+
     ]
 
   let sdkIntegrationMocks =

@@ -53,3 +53,8 @@ let ``sample4 binary+json`` =
   { ExampleDir = "sample4 binaryjson"
     FileNames = ["BinaryExample.fs"; "JsonExample.fs"]
     ProtoFile = "bundle.proto" }
+
+let ``sample5 pkg`` =
+  { ExampleDir = "sample5 pkg"
+    FileNames = ["BinaryExample.fs"]
+    ProtoFile = "bundle.proto" }
