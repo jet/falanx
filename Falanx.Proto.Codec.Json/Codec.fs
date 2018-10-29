@@ -42,6 +42,7 @@ module temp =
     open FSharpPlus
     open System.Reflection
     open Newtonsoft.Json.Linq
+    open Reflection
     
     let cleanUpTypeName (str:string) =
         let sb = Text.StringBuilder(str)
@@ -106,8 +107,10 @@ module temp =
               
     let  getFunctionReturnType (typ: Type) =
         let rec loop (typ: Type) = 
-            if FSharp.Reflection.FSharpType.IsFunction typ then
-                let domain, range = FSharp.Reflection.FSharpType.GetFunctionElements typ
+            if SafeReflection.FSharpType.IsFunction typ then
+                let domain, range = SafeReflection.FSharpType.GetFunctionElements typ
+                    //FSharp.Reflection.FSharpType.GetFunctionElements typ
+                    
                 loop range
             else typ  
         let result = loop typ
@@ -116,7 +119,7 @@ module temp =
     let  getFunctionReturnType2 typ =            
         let rec loop typ = 
             if FSharp.Reflection.FSharpType.IsFunction typ then
-                let domain, range = FSharp.Reflection.FSharpType.GetFunctionElements typ
+                let domain, range = SafeReflection.FSharpType.GetFunctionElements typ
                 range
             else typ
         let result = loop typ
@@ -124,10 +127,10 @@ module temp =
         
     let rec getLambdaElements typ = [
         let returnOrLoop t = [
-            if Reflection.FSharpType.IsFunction t then 
+            if SafeReflection.FSharpType.IsFunction t then 
                 yield! getLambdaElements t
             else yield t ]
-        let domain, rest = Reflection.FSharpType.GetFunctionElements(typ)
+        let domain, rest = SafeReflection.FSharpType.GetFunctionElements(typ)
         yield! returnOrLoop domain
         yield! returnOrLoop rest
         ]
