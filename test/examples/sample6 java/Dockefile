@@ -1,0 +1,8 @@
+FROM openjdk:7
+WORKDIR /usr/src/myapp
+
+COPY Program.java /usr/src/myapp
+
+RUN javac Program.java
+
+ENTRYPOINT ["java", "Program"]
