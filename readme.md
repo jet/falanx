@@ -5,9 +5,9 @@
 
 This repository contains the code generator to generate F# source (.fs files) from `proto3` source.  The general concepts are as follows:
 
-*  Resuse as much off the shelf code as possible for the mvp as to get a feel for how things will work and refine from there.
-*  Code generation, to generate F# source code, rather than types being injected as a type provider.
-*  Idiomatic F# code is generated rather than simple .NET 1.1 era code. This means records, discriminated unions, etc., are generated where appropriate.
+* Reuse as much off the shelf code as possible for the mvp as to get a feel for how things will work and refine from there.
+* Code generation, to generate F# source code, rather than types being injected as a type provider.
+* Idiomatic F# code is generated rather than simple .NET 1.1 era code. This means records, discriminated unions, etc., are generated where appropriate.
 
 # Project structure
 
