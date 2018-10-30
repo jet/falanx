@@ -19,6 +19,8 @@
     <EnableSourceControlManagerQueries>$(EnableSourceLink)</EnableSourceControlManagerQueries>
 
     <Version Condition=" '$(Version)' == '' ">0.3.0$(VersionSuffix)</Version>
+
+    <NoWarn>$(NoWarn);FS2003</NoWarn>
   </PropertyGroup>
 
 </Project>
