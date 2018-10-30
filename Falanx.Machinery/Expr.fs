@@ -71,7 +71,7 @@ namespace Falanx.Machinery
                 None
             | _ -> None
             
-        /// Get a MethodInfo from an expression yhat is a method call or a function type value
+        /// Get a MethodInfo from an expression that is a method call or a function type value
         let rec methodof expr =
             match expr with
             // any ordinary calls: foo.Bar ()
