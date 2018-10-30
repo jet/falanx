@@ -1,8 +1,7 @@
-FROM openjdk:7
-WORKDIR /usr/src/myapp
+FROM maven:3.5-jdk-8-alpine
+WORKDIR /app
 
-COPY Program.java /usr/src/myapp
+COPY app/ /app
+RUN mvn install
 
-RUN javac Program.java
-
-ENTRYPOINT ["java", "Program"]
+ENTRYPOINT ["java", "-jar", "/app/target/falanx-sample6-1.0.0.jar"]
