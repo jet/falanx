@@ -49,11 +49,15 @@ namespace Falanx.Machinery
         type MemberInfo with
             member m.TryGetCustomAttribute<'Attr when 'Attr :> System.Attribute> () =
                 try
-                    let attrs = m.GetCustomAttributes<'Attr> ()
+                    let attrs = m.GetCustomAttributes(typeof<'Attr>, false)
                     match attrs with
                     | null -> None
                     | _ -> if Seq.isEmpty attrs then None
-                           else  Some(Seq.head attrs)
+                           else  
+                                attrs
+                                |> Seq.choose (fun x -> match x with :? 'Attr as n -> Some n | _ -> None)
+                                |> Seq.tryHead
+                                //Some((Seq.head attrs) :?> 'Attr)
                 with _ ->
                     printfn "TryGetCustomAttribute failed for attribute %A on type %A" typeof<'Attr>.Name m
                     None

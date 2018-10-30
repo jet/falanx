@@ -45,7 +45,10 @@ type ProvidedUnion(isTgt: bool, container:TypeContainer, className: string, getB
         ProvidedUnion(false, TypeContainer.TypeToBeDecided, className, K baseType, attrs, K None, [], None, None, K [| |], nonNullable, hideObjectMethods)
         
     override this.GetCustomAttributes(_inherit) = unionAttribs
-    override this.GetCustomAttributes(_attributeType, _inherit) = unionAttribs
+    override this.GetCustomAttributes(_attributeType, _inherit) =
+        unionAttribs
+        //// typeof(SomeType).IsAssignableFrom(typeof(Derived))
+        //|> Array.filter (fun x -> x.GetType().IsAssignableFrom(_attributeType))
         
     //fields is set to just one for now
     member this.AddUnionCase(tag: int, position: int, name: string, [field]: PropertyInfo list) =
