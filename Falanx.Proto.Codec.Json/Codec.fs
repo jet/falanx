@@ -251,7 +251,7 @@ module temp =
             typedefof<Result<_,_>>.MakeGenericType([|functionType; typeof<string>|])
             
         let decoderType = Reflection.FSharpType.MakeFunctionType(domain, range)
-        let formattedDecoderType = sprintf "%a" sprintfsimpleTypeFormatter decoderType
+        //let formattedDecoderType = sprintf "%a" sprintfsimpleTypeFormatter decoderType
         //decoder is:
         //IReadOnlyDictionary<String,JToken> -> Result< Result2 -> Option<String> -> Option<Int32>, String>
         
@@ -262,19 +262,19 @@ module temp =
         
         // Record -> IReadOnlyDictionary<String, JToken>
         let encoderType = Reflection.FSharpType.MakeFunctionType(recordType, typeof<IReadOnlyDictionary<String, JToken>>)
-        let formattedEncoderType = sprintf "%a" sprintfsimpleTypeFormatter encoderType
+        //let formattedEncoderType = sprintf "%a" sprintfsimpleTypeFormatter encoderType
         let encoder = Var("encode", encoderType)
         
         // decoder * encoder
         // ( IReadOnlyDictionary<String, JToken> -> Result<Option<fieldType> -> Option<nextFieldType> -> Record, String>) * (Record -> IReadOnlyDictionary<String, JToken> )
         let codecType = Reflection.FSharpType.MakeTupleType [|decoderType; encoderType|]
-        let formattedCodecType = sprintf "%a" sprintfsimpleTypeFormatter codecType
+        //let formattedCodecType = sprintf "%a" sprintfsimpleTypeFormatter codecType
         let codec = Var("codec", codecType)
         
         Expr.Lambda(codec,
             Expr.Let(decoder, Expr.TupleGet(Expr.Var codec, 0),
                 Expr.Let(encoder, Expr.TupleGet(Expr.Var codec, 1),
-                    Expr.Call(jfieldoptMethodInfoTyped, [fieldName; getter; Expr.Var decoder; Expr.Var encoder]))))
+                    Expr.CallUnchecked(jfieldoptMethodInfoTyped, [fieldName; getter; Expr.Var decoder; Expr.Var encoder]))))
                     
                     
     type TypeChainCache<'a> = 
