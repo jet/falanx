@@ -366,7 +366,21 @@ module temp =
             match nextFieldType with 
             | Some t -> Reflection.FSharpType.MakeFunctionType(typedefof<Option<_>>.MakeGenericType(t), recordType)
             | None -> recordType
-        TypeTemplate.create callJfieldopt3<_,string,_> "callJfieldopt3" [recordType; fieldType; typeC] propertyInfo  
+        TypeTemplate.create callJfieldopt3<_,string,_> "callJfieldopt3" [recordType; fieldType; typeC] propertyInfo
+        
+    let createRecordJFieldOpts recordFields recordType =
+        let final = recordFields |> List.last
+        let pairs = recordFields |> List.pairwise
+        let optionType (o: Type) =
+            o.GetGenericArguments().[0]
+        
+        let jFieldOptions =
+            pairs
+            |> List.map (fun (first, second) -> callJfieldopt recordType first (optionType first.PropertyType) (Some (optionType second.PropertyType)))
+        let finalJField = callJfieldopt recordType final (optionType final.PropertyType) None
+        
+        [ yield! jFieldOptions
+          yield finalJField ]
         
     let quotationsTypePrinter() =
     
@@ -425,23 +439,11 @@ module temp =
         
         let recordFields = ProvidedRecord.getRecordFields recordType
         
-        let createRecordJFieldOpts recordFields =
-            let final = recordFields |> List.last
-            let pairs = recordFields |> List.pairwise
-            let optionType (o: Type) =
-                o.GetGenericArguments().[0]
-            
-            let jFieldOptions =
-                pairs
-                |> List.map (fun (first, second) -> callJfieldopt recordType first (optionType first.PropertyType) (Some (optionType second.PropertyType)))
-            let finalJField = callJfieldopt recordType final (optionType final.PropertyType) None
-            
-            [ yield! jFieldOptions
-              yield finalJField ]
+
                 
             
             
-        let jFieldOpts = createRecordJFieldOpts recordFields
+        let jFieldOpts = createRecordJFieldOpts recordFields recordType
         let allPipedFunctions = [yield lambdaRecord; yield mapping; yield! jFieldOpts]
         let foldedFunctions =
             allPipedFunctions |> List.reduce callPipeRight

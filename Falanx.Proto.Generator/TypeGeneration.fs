@@ -10,6 +10,7 @@ module TypeGeneration =
     open ProviderImplementation.ProvidedTypes
     open Falanx.Machinery
     open Falanx.Machinery.Prelude
+    open Falanx.Machinery.Reflection
     
     type Codec =
         | Binary
@@ -21,7 +22,7 @@ module TypeGeneration =
         | Repeated -> Expr.makeGenericType [fieldType] typedefof<proto_repeated<_>>
         | Optional -> Expr.makeGenericType [fieldType] typedefof<option<_>>
         
-    let private createPropertyDescriptor scope (lookup: TypesLookup) (ty: ProvidedTypeDefinition) (field: ProtoField) =
+    let private createPropertyDescriptor scope (lookup: TypesLookup) (ty: ProvidedTypeDefinition) (* index used by records field custom attribute *) index (field: ProtoField) =
     
         let typeKind, propertyType = 
             match TypeResolver.resolve scope field.Type lookup with
@@ -35,6 +36,15 @@ module TypeGeneration =
             match field.Rule with
             | Repeated -> ProvidedTypeDefinition.mkPropertyWithField propertyType propertyName true
             | _ -> ProvidedTypeDefinition.mkPropertyWithField propertyType propertyName false
+            
+        //apply custom attributes for record field
+        let constructor = typeof<CompilationMappingAttribute>.TryGetConstructor([|typeof<SourceConstructFlags>; typeof<int> |])
+        // a records field has attributes that look like: (where n is field number)"
+        // [CompilationMapping(SourceConstructFlags.Field, n)]
+        let arguments = 
+            [| CustomAttributeTypedArgument (typeof<SourceConstructFlags>, SourceConstructFlags.Field)
+               CustomAttributeTypedArgument (typeof<int>, index)|]
+        property.AddCustomAttribute(CustomAttributeData.Make(constructor.Value, args = arguments))
     
         { ProvidedProperty = property
           ProvidedField = Some backingField
@@ -228,7 +238,7 @@ module TypeGeneration =
 
              let properties =
                  message.Fields
-                 |> List.map (createPropertyDescriptor nestedScope lookup providedType)
+                 |> List.mapi (createPropertyDescriptor nestedScope lookup providedType)
         
              for prop in properties do
                  providedType.AddMember prop.ProvidedProperty
