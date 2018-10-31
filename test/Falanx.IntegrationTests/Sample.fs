@@ -310,23 +310,11 @@ let tests pkgUnderTestVersion =
       ftestCase |> withLog "scala" (fun _ fs ->
         let testDir = inDir fs "interop_scala"
 
-        let prepare (template: TestAssetProjInfo) example outDir =
-          fs.mkdir_p outDir
+        // copy the template and add the sample
+        testDir
+        |> copyExampleWithTemplate fs ``template4 scala`` ``sample7 scala binary``
 
-          // copy all the template files
-          fs.cp_r (ExamplesDir/template.ProjDir) outDir
-
-          fs.cd outDir
-
-          // copy the example .fs file in the program dir
-          for fileName in example.FileNames do
-            fs.cp (ExamplesDir/example.ExampleDir/fileName) (outDir/template.AssemblyName)
-
-          // copy the example proto
-          fs.mkdir_p (outDir/template.ProtoFile |> Path.GetDirectoryName)
-          fs.cp (ExamplesDir/example.ExampleDir/example.ProtoFile) (outDir/template.ProtoFile)
-
-        prepare ``template4 scala`` ``sample7 scala binary`` testDir
+        fs.cd testDir
 
         sbt_run fs ["--serialize"; @"e:\temp\b.bin"]
         |> checkExitCodeZero
