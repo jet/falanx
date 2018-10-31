@@ -28,8 +28,8 @@ let ``template3 binary+json`` =
 
 let ``template4 scala`` =
   { ProjDir = "template4 scala"
-    ProjectFile = "l1"/"l1.fsproj"
-    AssemblyName = "l1"
+    ProjectFile = "src"/"main"/"scala"/"Program.scala"
+    AssemblyName = "src"/"main"/"scala"
     ProtoFile = "src"/"main"/"protobuf"/"ItemLevelOrderHistory.proto" }
 
 type FalanxMock =
@@ -64,3 +64,8 @@ let ``sample5 pkg`` =
   { ExampleDir = "sample5 pkg"
     FileNames = ["BinaryExample.fs"]
     ProtoFile = "bundle.proto" }
+
+let ``sample7 scala binary`` =
+  { ExampleDir = "sample7 scala"
+    FileNames = ["BinaryExample.scala"]
+    ProtoFile = "ItemLevelOrderHistory.proto" }
