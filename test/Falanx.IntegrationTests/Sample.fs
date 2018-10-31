@@ -316,8 +316,18 @@ let tests pkgUnderTestVersion =
 
         fs.cd testDir
 
-        sbt_run fs ["--serialize"; @"e:\temp\b.bin"]
+        let binaryFilePath = testDir/"a.bin"
+
+        // serialize
+        sbt_run fs ["--serialize"; binaryFilePath]
         |> checkExitCodeZero
+        
+        // deserialize
+        let r = sbt_run fs ["--deserialize"; binaryFilePath]
+        r |> checkExitCodeZero
+
+        "check deserialize"
+        |> Expect.equal (stdOutLines r) ["ItemLevelOrderHistory(client1,sku1,12.3,brandA,product1,45.6)"]
       )
     ]
 
