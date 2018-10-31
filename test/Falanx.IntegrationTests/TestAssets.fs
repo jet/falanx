@@ -26,6 +26,12 @@ let ``template3 binary+json`` =
     AssemblyName = "l1"
     ProtoFile = "proto"/"bundle.proto" }
 
+let ``template4 scala`` =
+  { ProjDir = "template4 scala"
+    ProjectFile = "l1"/"l1.fsproj"
+    AssemblyName = "l1"
+    ProtoFile = "src"/"main"/"protobuf"/"ItemLevelOrderHistory.proto" }
+
 type FalanxMock =
   { ProjDir: string
     FileName: string }

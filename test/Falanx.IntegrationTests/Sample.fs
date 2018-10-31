@@ -28,6 +28,13 @@ let dotnetCmd (fs: FileUtils) args =
 let dotnet (fs: FileUtils) args =
     fs.shellExecRun "dotnet" (args @ ["/v:n"; "/bl"])
 
+let sbt_run (fs: FileUtils) args =
+    let sbtPath = @"C:\tools\sbt-1.2.6\bin\sbt.bat"
+    //sbt run with args is like
+    //  sbt "run a b"
+    let all = args |> Seq.ofList |> String.concat " "
+    fs.shellExecRun sbtPath ["--warn"; sprintf "run %s" all]
+
 let renderNugetConfig clear feeds =
     [ yield "<configuration>"
       yield "  <packageSources>"
@@ -297,8 +304,30 @@ let tests pkgUnderTestVersion =
 
     ]
 
+  let interop =
+    testList "interop" [
+
+      ftestCase |> withLog "scala" (fun _ fs ->
+        let testDir = inDir fs "interop_scala"
+
+        let prepare (template: TestAssetProjInfo) outDir =
+          fs.mkdir_p outDir
+
+          // copy all the template files
+          fs.cp_r (ExamplesDir/template.ProjDir) outDir
+
+          fs.cd outDir
+
+        prepare ``template4 scala`` testDir
+
+        sbt_run fs ["--serialize"; @"e:\temp\a.bin"]
+        |> checkExitCodeZero
+      )
+    ]
+
   [ generalTests
     sanityChecks
-    sdkIntegrationMocks ]
+    sdkIntegrationMocks
+    interop ]
   |> testList "suite"
   |> testSequenced
