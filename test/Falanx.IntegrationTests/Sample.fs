@@ -307,7 +307,7 @@ let tests pkgUnderTestVersion =
   let interop =
     testList "interop" [
 
-      ftestCase |> withLog "scala" (fun _ fs ->
+      testCase |> withLog "scala" (fun _ fs ->
         let testDir = inDir fs "interop_scala"
 
         // copy the template and add the sample
