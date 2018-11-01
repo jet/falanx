@@ -21,8 +21,7 @@ module Program =
 
         match cmd with
         | SerializeDeserialize ->
-            let buffer = BinaryExample.serialize ()
-            let bytes = buffer.ToArray()
+            let bytes = BinaryExample.serialize ()
 
             printfn "Serialized:"
             printfn "%A" bytes
@@ -33,8 +32,7 @@ module Program =
             printfn "%A" s
 
         | Serialize path ->
-            let buffer = BinaryExample.serialize ()
-            let bytes = buffer.ToArray()
+            let bytes = BinaryExample.serialize ()
 
             printfn "Serialized:"
             printfn "%A" bytes

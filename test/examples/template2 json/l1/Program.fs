@@ -1,18 +1,51 @@
 namespace l1
 
+open System.IO
+
 module Program =
+
+    type Command =
+        | Serialize of string
+        | Deserialize of string
+        | SerializeDeserialize
 
     [<EntryPoint>]
     let main args =
 
-        let buffer = JsonExample.serialize ()
+        let cmd =
+            match args with
+            | [| "--serialize"; path |] -> Serialize path
+            | [| "--deserialize"; path |] -> Deserialize path
+            | [| |] -> SerializeDeserialize
+            | _ -> failwith "invalid args, expecting --serialize or --deserialize"
 
-        printfn "Serialized:"
-        printfn "%A" (buffer.Array)
+        match cmd with
+        | SerializeDeserialize ->
+            let bytes = JsonExample.serialize ()
 
-        let s = JsonExample.deserialize buffer.Array
+            printfn "Serialized:"
+            printfn "%A" bytes
 
-        printfn "Deserialized:"
-        printfn "%A" s
+            let s = JsonExample.deserialize bytes
+
+            printfn "Deserialized:"
+            printfn "%A" s
+
+        | Serialize path ->
+            let bytes = JsonExample.serialize ()
+
+            printfn "Serialized:"
+            printfn "%A" bytes
+
+            File.WriteAllBytes(path, bytes)
+
+        | Deserialize path ->
+            let bytes = File.ReadAllBytes(path)
+
+            let s = JsonExample.deserialize bytes
+
+            printfn "Deserialized:"
+            printfn "%A" s
 
         0
+
