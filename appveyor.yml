@@ -21,13 +21,11 @@ artifacts:
 
 on_finish:
   - ps: >-
-      $wc = New-Object 'System.Net.WebClient';
       $testResults = @(
-        # '.\bin\test_results\TestResults.xml'
-      )
-  - ps: >-
+         '.\bin\test_results\TestResults.xml'
+      );
       Foreach ($path in $testResults) {
         If (Test-Path $path) {
-          $wc.UploadFile("https://ci.appveyor.com/api/testresults/nunit3/$($env:APPVEYOR_JOB_ID)", (Resolve-Path $path))
+          (New-Object 'System.Net.WebClient').UploadFile("https://ci.appveyor.com/api/testresults/nunit/$env:APPVEYOR_JOB_ID", (Resolve-Path $path));
         }
       }
