@@ -246,3 +246,4 @@ paket-files/
 /example-projects/paket-oldsdk/hellow/Prova.fs
 /example-projects/dotnetsdk/hellow/Prova.fs
 /test/testrun/
+target/

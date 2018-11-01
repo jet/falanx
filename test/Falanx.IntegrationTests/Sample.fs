@@ -28,6 +28,24 @@ let dotnetCmd (fs: FileUtils) args =
 let dotnet (fs: FileUtils) args =
     fs.shellExecRun "dotnet" (args @ ["/v:n"; "/bl"])
 
+let getEnv name =
+  System.Environment.GetEnvironmentVariable(name)
+  |> Option.ofObj
+
+let sbtPath () =
+  match getEnv "SBT_HOME" with
+  | None -> None
+  | Some dir -> Some (dir/"sbt.bat")
+
+let sbt_run (fs: FileUtils) args =
+    match sbtPath () with
+    | None -> failwithf "expected SBT_HOME env var"
+    | Some sbt ->
+      //sbt run with args is like
+      //  sbt "run a b"
+      let all = args |> Seq.ofList |> String.concat " "
+      fs.shellExecRun sbt ["--warn"; sprintf "run %s" all]
+
 let renderNugetConfig clear feeds =
     [ yield "<configuration>"
       yield "  <packageSources>"
@@ -51,6 +69,7 @@ let prepareTool (fs: FileUtils) pkgUnderTestVersion =
     fs.createFile (TestRunDirToolDir/"Directory.Build.props") (writeLines 
       [ """<Project ToolsVersion="15.0">"""
         "  <PropertyGroup>"
+        "    <Version></Version>"
         "  </PropertyGroup>"
         "</Project>" ])
 
@@ -74,8 +93,14 @@ let copyExampleWithTemplate (fs: FileUtils) (template: TestAssetProjInfo) (examp
     // copy all the template files
     fs.cp_r (ExamplesDir/template.ProjDir) outDir
 
+    let fileNames =
+      example.FileNames
+      |> List.filter (fun (lang, _, _) -> lang = template.Language)
+      |> List.filter (fun (_, f, _) -> template.RequiredFormats |> List.contains f)
+      |> List.map (fun (_, _, path) -> path)
+
     // copy the example .fs file in the program dir
-    for fileName in example.FileNames do
+    for fileName in fileNames do
       fs.cp (ExamplesDir/example.ExampleDir/fileName) (outDir/template.AssemblyName)
 
     // copy the example proto
@@ -166,8 +191,25 @@ let tests pkgUnderTestVersion =
       let outputPath = projDir/"bin"/"Debug"/"netcoreapp2.1"/template.AssemblyName + ".dll"
       Expect.isTrue (File.Exists outputPath) (sprintf "output assembly '%s' not found" outputPath)
 
-      dotnet fs [outputPath]
+      let binaryFilePath = testDir/"my.bin"
+      let textFilePath = testDir/"output.txt"
+
+      dotnetCmd fs [outputPath; "--serialize"; binaryFilePath]
       |> checkExitCodeZero
+
+      "check serialized binary file exists"
+      |> Expect.isTrue (File.Exists binaryFilePath)
+
+      dotnetCmd fs [outputPath; "--deserialize"; binaryFilePath; "--out"; textFilePath]
+      |> checkExitCodeZero
+
+      "check deserialized output text file exists"
+      |> Expect.isTrue (File.Exists textFilePath)
+
+      let text = File.ReadAllText(textFilePath)
+
+      "check deserialized text exists"
+      |> Expect.isNotWhitespace text
 
   let sanityChecks =
     testList "sanity check of projects" [
@@ -176,7 +218,7 @@ let tests pkgUnderTestVersion =
         let testDir = inDir fs "sanity_check_sample2"
 
         testDir
-        |> buildExampleWithTemplate fs ``template1 binary`` ``sample2 binary``
+        |> buildExampleWithTemplate fs ``template1 binary`` ``sample6 bundle``
       )
 
       testCase |> withLog "can build sample3 json" (fun _ fs ->
@@ -185,7 +227,7 @@ let tests pkgUnderTestVersion =
         Tests.skiptest "only json doesnt work yet"
 
         testDir
-        |> buildExampleWithTemplate fs ``template2 json`` ``sample3 json``
+        |> buildExampleWithTemplate fs ``template2 json`` ``sample6 bundle``
       )
 
       testCase |> withLog "can build sample4 binary+json" (fun _ fs ->
@@ -194,7 +236,7 @@ let tests pkgUnderTestVersion =
         Tests.skiptest "doesnt contains a json serialization/deserialization"
 
         testDir
-        |> buildExampleWithTemplate fs ``template3 binary+json`` ``sample4 binary+json``
+        |> buildExampleWithTemplate fs ``template3 binary+json`` ``sample6 bundle``
       )
 
       testCase |> withLog "can build sample5 pkg" (fun _ fs ->
@@ -297,8 +339,144 @@ let tests pkgUnderTestVersion =
 
     ]
 
+  let interop =
+  
+    let requireSbt () =
+      if sbtPath () |> Option.isNone then
+        Tests.skiptest "sbt now found, check if env var SBT_HOME is set"
+
+    testList "interop" [
+
+      testCase |> withLog "scala sanity check" (fun _ fs ->
+        let testDir = inDir fs "sanity_check_scala"
+
+        let binaryFilePath = testDir/"a.bin"
+        let outFilePath = testDir/"out.txt"
+
+        // copy the template and add the sample
+        testDir
+        |> copyExampleWithTemplate fs ``template4 scala`` ``sample7 itemLevelOrderHistory``
+
+        requireSbt ()
+
+        fs.cd testDir
+
+        // serialize
+        sbt_run fs ["--serialize"; binaryFilePath]
+        |> checkExitCodeZero
+
+        "check serialized file exists"
+        |> Expect.isTrue (File.Exists binaryFilePath)
+
+        // deserialize
+        sbt_run fs ["--deserialize"; binaryFilePath; "--out"; outFilePath]
+        |> checkExitCodeZero
+
+        "check out file exists"
+        |> Expect.isTrue (File.Exists outFilePath)
+
+        let text = File.ReadAllText(outFilePath)
+
+        "check deserialize"
+        |> Expect.equal text "ItemLevelOrderHistory(client1,sku1,12.3,brandA,product1,45.6)"
+      )
+
+      testCase |> withLog ".net -> scala" (fun _ fs ->
+        let testDir = inDir fs "interop_net_scala"
+
+        let scalaApp = testDir/"scala-app"
+        let netApp = testDir/"net-app"
+
+        let binaryFilePath = testDir/"a.bin"
+        let outFilePath = testDir/"out.txt"
+
+        // copy the template and add the sample
+        scalaApp
+        |> copyExampleWithTemplate fs ``template4 scala`` ``sample7 itemLevelOrderHistory``
+
+        netApp
+        |> copyExampleWithTemplate fs ``template1 binary`` ``sample7 itemLevelOrderHistory``
+
+        // serialize with .net
+        fs.cd netApp
+
+        dotnetCmd fs ["run"; "-p"; ``template1 binary``.AssemblyName; "--"; "--serialize"; binaryFilePath]
+        |> checkExitCodeZero
+
+        "check serialized file exists"
+        |> Expect.isTrue (File.Exists binaryFilePath)
+
+        // deserialize with scala
+        requireSbt ()
+
+        fs.cd scalaApp
+
+        sbt_run fs ["--deserialize"; binaryFilePath; "--out"; outFilePath]
+        |> checkExitCodeZero
+
+        "check out file exists"
+        |> Expect.isTrue (File.Exists outFilePath)
+
+        let text = File.ReadAllText(outFilePath)
+
+        "check deserialize"
+        |> Expect.equal text "ItemLevelOrderHistory(clientA,sku12345,78.91,myBrand1,p100,43.21)"
+      )
+
+      testCase |> withLog "scala -> .net" (fun _ fs ->
+        let testDir = inDir fs "interop_scala_net"
+
+        let scalaApp = testDir/"scala-app2"
+        let netApp = testDir/"net-app2"
+
+        let binaryFilePath = testDir/"b.bin"
+        let outFilePath = testDir/"out2.txt"
+
+        // copy the template and add the sample
+        scalaApp
+        |> copyExampleWithTemplate fs ``template4 scala`` ``sample7 itemLevelOrderHistory``
+
+        netApp
+        |> copyExampleWithTemplate fs ``template1 binary`` ``sample7 itemLevelOrderHistory``
+
+        // serialize with scala
+        requireSbt ()
+
+        fs.cd scalaApp
+
+        sbt_run fs ["--serialize"; binaryFilePath]
+        |> checkExitCodeZero
+
+        "check out file exists"
+        |> Expect.isTrue (File.Exists binaryFilePath)
+
+        // deserialize with .net
+        fs.cd netApp
+
+        dotnetCmd fs ["run"; "-p"; ``template1 binary``.AssemblyName; "--"; "--deserialize"; binaryFilePath; "--out"; outFilePath]
+        |> checkExitCodeZero
+
+        "check deserialized file exists"
+        |> Expect.isTrue (File.Exists outFilePath)
+
+        let textLines = File.ReadAllLines(outFilePath) |> List.ofArray
+
+        let expected =
+          ["""{clientId = Some "client1";"""
+           """ retailSkuId = Some "sku1";"""
+           """ categoryId = Some 12.3;"""
+           """ brand = Some "brandA";"""
+           """ product = Some "product1";"""
+           """ orderTss = Some 45.5999985f;}""" ]
+
+        "check deserialize"
+        |> Expect.equal textLines expected
+      )
+    ]
+
   [ generalTests
     sanityChecks
-    sdkIntegrationMocks ]
+    sdkIntegrationMocks
+    interop ]
   |> testList "suite"
   |> testSequenced
