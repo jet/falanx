@@ -422,6 +422,56 @@ let tests pkgUnderTestVersion =
         "check deserialize"
         |> Expect.equal text "ItemLevelOrderHistory(clientA,sku12345,78.91,myBrand1,p100,43.21)"
       )
+
+      testCase |> withLog "scala -> .net" (fun _ fs ->
+        let testDir = inDir fs "interop_scala_net"
+
+        let scalaApp = testDir/"scala-app2"
+        let netApp = testDir/"net-app2"
+
+        let binaryFilePath = testDir/"b.bin"
+        let outFilePath = testDir/"out2.txt"
+
+        // copy the template and add the sample
+        scalaApp
+        |> copyExampleWithTemplate fs ``template4 scala`` ``sample7 itemLevelOrderHistory``
+
+        netApp
+        |> copyExampleWithTemplate fs ``template1 binary`` ``sample7 itemLevelOrderHistory``
+
+        // serialize with scala
+        requireSbt ()
+
+        fs.cd scalaApp
+
+        sbt_run fs ["--serialize"; binaryFilePath]
+        |> checkExitCodeZero
+
+        "check out file exists"
+        |> Expect.isTrue (File.Exists binaryFilePath)
+
+        // deserialize with .net
+        fs.cd netApp
+
+        dotnetCmd fs ["run"; "-p"; ``template1 binary``.AssemblyName; "--"; "--deserialize"; binaryFilePath; "--out"; outFilePath]
+        |> checkExitCodeZero
+
+        "check deserialized file exists"
+        |> Expect.isTrue (File.Exists outFilePath)
+
+        let textLines = File.ReadAllLines(outFilePath) |> List.ofArray
+
+        let expected =
+          ["""{clientId = Some "client1";"""
+           """ retailSkuId = Some "sku1";"""
+           """ categoryId = Some 12.3;"""
+           """ brand = Some "brandA";"""
+           """ product = Some "product1";"""
+           """ orderTss = Some 45.5999985f;}""" ]
+
+        "check deserialize"
+        |> Expect.equal textLines expected
+      )
     ]
 
   [ generalTests
