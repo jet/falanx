@@ -5,22 +5,22 @@ module Program =
     [<EntryPoint>]
     let main args =
 
-        let buffer = BinaryExample.serialize ()
+        let bytes = BinaryExample.serialize ()
 
         printfn "[BINARY] Serialized:"
-        printfn "%A" (buffer.Array)
+        printfn "%A" bytes
 
-        let s = BinaryExample.deserialize buffer.Array
+        let s = BinaryExample.deserialize bytes
 
         printfn "[BINARY] Deserialized:"
         printfn "%A" s
 
-        let buffer = JsonExample.serialize ()
+        let bytes = JsonExample.serialize ()
 
         printfn "[JSON] Serialized:"
-        printfn "%A" (buffer.Array)
+        printfn "%A" bytes
 
-        let s = JsonExample.deserialize buffer.Array
+        let s = JsonExample.deserialize bytes
 
         printfn "[JSON] Deserialized:"
         printfn "%A" s

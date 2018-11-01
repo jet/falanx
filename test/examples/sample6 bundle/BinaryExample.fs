@@ -1,4 +1,4 @@
-module JsonExample
+module BinaryExample
 
 open l1.Contracts
 
@@ -11,7 +11,7 @@ let serialize () =
 
     let buffer = new Froto.Serialization.ZeroCopyBuffer(1000)
     BundleRequest.Serialize(r, buffer)
-    buffer
+    buffer.ToArray()
 
 let deserialize (bytes: byte array) =
     let buffer2 = new Froto.Serialization.ZeroCopyBuffer(bytes)
