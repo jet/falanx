@@ -1,7 +1,0 @@
-FROM maven:3.5-jdk-8-alpine
-WORKDIR /app
-
-COPY app/ /app
-RUN mvn install
-
-ENTRYPOINT ["java", "-jar", "/app/target/falanx-sample6-1.0.0.jar"]
