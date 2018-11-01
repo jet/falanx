@@ -69,6 +69,7 @@ let prepareTool (fs: FileUtils) pkgUnderTestVersion =
     fs.createFile (TestRunDirToolDir/"Directory.Build.props") (writeLines 
       [ """<Project ToolsVersion="15.0">"""
         "  <PropertyGroup>"
+        "    <Version></Version>"
         "  </PropertyGroup>"
         "</Project>" ])
 
