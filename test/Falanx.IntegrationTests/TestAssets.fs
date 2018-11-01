@@ -44,7 +44,7 @@ let ``template3 binary+json`` =
 
 let ``template4 scala`` =
   { ProjDir = "template4 scala"
-    Language = FSharp
+    Language = Scala
     RequiredFormats = [Binary]
     ProjectFile = "src"/"main"/"scala"/"Program.scala"
     AssemblyName = "src"/"main"/"scala"
