@@ -81,8 +81,14 @@ let copyExampleWithTemplate (fs: FileUtils) (template: TestAssetProjInfo) (examp
     // copy all the template files
     fs.cp_r (ExamplesDir/template.ProjDir) outDir
 
+    let fileNames =
+      example.FileNames
+      |> List.filter (fun (lang, _, _) -> lang = template.Language)
+      |> List.filter (fun (_, f, _) -> template.RequiredFormats |> List.contains f)
+      |> List.map (fun (_, _, path) -> path)
+
     // copy the example .fs file in the program dir
-    for fileName in example.FileNames do
+    for fileName in fileNames do
       fs.cp (ExamplesDir/example.ExampleDir/fileName) (outDir/template.AssemblyName)
 
     // copy the example proto
@@ -183,7 +189,7 @@ let tests pkgUnderTestVersion =
         let testDir = inDir fs "sanity_check_sample2"
 
         testDir
-        |> buildExampleWithTemplate fs ``template1 binary`` ``sample2 binary``
+        |> buildExampleWithTemplate fs ``template1 binary`` ``sample6 bundle``
       )
 
       testCase |> withLog "can build sample3 json" (fun _ fs ->
@@ -192,7 +198,7 @@ let tests pkgUnderTestVersion =
         Tests.skiptest "only json doesnt work yet"
 
         testDir
-        |> buildExampleWithTemplate fs ``template2 json`` ``sample3 json``
+        |> buildExampleWithTemplate fs ``template2 json`` ``sample6 bundle``
       )
 
       testCase |> withLog "can build sample4 binary+json" (fun _ fs ->
@@ -201,7 +207,7 @@ let tests pkgUnderTestVersion =
         Tests.skiptest "doesnt contains a json serialization/deserialization"
 
         testDir
-        |> buildExampleWithTemplate fs ``template3 binary+json`` ``sample4 binary+json``
+        |> buildExampleWithTemplate fs ``template3 binary+json`` ``sample6 bundle``
       )
 
       testCase |> withLog "can build sample5 pkg" (fun _ fs ->
@@ -312,7 +318,7 @@ let tests pkgUnderTestVersion =
 
         // copy the template and add the sample
         testDir
-        |> copyExampleWithTemplate fs ``template4 scala`` ``sample7 scala binary``
+        |> copyExampleWithTemplate fs ``template4 scala`` ``sample7 itemLevelOrderHistory``
 
         fs.cd testDir
 
