@@ -28,12 +28,23 @@ let dotnetCmd (fs: FileUtils) args =
 let dotnet (fs: FileUtils) args =
     fs.shellExecRun "dotnet" (args @ ["/v:n"; "/bl"])
 
+let getEnv name =
+  System.Environment.GetEnvironmentVariable(name)
+  |> Option.ofObj
+
+let sbtPath () =
+  match getEnv "SBT_HOME" with
+  | None -> None
+  | Some dir -> Some (dir/"sbt.bat")
+
 let sbt_run (fs: FileUtils) args =
-    let sbtPath = @"C:\tools\sbt-1.2.6\bin\sbt.bat"
-    //sbt run with args is like
-    //  sbt "run a b"
-    let all = args |> Seq.ofList |> String.concat " "
-    fs.shellExecRun sbtPath ["--warn"; sprintf "run %s" all]
+    match sbtPath () with
+    | None -> failwithf "expected SBT_HOME env var"
+    | Some sbt ->
+      //sbt run with args is like
+      //  sbt "run a b"
+      let all = args |> Seq.ofList |> String.concat " "
+      fs.shellExecRun sbt ["--warn"; sprintf "run %s" all]
 
 let renderNugetConfig clear feeds =
     [ yield "<configuration>"
@@ -311,6 +322,11 @@ let tests pkgUnderTestVersion =
     ]
 
   let interop =
+  
+    let requireSbt () =
+      if sbtPath () |> Option.isNone then
+        Tests.skiptest "sbt now found, check if env var SBT_HOME is set"
+
     testList "interop" [
 
       testCase |> withLog "scala sanity check" (fun _ fs ->
@@ -323,6 +339,8 @@ let tests pkgUnderTestVersion =
         fs.cd testDir
 
         let binaryFilePath = testDir/"a.bin"
+
+        requireSbt ()
 
         // serialize
         sbt_run fs ["--serialize"; binaryFilePath]
