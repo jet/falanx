@@ -69,11 +69,11 @@ let ``sample5 pkg`` =
     ProtoFile = "bundle.proto" }
 
 let ``sample6 bundle`` =
-  { ExampleDir = "sample4 binaryjson"
+  { ExampleDir = "sample6 bundle"
     FileNames = [FSharp, Binary, "BinaryExample.fs"; FSharp, Json, "JsonExample.fs"]
     ProtoFile = "bundle.proto" }
 
 let ``sample7 itemLevelOrderHistory`` =
-  { ExampleDir = "sample7 scala"
+  { ExampleDir = "sample7 itemLevelOrderHistory"
     FileNames = [Scala, Binary, "BinaryExample.scala"]
     ProtoFile = "ItemLevelOrderHistory.proto" }
