@@ -361,6 +361,7 @@ let tests pkgUnderTestVersion =
         let netApp = testDir/"net-app"
 
         let binaryFilePath = testDir/"a.bin"
+        let outFilePath = testDir/"out.txt"
 
         // copy the template and add the sample
         scalaApp
@@ -383,11 +384,16 @@ let tests pkgUnderTestVersion =
 
         fs.cd scalaApp
 
-        let r = sbt_run fs ["--deserialize"; binaryFilePath]
-        r |> checkExitCodeZero
+        sbt_run fs ["--deserialize"; binaryFilePath; "--out"; outFilePath]
+        |> checkExitCodeZero
+
+        "check out file exists"
+        |> Expect.isTrue (File.Exists outFilePath)
+
+        let text = File.ReadAllText(outFilePath)
 
         "check deserialize"
-        |> Expect.equal (stdOutLines r) ["ItemLevelOrderHistory(client1,sku1,12.3,brandA,product1,45.6)"]
+        |> Expect.equal text "ItemLevelOrderHistory(clientA,sku12345,78.91,myBrand1,p100,43.21)"
       )
     ]
 

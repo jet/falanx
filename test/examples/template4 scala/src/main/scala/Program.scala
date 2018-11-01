@@ -1,10 +1,11 @@
 import java.nio.file.{Files, Paths}
+import java.nio.charset.StandardCharsets
 
 object Program {
 
   sealed trait Command
   case class Serialize(path: String) extends Command
-  case class Deserialize(path: String) extends Command
+  case class Deserialize(path: String, out: String) extends Command
 
 
   def main(args: Array[String]): Unit = {
@@ -12,7 +13,7 @@ object Program {
     val cmd =
       args match {
         case Array("--serialize", p) => Serialize(p)
-        case Array("--deserialize", p) => Deserialize(p)
+        case Array("--deserialize", p, "--out", o) => Deserialize(p, o)
         case _ => throw new Exception("invalid args, expecting --serialize or --deserialize")
       }
 
@@ -24,10 +25,11 @@ object Program {
         println(bytes)
         Files.write(Paths.get(path), bytes)
       }
-      case Deserialize(path) => {
+      case Deserialize(path, out) => {
         val bytes = Files.readAllBytes(Paths.get(path))
         val item2 = example.deserialize(bytes)
         println(item2)
+        Files.write(Paths.get(out), item2.toString().getBytes(StandardCharsets.UTF_8))
       }
     }
 
