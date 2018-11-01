@@ -332,29 +332,38 @@ let tests pkgUnderTestVersion =
       testCase |> withLog "scala sanity check" (fun _ fs ->
         let testDir = inDir fs "sanity_check_scala"
 
+        let binaryFilePath = testDir/"a.bin"
+        let outFilePath = testDir/"out.txt"
+
         // copy the template and add the sample
         testDir
         |> copyExampleWithTemplate fs ``template4 scala`` ``sample7 itemLevelOrderHistory``
 
-        fs.cd testDir
-
-        let binaryFilePath = testDir/"a.bin"
-
         requireSbt ()
+
+        fs.cd testDir
 
         // serialize
         sbt_run fs ["--serialize"; binaryFilePath]
         |> checkExitCodeZero
-        
+
+        "check serialized file exists"
+        |> Expect.isTrue (File.Exists binaryFilePath)
+
         // deserialize
-        let r = sbt_run fs ["--deserialize"; binaryFilePath]
-        r |> checkExitCodeZero
+        sbt_run fs ["--deserialize"; binaryFilePath; "--out"; outFilePath]
+        |> checkExitCodeZero
+
+        "check out file exists"
+        |> Expect.isTrue (File.Exists outFilePath)
+
+        let text = File.ReadAllText(outFilePath)
 
         "check deserialize"
-        |> Expect.equal (stdOutLines r) ["ItemLevelOrderHistory(client1,sku1,12.3,brandA,product1,45.6)"]
+        |> Expect.equal text "ItemLevelOrderHistory(client1,sku1,12.3,brandA,product1,45.6)"
       )
 
-      ftestCase |> withLog ".net -> scala" (fun _ fs ->
+      testCase |> withLog ".net -> scala" (fun _ fs ->
         let testDir = inDir fs "interop_net_scala"
 
         let scalaApp = testDir/"scala-app"
