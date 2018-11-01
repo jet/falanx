@@ -28,7 +28,7 @@ artifacts:
 on_finish:
   - ps: >-
       $testResults = @(
-         '.\bin\test_results\TestResults.xml'
+         '.\artifact\test_results\TestResults.xml'
       );
       Foreach ($path in $testResults) {
         If (Test-Path $path) {
