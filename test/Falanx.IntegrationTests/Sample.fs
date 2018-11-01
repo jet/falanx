@@ -307,8 +307,8 @@ let tests pkgUnderTestVersion =
   let interop =
     testList "interop" [
 
-      testCase |> withLog "scala" (fun _ fs ->
-        let testDir = inDir fs "interop_scala"
+      testCase |> withLog "scala sanity check" (fun _ fs ->
+        let testDir = inDir fs "sanity_check_scala"
 
         // copy the template and add the sample
         testDir
