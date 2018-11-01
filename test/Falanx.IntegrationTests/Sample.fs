@@ -191,8 +191,25 @@ let tests pkgUnderTestVersion =
       let outputPath = projDir/"bin"/"Debug"/"netcoreapp2.1"/template.AssemblyName + ".dll"
       Expect.isTrue (File.Exists outputPath) (sprintf "output assembly '%s' not found" outputPath)
 
-      dotnetCmd fs [outputPath]
+      let binaryFilePath = testDir/"my.bin"
+      let textFilePath = testDir/"output.txt"
+
+      dotnetCmd fs [outputPath; "--serialize"; binaryFilePath]
       |> checkExitCodeZero
+
+      "check serialized binary file exists"
+      |> Expect.isTrue (File.Exists binaryFilePath)
+
+      dotnetCmd fs [outputPath; "--deserialize"; binaryFilePath; "--out"; textFilePath]
+      |> checkExitCodeZero
+
+      "check deserialized output text file exists"
+      |> Expect.isTrue (File.Exists textFilePath)
+
+      let text = File.ReadAllText(textFilePath)
+
+      "check deserialized text exists"
+      |> Expect.isNotWhitespace text
 
   let sanityChecks =
     testList "sanity check of projects" [

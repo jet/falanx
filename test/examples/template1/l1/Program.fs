@@ -6,8 +6,7 @@ module Program =
 
     type Command =
         | Serialize of string
-        | Deserialize of string
-        | SerializeDeserialize
+        | Deserialize of string * string
 
     [<EntryPoint>]
     let main args =
@@ -15,22 +14,10 @@ module Program =
         let cmd =
             match args with
             | [| "--serialize"; path |] -> Serialize path
-            | [| "--deserialize"; path |] -> Deserialize path
-            | [| |] -> SerializeDeserialize
+            | [| "--deserialize"; path; "--out"; out |] -> Deserialize (path, out)
             | _ -> failwithf "invalid args, expecting --serialize or --deserialize, but was '%A'" args
 
         match cmd with
-        | SerializeDeserialize ->
-            let bytes = BinaryExample.serialize ()
-
-            printfn "Serialized:"
-            printfn "%A" bytes
-
-            let s = BinaryExample.deserialize bytes
-
-            printfn "Deserialized:"
-            printfn "%A" s
-
         | Serialize path ->
             let bytes = BinaryExample.serialize ()
 
@@ -39,7 +26,7 @@ module Program =
 
             File.WriteAllBytes(path, bytes)
 
-        | Deserialize path ->
+        | Deserialize (path, outputPath) ->
             let bytes = File.ReadAllBytes(path)
 
             let s = BinaryExample.deserialize bytes
@@ -47,5 +34,6 @@ module Program =
             printfn "Deserialized:"
             printfn "%A" s
 
+            File.WriteAllText(outputPath, sprintf "%A" s, System.Text.Encoding.UTF8)
         0
 
