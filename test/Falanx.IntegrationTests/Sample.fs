@@ -191,7 +191,7 @@ let tests pkgUnderTestVersion =
       let outputPath = projDir/"bin"/"Debug"/"netcoreapp2.1"/template.AssemblyName + ".dll"
       Expect.isTrue (File.Exists outputPath) (sprintf "output assembly '%s' not found" outputPath)
 
-      dotnet fs [outputPath]
+      dotnetCmd fs [outputPath]
       |> checkExitCodeZero
 
   let sanityChecks =

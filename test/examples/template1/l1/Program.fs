@@ -17,7 +17,7 @@ module Program =
             | [| "--serialize"; path |] -> Serialize path
             | [| "--deserialize"; path |] -> Deserialize path
             | [| |] -> SerializeDeserialize
-            | _ -> failwith "invalid args, expecting --serialize or --deserialize"
+            | _ -> failwithf "invalid args, expecting --serialize or --deserialize, but was '%A'" args
 
         match cmd with
         | SerializeDeserialize ->
