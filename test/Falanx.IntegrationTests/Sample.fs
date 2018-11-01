@@ -353,6 +353,42 @@ let tests pkgUnderTestVersion =
         "check deserialize"
         |> Expect.equal (stdOutLines r) ["ItemLevelOrderHistory(client1,sku1,12.3,brandA,product1,45.6)"]
       )
+
+      ftestCase |> withLog ".net -> scala" (fun _ fs ->
+        let testDir = inDir fs "interop_net_scala"
+
+        let scalaApp = testDir/"scala-app"
+        let netApp = testDir/"net-app"
+
+        let binaryFilePath = testDir/"a.bin"
+
+        // copy the template and add the sample
+        scalaApp
+        |> copyExampleWithTemplate fs ``template4 scala`` ``sample7 itemLevelOrderHistory``
+
+        netApp
+        |> copyExampleWithTemplate fs ``template1 binary`` ``sample7 itemLevelOrderHistory``
+
+        // serialize with .net
+        fs.cd netApp
+
+        dotnetCmd fs ["run"; "-p"; ``template1 binary``.AssemblyName; "--"; "--serialize"; binaryFilePath]
+        |> checkExitCodeZero
+
+        "check serialized file exists"
+        |> Expect.isTrue (File.Exists binaryFilePath)
+
+        // deserialize with scala
+        requireSbt ()
+
+        fs.cd scalaApp
+
+        let r = sbt_run fs ["--deserialize"; binaryFilePath]
+        r |> checkExitCodeZero
+
+        "check deserialize"
+        |> Expect.equal (stdOutLines r) ["ItemLevelOrderHistory(client1,sku1,12.3,brandA,product1,45.6)"]
+      )
     ]
 
   [ generalTests

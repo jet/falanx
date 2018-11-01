@@ -75,5 +75,5 @@ let ``sample6 bundle`` =
 
 let ``sample7 itemLevelOrderHistory`` =
   { ExampleDir = "sample7 itemLevelOrderHistory"
-    FileNames = [Scala, Binary, "BinaryExample.scala"]
+    FileNames = [FSharp, Binary, "BinaryExample.fs"; Scala, Binary, "BinaryExample.scala"]
     ProtoFile = "ItemLevelOrderHistory.proto" }
