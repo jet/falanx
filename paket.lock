@@ -308,8 +308,8 @@ NUGET
       System.Runtime.Handles (>= 4.3)
 GITHUB
   remote: 7sharp9/FSharp.TypeProviders.SDK
-    src/ProvidedTypes.fs (fe917ade18fa4aabde3cb30de64652766e5b64ca)
-    src/ProvidedTypesTesting.fs (fe917ade18fa4aabde3cb30de64652766e5b64ca)
+    src/ProvidedTypes.fs (5237ee5bbff10e1699b7b27e009dd0d34018119c)
+    src/ProvidedTypesTesting.fs (5237ee5bbff10e1699b7b27e009dd0d34018119c)
 GROUP IntegrationTests
 STORAGE: NONE
 RESTRICTION: || (== netcoreapp2.1) (== netstandard2.0)
