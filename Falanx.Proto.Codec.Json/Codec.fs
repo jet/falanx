@@ -5,17 +5,13 @@ open System.Collections.Generic
 open Fleece
 open Fleece.Newtonsoft
 open Microsoft.FSharp.Quotations
-open Microsoft.FSharp.Quotations.DerivedPatterns
 open Microsoft.FSharp.Quotations.Patterns
 open Falanx.Machinery
 open System.Runtime.CompilerServices
 open ProviderImplementation.ProvidedTypes.UncheckedQuotations
 open Falanx.Proto.Core.Model
-
-open Froto.Parser.ClassModel
-open Falanx.Proto.Core.Model
-open Falanx.Machinery.Expr
 open ProviderImplementation.ProvidedTypes
+open FSharpPlus
 open Newtonsoft.Json.Linq
 open Reflection
 
