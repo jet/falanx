@@ -14,6 +14,7 @@ namespace Falanx.Machinery
         open Microsoft.FSharp.Compiler.SourceCodeServices
         open ProviderImplementation.ProvidedTypes
         open ProviderImplementation.ProvidedTypes.UncheckedQuotations
+        open Falanx.Machinery.Reflection
         
         let thisPrefix = "x"
         
@@ -169,8 +170,8 @@ namespace Falanx.Machinery
                     |> List.map(fun et -> false, sysTypeToSynType range et knownNamespaces ommitEnclosingType)
         
                 SynType.Tuple(telems, range)
-            elif t.GetType().Name <> typeof<ProvidedUnion>.Name && FSharpType.IsFunction t then
-                let dom, cod = FSharpType.GetFunctionElements t
+            elif t.GetType().Name <> typeof<ProvidedUnion>.Name && FSharpTypeSafe.IsFunction t then
+                let dom, cod = FSharpTypeSafe.GetFunctionElements t
                 let synDom = sysTypeToSynType range dom knownNamespaces ommitEnclosingType
                 let synCod = sysTypeToSynType range cod knownNamespaces ommitEnclosingType
                 SynType.Fun(synDom, synCod, range)

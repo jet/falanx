@@ -9,7 +9,6 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Reflection.fs" />
     <Compile Include="Codec.fs" />
   </ItemGroup>
   <ItemGroup>
