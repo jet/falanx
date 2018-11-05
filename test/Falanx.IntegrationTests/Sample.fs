@@ -224,16 +224,12 @@ let tests pkgUnderTestVersion =
       testCase |> withLog "can build sample3 json" (fun _ fs ->
         let testDir = inDir fs "sanity_check_sample3_json"
 
-        Tests.skiptest "only json doesnt work yet"
-
         testDir
         |> buildExampleWithTemplate fs ``template2 json`` ``sample6 bundle``
       )
 
       testCase |> withLog "can build sample4 binary+json" (fun _ fs ->
         let testDir = inDir fs "sanity_check_sample4_binaryjson"
-
-        Tests.skiptest "doesnt contains a json serialization/deserialization"
 
         testDir
         |> buildExampleWithTemplate fs ``template3 binary+json`` ``sample6 bundle``
