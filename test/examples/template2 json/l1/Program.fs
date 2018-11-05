@@ -24,12 +24,12 @@ module Program =
             printfn "Serialized:"
             printfn "%A" bytes
 
-            File.WriteAllBytes(path, bytes)
+            File.WriteAllText(path, bytes)
 
         | Deserialize (path, outputPath) ->
-            let bytes = File.ReadAllBytes(path)
+            let jsonText = File.ReadAllText(path)
 
-            let s = JsonExample.deserialize bytes
+            let s = JsonExample.deserialize jsonText
 
             printfn "Deserialized:"
             printfn "%A" s
