@@ -19,8 +19,17 @@ let TestRunDirToolDir = TestRunDir/"tool"
 let NupkgsDir = RepoDir/"artifact"/"nupkg"
 let NugetOrgV3Url = "https://api.nuget.org/v3/index.json"
 
+let stdOutLines (cmd: Command) =
+    cmd.Result.StandardOutput
+    |> fun s -> s.Trim()
+    |> fun s -> s.Split(Environment.NewLine)
+    |> List.ofArray
+
 let checkExitCodeZero (cmd: Command) =
-    Expect.equal 0 cmd.Result.ExitCode "command finished with exit code non-zero."
+    [ yield "command finished with exit code non-zero. Output was:"
+      yield! stdOutLines cmd ]
+    |> String.concat Environment.NewLine
+    |> Expect.equal 0 cmd.Result.ExitCode
 
 let dotnetCmd (fs: FileUtils) args =
     fs.shellExecRun "dotnet" args
@@ -155,14 +164,6 @@ let tests pkgUnderTestVersion =
     fs.mkdir_p outDir
     fs.cd outDir
     outDir
-
-  let asLines (s: string) =
-    s.Split(Environment.NewLine) |> List.ofArray
-
-  let stdOutLines (cmd: Command) =
-    cmd.Result.StandardOutput
-    |> fun s -> s.Trim()
-    |> asLines
 
   let generalTests =
     testList "general" [
