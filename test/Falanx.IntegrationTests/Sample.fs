@@ -26,8 +26,8 @@ let stdOutLines (cmd: Command) =
     |> List.ofArray
 
 let checkExitCodeZero (cmd: Command) =
-    sprintf "command finished with exit code non-zero %i" cmd.Result.ExitCode
-    |> Expect.equal 0 cmd.Result.ExitCode
+    "command finished with exit code non-zero"
+    |> Expect.equal cmd.Result.ExitCode 0
 
 let dotnetCmd (fs: FileUtils) args =
     fs.shellExecRun "dotnet" args
