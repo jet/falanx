@@ -10,6 +10,11 @@ module TypeGeneration =
     open ProviderImplementation.ProvidedTypes
     open Falanx.Machinery
     open Falanx.Machinery.Prelude
+    open Falanx.Machinery.Reflection
+    
+    type Codec =
+        | Binary
+        | Json
 
     let applyRule rule (fieldType: Type) = 
         match rule with
@@ -17,7 +22,7 @@ module TypeGeneration =
         | Repeated -> Expr.makeGenericType [fieldType] typedefof<proto_repeated<_>>
         | Optional -> Expr.makeGenericType [fieldType] typedefof<option<_>>
         
-    let private createPropertyDescriptor scope (lookup: TypesLookup) (ty: ProvidedTypeDefinition) (field: ProtoField) =
+    let private createPropertyDescriptor scope (lookup: TypesLookup) (ty: ProvidedTypeDefinition) (* index used by records field custom attribute *) index (field: ProtoField) =
     
         let typeKind, propertyType = 
             match TypeResolver.resolve scope field.Type lookup with
@@ -31,6 +36,15 @@ module TypeGeneration =
             match field.Rule with
             | Repeated -> ProvidedTypeDefinition.mkPropertyWithField propertyType propertyName true
             | _ -> ProvidedTypeDefinition.mkPropertyWithField propertyType propertyName false
+            
+        //apply custom attributes for record field
+        let constructor = typeof<CompilationMappingAttribute>.TryGetConstructor([|typeof<SourceConstructFlags>; typeof<int> |])
+        // a records field has attributes that look like: (where n is field number)"
+        // [CompilationMapping(SourceConstructFlags.Field, n)]
+        let arguments = 
+            [| CustomAttributeTypedArgument (typeof<SourceConstructFlags>, SourceConstructFlags.Field)
+               CustomAttributeTypedArgument (typeof<int>, index)|]
+        property.AddCustomAttribute(CustomAttributeData.Make(constructor.Value, args = arguments))
     
         { ProvidedProperty = property
           ProvidedField = Some backingField
@@ -191,7 +205,7 @@ module TypeGeneration =
           CaseProperty = caseProperty
           CaseField = caseField }        
             
-    let rec createType scope (lookup: TypesLookup) (message: ProtoMessage) : ProvidedTypeDefinition = 
+    let rec createType (container: ProvidedTypeDefinition) scope (lookup: TypesLookup) (codecs: Codec Set) (message: ProtoMessage) : ProvidedTypeDefinition = 
          try
              let _kind, providedType = 
                  match TypeResolver.resolveNonScalar scope message.Name lookup with
@@ -199,13 +213,14 @@ module TypeGeneration =
                  | None -> failwithf "Type '%s' is not defined" message.Name
                   
              let nestedScope = scope +.+ message.Name
+             providedType.PatchDeclaringType container
              
              message.Enums
              |> Seq.map (createEnum nestedScope lookup)
              |> Seq.iter providedType.AddMember
              
              message.Messages
-             |> Seq.map (createType nestedScope lookup)
+             |> Seq.map (createType providedType nestedScope lookup codecs)
              |> Seq.iter providedType.AddMember
              
              let oneOfDescriptors = 
@@ -223,7 +238,7 @@ module TypeGeneration =
 
              let properties =
                  message.Fields
-                 |> List.map (createPropertyDescriptor nestedScope lookup providedType)
+                 |> List.mapi (createPropertyDescriptor nestedScope lookup providedType)
         
              for prop in properties do
                  providedType.AddMember prop.ProvidedProperty
@@ -243,24 +258,31 @@ module TypeGeneration =
         
              let typeInfo = { Type = providedType; Properties = properties; OneOfGroups = oneOfDescriptors; Maps = maps }
         
-             let staticSerializeMethod = Falanx.Proto.Codec.Binary.Serialization.createSerializeMethod typeInfo
-             let staticDeserializeMethod = Falanx.Proto.Codec.Binary.Deserialization.createDeserializeMethod typeInfo
-             providedType.AddMember staticSerializeMethod
-             providedType.AddMember staticDeserializeMethod
-             
-             providedType.AddInterfaceImplementation typeof<IMessage>
-             
-             let serializeMethod = Falanx.Proto.Codec.Binary.Serialization.createInstanceSerializeMethod typeInfo staticSerializeMethod
-             providedType.AddMember serializeMethod
-             providedType.DefineMethodOverride(serializeMethod, typeof<IMessage>.GetMethod("Serialize"))
-             
-             let readFromMethod = Falanx.Proto.Codec.Binary.Deserialization.createReadFromMethod typeInfo
-             providedType.AddMember readFromMethod
-             providedType.DefineMethodOverride(readFromMethod, typeof<IMessage>.GetMethod("ReadFrom"))
-             
-             let serializedLengthMethod = Falanx.Proto.Codec.Binary.Serialization.createSerializedLength typeInfo
-             providedType.AddMember serializedLengthMethod
-             providedType.DefineMethodOverride(serializedLengthMethod, typeof<IMessage>.GetMethod("SerializedLength"))
+             codecs
+             |> Set.iter (fun codec -> match codec with
+                          | Binary ->
+                                 let staticSerializeMethod = Falanx.Proto.Codec.Binary.Serialization.createSerializeMethod typeInfo
+                                 let staticDeserializeMethod = Falanx.Proto.Codec.Binary.Deserialization.createDeserializeMethod typeInfo
+                                 providedType.AddMember staticSerializeMethod
+                                 providedType.AddMember staticDeserializeMethod
+                                 
+                                 providedType.AddInterfaceImplementation typeof<IMessage>
+                                 
+                                 let serializeMethod = Falanx.Proto.Codec.Binary.Serialization.createInstanceSerializeMethod typeInfo staticSerializeMethod
+                                 providedType.AddMember serializeMethod
+                                 providedType.DefineMethodOverride(serializeMethod, typeof<IMessage>.GetMethod("Serialize"))
+                                 
+                                 let readFromMethod = Falanx.Proto.Codec.Binary.Deserialization.createReadFromMethod typeInfo
+                                 providedType.AddMember readFromMethod
+                                 providedType.DefineMethodOverride(readFromMethod, typeof<IMessage>.GetMethod("ReadFrom"))
+                                 
+                                 let serializedLengthMethod = Falanx.Proto.Codec.Binary.Serialization.createSerializedLength typeInfo
+                                 providedType.AddMember serializedLengthMethod
+                                 providedType.DefineMethodOverride(serializedLengthMethod, typeof<IMessage>.GetMethod("SerializedLength"))
+                          | Json ->
+                              let jsonObjCodec = Falanx.Proto.Codec.Json.temp.tryCode typeInfo
+                              providedType.AddMember jsonObjCodec
+                         )
                           
              providedType
          with

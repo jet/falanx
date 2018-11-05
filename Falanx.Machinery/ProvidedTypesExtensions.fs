@@ -45,7 +45,10 @@ type ProvidedUnion(isTgt: bool, container:TypeContainer, className: string, getB
         ProvidedUnion(false, TypeContainer.TypeToBeDecided, className, K baseType, attrs, K None, [], None, None, K [| |], nonNullable, hideObjectMethods)
         
     override this.GetCustomAttributes(_inherit) = unionAttribs
-    override this.GetCustomAttributes(_attributeType, _inherit) = unionAttribs
+    override this.GetCustomAttributes(_attributeType, _inherit) =
+        unionAttribs
+        //// typeof(SomeType).IsAssignableFrom(typeof(Derived))
+        //|> Array.filter (fun x -> x.GetType().IsAssignableFrom(_attributeType))
         
     //fields is set to just one for now
     member this.AddUnionCase(tag: int, position: int, name: string, [field]: PropertyInfo list) =
@@ -89,6 +92,9 @@ type ProvidedUnion(isTgt: bool, container:TypeContainer, className: string, getB
  
 type ProvidedRecord(isTgt: bool, container:TypeContainer, className: string, getBaseType: (unit -> Type option), attrs: TypeAttributes, getEnumUnderlyingType, staticParams, staticParamsApply, backingDataSource, customAttributesData, nonNullable, hideObjectMethods) =
     inherit ProvidedTypeDefinition(isTgt, container, className, getBaseType, attrs,  getEnumUnderlyingType, staticParams, staticParamsApply, backingDataSource, customAttributesData, nonNullable, hideObjectMethods)
+    
+    let recordAttribs = [|(CompilationMappingAttribute(SourceConstructFlags.RecordType) :> Attribute)|] |> box |> unbox<obj[]>
+    
     static let defaultAttributes isErased = 
              TypeAttributes.Public ||| TypeAttributes.Class ||| TypeAttributes.Sealed ||| enum (if isErased then int32 TypeProviderTypeAttributes.IsErased else 0)
 
@@ -106,6 +112,9 @@ type ProvidedRecord(isTgt: bool, container:TypeContainer, className: string, get
         let hideObjectMethods = defaultArg hideObjectMethods false
         let attrs = defaultAttributes isErased
         ProvidedRecord(false, TypeContainer.TypeToBeDecided, className, K baseType, attrs, K None, [], None, None, K [| |], nonNullable, hideObjectMethods)
+        
+    override this.GetCustomAttributes(_inherit) = recordAttribs
+    override this.GetCustomAttributes(_attributeType, _inherit) = recordAttribs
 
 module ProvidedUnion =
     let inline private apply (uc: ProvidedUnion) f = uc.UnionCases |> Seq.tryFind f
@@ -117,3 +126,10 @@ module ProvidedUnion =
         
     let tryGetUnionCaseByPosition position (uc:ProvidedUnion) =
         apply uc (fun uc -> uc.position = position)
+        
+        
+module ProvidedRecord =
+    let getRecordFields (providedRecord: ProvidedRecord) =
+        providedRecord.GetProperties()
+        |> Array.choose (function :? ProvidedProperty as pp -> Some pp | _ -> None)
+        |> Array.toList

@@ -14,6 +14,7 @@ namespace Falanx.Machinery
         open Microsoft.FSharp.Compiler.SourceCodeServices
         open ProviderImplementation.ProvidedTypes
         open ProviderImplementation.ProvidedTypes.UncheckedQuotations
+        open Falanx.Machinery.Reflection
         
         let thisPrefix = "x"
         
@@ -49,11 +50,15 @@ namespace Falanx.Machinery
         type MemberInfo with
             member m.TryGetCustomAttribute<'Attr when 'Attr :> System.Attribute> () =
                 try
-                    let attrs = m.GetCustomAttributes<'Attr> ()
+                    let attrs = m.GetCustomAttributes(typeof<'Attr>, false)
                     match attrs with
                     | null -> None
                     | _ -> if Seq.isEmpty attrs then None
-                           else  Some(Seq.head attrs)
+                           else  
+                                attrs
+                                |> Seq.choose (fun x -> match x with :? 'Attr as n -> Some n | _ -> None)
+                                |> Seq.tryHead
+                                //Some((Seq.head attrs) :?> 'Attr)
                 with _ ->
                     printfn "TryGetCustomAttribute failed for attribute %A on type %A" typeof<'Attr>.Name m
                     None
@@ -165,8 +170,8 @@ namespace Falanx.Machinery
                     |> List.map(fun et -> false, sysTypeToSynType range et knownNamespaces ommitEnclosingType)
         
                 SynType.Tuple(telems, range)
-            elif t.GetType().Name <> typeof<ProvidedUnion>.Name && FSharpType.IsFunction t then
-                let dom, cod = FSharpType.GetFunctionElements t
+            elif t.GetType().Name <> typeof<ProvidedUnion>.Name && FSharpTypeSafe.IsFunction t then
+                let dom, cod = FSharpTypeSafe.GetFunctionElements t
                 let synDom = sysTypeToSynType range dom knownNamespaces ommitEnclosingType
                 let synCod = sysTypeToSynType range cod knownNamespaces ommitEnclosingType
                 SynType.Fun(synDom, synCod, range)

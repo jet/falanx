@@ -308,8 +308,8 @@ NUGET
       System.Runtime.Handles (>= 4.3)
 GITHUB
   remote: 7sharp9/FSharp.TypeProviders.SDK
-    src/ProvidedTypes.fs (c62b5fa53be06f53fa04724ee2e4f5a905f92fa6)
-    src/ProvidedTypesTesting.fs (c62b5fa53be06f53fa04724ee2e4f5a905f92fa6)
+    src/ProvidedTypes.fs (5237ee5bbff10e1699b7b27e009dd0d34018119c)
+    src/ProvidedTypesTesting.fs (5237ee5bbff10e1699b7b27e009dd0d34018119c)
 GROUP IntegrationTests
 STORAGE: NONE
 RESTRICTION: || (== netcoreapp2.1) (== netstandard2.0)
@@ -318,12 +318,12 @@ NUGET
     Argu (5.1)
       FSharp.Core (>= 4.3.2)
       System.Configuration.ConfigurationManager (>= 4.4)
-    Expecto (8.4.2)
+    Expecto (8.4.3)
       Argu (>= 5.1)
       Mono.Cecil (>= 0.10)
       System.Diagnostics.FileVersionInfo (>= 4.3)
-    Expecto.TestResults (8.4.2)
-      Expecto (>= 8.4.2)
+    Expecto.TestResults (8.4.3)
+      Expecto (>= 8.4.3)
     FSharp.Core (4.5.2)
     MedallionShell (1.5.1)
       NETStandard.Library (>= 1.6)
@@ -603,7 +603,7 @@ NUGET
       System.Runtime.Handles (>= 4.3)
 GITHUB
   remote: enricosada/dotnet-proj-info
-    test/dotnet-proj-info.Tests/FileUtils.fs (40833a14359e2e4ba7bdfaa1cc6c6944b70c8ea0)
+    test/dotnet-proj-info.Tests/FileUtils.fs (b691ffbd58b6b418e0afff5f3e5ddc3d6647f636)
 GROUP MergeNupkgTool
 STORAGE: NONE
 RESTRICTION: || (== netcoreapp2.0) (== netstandard2.0)

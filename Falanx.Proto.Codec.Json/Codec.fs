@@ -1,14 +1,20 @@
 namespace Falanx.Proto.Codec.Json
 open System
+open System.Reflection
+open System.Collections.Generic
 open Fleece
 open Fleece.Newtonsoft
-open System.Collections.Generic
 open Microsoft.FSharp.Quotations
-open Microsoft.FSharp.Quotations.DerivedPatterns
 open Microsoft.FSharp.Quotations.Patterns
 open Falanx.Machinery
 open System.Runtime.CompilerServices
 open ProviderImplementation.ProvidedTypes.UncheckedQuotations
+open Falanx.Proto.Core.Model
+open ProviderImplementation.ProvidedTypes
+open FSharpPlus
+open Newtonsoft.Json.Linq
+open Reflection
+
 
 [<CLIMutable>]
 type Result2 =
@@ -30,11 +36,7 @@ module Quotations =
           for ex in args do yield! traverseForCall ex
       | Quotations.ExprShape.ShapeVar _ -> () ]
 
-module temp =
-    open FSharpPlus
-    open System.Reflection
-    open Newtonsoft.Json.Linq
-    
+module temp =    
     let cleanUpTypeName (str:string) =
         let sb = Text.StringBuilder(str)
         sb.Replace("System.", "")
@@ -48,7 +50,7 @@ module temp =
           .Replace("Int32", "int") |> ignore
         sb.ToString()
             
-    let simpleTypeFormatter (a:System.IO.TextWriter) (b:Type) =
+    let simpleTypeFormatter (a:IO.TextWriter) (b:Type) =
         b.ToString()
         |> cleanUpTypeName
         |> a.Write
@@ -59,7 +61,7 @@ module temp =
 
     let x<'T> : 'T = Unchecked.defaultof<'T>
     let knownNamespaces = ["System"; "System.Collections.Generic"; "Fleece.Newtonsoft"; "Microsoft.FSharp.Core"; "Newtonsoft.Json.Linq"] |> Set.ofList
-    let qs = ProviderImplementation.ProvidedTypes.QuotationSimplifier(true)                          
+    let qs = QuotationSimplifier(true)                          
      
     let typeName (m : Type) =
         Microsoft.FSharp.Compiler.PrettyNaming.DemangleGenericTypeName  m.Name
@@ -75,32 +77,31 @@ module temp =
         sprintf "[%s]" x
     
     let rec fsSig (t : Type) = 
-        if Reflection.FSharpType.IsFunction t then 
-            let a,b = Reflection.FSharpType.GetFunctionElements t
+        if FSharpType.IsFunction t then 
+            let a,b = FSharpType.GetFunctionElements t
             sprintf "%s -> %s" (fsSig a) (fsSig b)
-        elif Reflection.FSharpType.IsTuple t then 
-            let types = Reflection.FSharpType.GetTupleElements t
+        elif FSharpType.IsTuple t then 
+            let types = FSharpType.GetTupleElements t
             let str = types |> Array.map fsSig |> String.concat ", " 
             sprintf "(%i, %s)" types.Length str
         else    
             generic t
     
-    let createLambdaRecord recordType =
+    let createLambdaRecord (recordType: ProvidedRecord) =
         //Lambda (u, Lambda (t, NewRecord (Result2, u, t))
-        let recordFields = Reflection.FSharpType.GetRecordFields(recordType)
+        let recordFields = ProvidedRecord.getRecordFields recordType
         let recordVars =
             recordFields
-            |> List.ofArray
             |> List.map(fun pi -> Var(pi.Name, pi.PropertyType))
 
         let thing = 
-            List.foldBack (fun v acc -> Expr.Lambda(v,acc)) recordVars (Expr.NewRecord(recordType, recordVars |> List.map (Expr.Var) ))
+            List.foldBack (fun v acc -> Expr.Lambda(v,acc)) recordVars (Expr.NewRecordUnchecked(recordType, recordVars |> List.map (Expr.Var) ))
         thing
               
-    let  getFunctionReturnType typ =
-        let rec loop typ = 
-            if FSharp.Reflection.FSharpType.IsFunction typ then
-                let domain, range = FSharp.Reflection.FSharpType.GetFunctionElements typ
+    let  getFunctionReturnType (typ: Type) =
+        let rec loop (typ: Type) = 
+            if FSharpTypeSafe.IsFunction typ then
+                let domain, range = FSharpTypeSafe.GetFunctionElements typ                   
                 loop range
             else typ  
         let result = loop typ
@@ -108,8 +109,8 @@ module temp =
         
     let  getFunctionReturnType2 typ =            
         let rec loop typ = 
-            if FSharp.Reflection.FSharpType.IsFunction typ then
-                let domain, range = FSharp.Reflection.FSharpType.GetFunctionElements typ
+            if FSharpType.IsFunction typ then
+                let domain, range = FSharpTypeSafe.GetFunctionElements typ
                 range
             else typ
         let result = loop typ
@@ -117,16 +118,16 @@ module temp =
         
     let rec getLambdaElements typ = [
         let returnOrLoop t = [
-            if Reflection.FSharpType.IsFunction t then 
+            if FSharpTypeSafe.IsFunction t then 
                 yield! getLambdaElements t
             else yield t ]
-        let domain, rest = Reflection.FSharpType.GetFunctionElements(typ)
+        let domain, rest = FSharpTypeSafe.GetFunctionElements(typ)
         yield! returnOrLoop domain
         yield! returnOrLoop rest
         ]
         
     let makeFunctionTypeFromElements (xs: Type list) =
-        let newFunction = xs |> List.reduceBack (fun a b -> Reflection.FSharpType.MakeFunctionType(a, b) )
+        let newFunction = xs |> List.reduceBack (fun a b -> FSharpType.MakeFunctionType(a, b) )
         newFunction
         
     
@@ -134,12 +135,13 @@ module temp =
     
         let replaceLambdaArgs (mi: MethodInfo) (lambda:Type) =
             let lambdaReturn = getFunctionReturnType lambda
-            mi.MakeGenericMethod([|lambda
-                                   typeof<IReadOnlyDictionary<string,JsonValue>>
-                                   typeof<string>
-                                   lambdaReturn
-                                   typeof<string>
-                                   typeof<JToken>|])
+            ProvidedTypeBuilder.MakeGenericMethod(mi, [lambda; typeof<IReadOnlyDictionary<string,JsonValue>>; typeof<string>; lambdaReturn; typeof<string>; typeof<JToken>] )
+//            mi.MakeGenericMethod([|lambda
+//                                   typeof<IReadOnlyDictionary<string,JsonValue>>
+//                                   typeof<string>
+//                                   lambdaReturn
+//                                   typeof<string>
+//                                   typeof<JToken>|])
 
         //mapping f: 'a -> ('b -> Result<'a,'c>) * ('d -> IReadOnlyDictionary<'e,'f>)
         
@@ -172,15 +174,17 @@ module temp =
         //System.Tuple`2[FSharpFunc`2[IReadOnlyDictionary`2[String, JToken],FSharpResult`2[FSharpFunc`2[FSharpOption`1[String], FSharpFunc`2[FSharpOption`1[String],Result2]],String]],FSharpFunc`2[Result3,IReadOnlyDictionary`2[JToken]]]
 
         let f = Var("f", lambdaType)
-        let call = Expr.Call(mappingMethodInfoFull, [Expr.Var(f)])
+        let call = Expr.CallUnchecked(mappingMethodInfoFull, [Expr.Var(f)])
         let lambda = Expr.Lambda(f, call)
         lambda        
         
     let callPipeRight (arg:Expr) (func:Expr) =
         let methodInfoGeneric = Expr.methoddefof<@ (|>) @>
         let funcTypeReturn = getFunctionReturnType func.Type
-        let methodInfoTyped = methodInfoGeneric.MakeGenericMethod([|arg.Type; funcTypeReturn|])
-        let expr = Expr.Call(methodInfoTyped, [arg; func])
+        
+        let methodInfoTyped = ProvidedTypeBuilder.MakeGenericMethod(methodInfoGeneric, [arg.Type; funcTypeReturn])
+        //methodInfoGeneric.MakeGenericMethod([|arg.Type; funcTypeReturn|])
+        let expr = Expr.CallUnchecked(methodInfoTyped, [arg; func])
         expr
         
 
@@ -207,13 +211,14 @@ module temp =
         let remainingTypeExpression = 
             match nextFieldType with 
             | Some nextFieldType ->
-                Reflection.FSharpType.MakeFunctionType(typedefof<Option<_>>.MakeGenericType(nextFieldType), recordType)
+                FSharpType.MakeFunctionType(typedefof<Option<_>>.MakeGenericType(nextFieldType), recordType)
             | None -> recordType
         
         let jfieldoptMethodInfo = Expr.methoddefof <@ jfieldOpt<_,string,_> x x x @>
         //                          Record    ; fieldType; nextFieldType -> Record
-        let jFieldTypeArguments = [|recordType; fieldType; remainingTypeExpression|]
-        let jfieldoptMethodInfoTyped = jfieldoptMethodInfo.MakeGenericMethod jFieldTypeArguments
+        let jFieldTypeArguments = [recordType; fieldType; remainingTypeExpression]
+        let jfieldoptMethodInfoTyped = 
+            ProvidedTypeBuilder.MakeGenericMethod(jfieldoptMethodInfo, jFieldTypeArguments)
         let formattedjfieldoptMethodInfoTyped = sprintf "%s" (jfieldoptMethodInfoTyped.ToString() |> cleanUpTypeName)
         
         let fieldName = Expr.Value "url"
@@ -233,14 +238,14 @@ module temp =
                     let nextField = typedefof<Option<_>>.MakeGenericType(nextFieldType)
                     makeFunctionTypeFromElements [currentField; nextField; recordType]
                 | None ->
-                    Reflection.FSharpType.MakeFunctionType(currentField, recordType)
+                    FSharpType.MakeFunctionType(currentField, recordType)
             
             //IReadOnlyDictionary<String,JToken> -> Result<Option<String> -> Option<Int32>   -> Result2, String>
             //IReadOnlyDictionary<String,JToken> -> Result<Option<Int32>                     -> Result2, String>
-            typedefof<Result<_,_>>.MakeGenericType([|functionType; typeof<string>|])
+            typedefof<Result<_,_>>.MakeGenericType( [| functionType; typeof<string> |] )
             
-        let decoderType = Reflection.FSharpType.MakeFunctionType(domain, range)
-        let formattedDecoderType = sprintf "%a" sprintfsimpleTypeFormatter decoderType
+        let decoderType = FSharpType.MakeFunctionType(domain, range)
+        //let formattedDecoderType = sprintf "%a" sprintfsimpleTypeFormatter decoderType
         //decoder is:
         //IReadOnlyDictionary<String,JToken> -> Result< Result2 -> Option<String> -> Option<Int32>, String>
         
@@ -250,20 +255,20 @@ module temp =
         let decoder = Var("decode", decoderType)
         
         // Record -> IReadOnlyDictionary<String, JToken>
-        let encoderType = Reflection.FSharpType.MakeFunctionType(recordType, typeof<IReadOnlyDictionary<String, JToken>>)
-        let formattedEncoderType = sprintf "%a" sprintfsimpleTypeFormatter encoderType
+        let encoderType = FSharpType.MakeFunctionType(recordType, typeof<IReadOnlyDictionary<String, JToken>>)
+        //let formattedEncoderType = sprintf "%a" sprintfsimpleTypeFormatter encoderType
         let encoder = Var("encode", encoderType)
         
         // decoder * encoder
         // ( IReadOnlyDictionary<String, JToken> -> Result<Option<fieldType> -> Option<nextFieldType> -> Record, String>) * (Record -> IReadOnlyDictionary<String, JToken> )
-        let codecType = Reflection.FSharpType.MakeTupleType [|decoderType; encoderType|]
-        let formattedCodecType = sprintf "%a" sprintfsimpleTypeFormatter codecType
+        let codecType = FSharpType.MakeTupleType [|decoderType; encoderType|]
+        //let formattedCodecType = sprintf "%a" sprintfsimpleTypeFormatter codecType
         let codec = Var("codec", codecType)
         
         Expr.Lambda(codec,
             Expr.Let(decoder, Expr.TupleGet(Expr.Var codec, 0),
                 Expr.Let(encoder, Expr.TupleGet(Expr.Var codec, 1),
-                    Expr.Call(jfieldoptMethodInfoTyped, [fieldName; getter; Expr.Var decoder; Expr.Var encoder]))))
+                    Expr.CallUnchecked(jfieldoptMethodInfoTyped, [fieldName; getter; Expr.Var decoder; Expr.Var encoder]))))
                     
                     
     type TypeChainCache<'a> = 
@@ -353,14 +358,25 @@ module temp =
     let callJfieldoptNew (recordType: Type) propertyInfo (fieldType: Type ) (nextFieldType: Type option) =
         let typeC =
             match nextFieldType with 
-            | Some t -> Reflection.FSharpType.MakeFunctionType(typedefof<Option<_>>.MakeGenericType(t), recordType)
+            | Some t -> FSharpType.MakeFunctionType(typedefof<Option<_>>.MakeGenericType(t), recordType)
             | None -> recordType
         TypeTemplate.create callJfieldopt3<_,string,_> "callJfieldopt3" [recordType; fieldType; typeC] propertyInfo
-     
-
-
         
-    let printerOfDoom() =
+    let createRecordJFieldOpts recordFields recordType =
+        let final = recordFields |> List.last
+        let pairs = recordFields |> List.pairwise
+        let optionType (o: Type) =
+            o.GetGenericArguments().[0]
+        
+        let jFieldOptions =
+            pairs
+            |> List.map (fun (first, second) -> callJfieldopt recordType first (optionType first.PropertyType) (Some (optionType second.PropertyType)))
+        let finalJField = callJfieldopt recordType final (optionType final.PropertyType) None
+        
+        [ yield! jFieldOptions
+          yield finalJField ]
+        
+    let quotationsTypePrinter expr =
     
         let rec traverseQuotation f q = 
           let q = defaultArg (f q) q
@@ -368,78 +384,41 @@ module temp =
           | ExprShape.ShapeLambda(v, body)  -> Expr.Lambda(v, traverseQuotation f body)
           | ExprShape.ShapeCombination(comb, args) -> ExprShape.RebuildShapeCombination(comb, List.map (traverseQuotation f) args )          
           | ExprShape.ShapeVar _ -> q
-      
-        let r =
-            <@
-                fun u t s -> { url = u; title= t; snippets = s }
-                |> withFields
-                |> jfieldOpt "url" (fun x -> x.url)
-                |> jfieldOpt "title" (fun x -> x.title)
-                |> jfield "snippets"  (fun x -> x.snippets)
-                
-            @>
+             
+        traverseQuotation (fun e -> match e with
+                                    | Call(_,mi,args) when mi.IsGenericMethod -> 
+                                       printfn "Call: %s" mi.Name
+                                       printfn "    Args: %A" args
+                                       printfn "    Type: %a" simpleTypeFormatter e.Type
+                                       printfn "    MI_RType: %a" simpleTypeFormatter mi.ReturnType
+                                       mi.GetGenericArguments()
+                                       |> Array.iteri (fun i a -> printfn "    %i: %a" i simpleTypeFormatter a)
+                                       printfn ""
+                                       None
+                                    | Let(v,mi,_) ->
+                                        printfn "Let:\n    Var: %s\n    Type: %a\n" v.Name simpleTypeFormatter v.Type
+                                        None
+                                    | Lambda(v, expr) ->
+                                       printfn "Lambda:"
+                                       printfn "    Var: %s\n    Type: %a" v.Name simpleTypeFormatter v.Type
+                                       printfn "    expr: %A" expr
+                                       printfn "    Type: %a" simpleTypeFormatter expr.Type
+                                       
+                                       None
+                                    | _ -> None) expr
 
+    let tryCode (typeDescriptor: TypeDescriptor) =
 
-        
-        let result = 
-            r |> traverseQuotation (fun e -> match e with
-                                             | Call(_,mi,args) when mi.IsGenericMethod -> 
-                                                                        printfn "Call: %s" mi.Name
-                                                                        printfn "    Args: %A" args
-                                                                        printfn "    Type: %a" simpleTypeFormatter e.Type
-                                                                        printfn "    MI_RType: %a" simpleTypeFormatter mi.ReturnType
-                                                                        mi.GetGenericArguments()
-                                                                        |> Array.iteri (fun i a -> printfn "    %i: %a" i simpleTypeFormatter a)
-                                                                        printfn ""
-                                                                        None
-                                             | Let(v,mi,_) ->
-                                                 printfn "Let:\n    Var: %s\n    Type: %a\n" v.Name simpleTypeFormatter v.Type
-                                                 None
-                                             | Lambda(v, expr) ->
-                                                printfn "Lambda:"
-                                                printfn "    Var: %s\n    Type: %a" v.Name simpleTypeFormatter v.Type
-                                                printfn "    expr: %A" expr
-                                                printfn "    Type: %a" simpleTypeFormatter expr.Type
-                                                
-                                                None
-                                             | _ -> None)
-                                                                        
-        
-
-        ()   
-        //printfn "%A" (loop r)
-
-    let tryCode() =
-        printerOfDoom()
-
-        let recordType = typeof<Result2>
+        let recordType = typeDescriptor.Type :?> ProvidedRecord
         let lambdaRecord = createLambdaRecord recordType
         let mapping = callMapping lambdaRecord
-        let pipeLambdaToMapping =  callPipeRight lambdaRecord mapping
+        let pipeLambdaToMapping = callPipeRight lambdaRecord mapping
         
-        let recordFields = Reflection.FSharpType.GetRecordFields(recordType) |> Array.toList
-        
-        
-        let createRecordJFieldOpts recordFields =
-            let final = recordFields |> List.last
-            let pairs = recordFields |> List.pairwise
-            let optionType (o: Type) =
-                o.GetGenericArguments().[0]
+        let recordFields = ProvidedRecord.getRecordFields recordType        
             
-            let jFieldOptions =
-                pairs
-                |> List.map (fun (first, second) -> callJfieldopt recordType first (optionType first.PropertyType) (Some (optionType second.PropertyType)))
-            let finalJField = callJfieldopt recordType final (optionType final.PropertyType) None
-            
-            [ yield! jFieldOptions
-              yield finalJField ]
-                
-            
-            
-        let jFieldOpts = createRecordJFieldOpts recordFields
+        let jFieldOpts = createRecordJFieldOpts recordFields recordType
         let allPipedFunctions = [yield lambdaRecord; yield mapping; yield! jFieldOpts]
-        let foldedFunctions =
-            allPipedFunctions |> List.reduce callPipeRight
+        let foldedFunctions = allPipedFunctions |> List.reduce callPipeRight
                          
 
 //        let firstJfieldOpt = callJfieldopt recordType (Expr.propertyof<@ (x:Result2).url @>) typeof<string> (Some typeof<int>)
@@ -453,16 +432,24 @@ module temp =
         
         let ctast, ctpt = Quotations.ToAst( foldedFunctions, knownNamespaces = knownNamespaces )
         let code = Fantomas.CodeFormatter.FormatAST(ctpt, "test", None, Fantomas.FormatConfig.FormatConfig.Default)
-        //FsAst.PrintAstInfo.printAstInfo "/Users/dave.thomas/codec.fs"
-        code                              
+        //FsAst.PrintAstInfo.printAstInfo "/Users/dave.thomas/codec.fs"                           
            
-module test =
+//        type Person = { 
+//            name : string * string
+//            age : int option
+//            children: Person list }
+//            with
+//            static member JsonObjCodec : Codec<IReadOnlyDictionary<string,JsonValue>,Person> =
+//                fun f l a c -> { name = (f, l); age = a; children = c }
+//                |> withFields
+//                |> jfield    "firstName" (fun x -> fst x.name)
+//                |> jfield    "lastName"  (fun x -> snd x.name)
+//                |> jfieldOpt "age"       (fun x -> x.age)
+//                |> jfield    "children"  (fun x -> x.children)
 
-
-    let test() =
-
-        //let original = {url = Some "John"}
-        //let serialized = sprintf "%s" (string (toJson original))
-        //let deserialized = parseJson<Result> serialized
-        //original, serialized, deserialized
-        ()
+        let signatureType =
+            let def = typedefof<Codec<IReadOnlyDictionary<string,JsonValue>,_>>
+            def.MakeGenericType [|typeof<IReadOnlyDictionary<string,JsonValue>>; typeDescriptor.Type :> _ |]
+            
+        let createJsonObjCodec = ProvidedMethod("JsonObjCodec", [], signatureType, invokeCode = (fun args -> foldedFunctions), isStatic = true )
+        createJsonObjCodec
