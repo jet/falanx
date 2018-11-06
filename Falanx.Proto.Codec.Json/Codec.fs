@@ -11,7 +11,6 @@ open System.Runtime.CompilerServices
 open ProviderImplementation.ProvidedTypes.UncheckedQuotations
 open Falanx.Proto.Core.Model
 open ProviderImplementation.ProvidedTypes
-open FSharpPlus
 open Newtonsoft.Json.Linq
 open Reflection
 
@@ -202,26 +201,22 @@ module temp =
 //        expr
 
         
-    let callJfieldopt (recordType: Type) propertyInfo (fieldType: Type ) (nextFieldType: Type option) =
+    let callJfieldopt (recordType: Type) propertyInfo (fieldType: Type ) (nextFieldType: Type) =
         //
         // fun u t -> { url = u; title= t }
         // |> mapping<Option<String> -> Option<int> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken>
         // |> jfieldopt<Result2, string, Option<int> -> Result2> "url"   (fun x -> x.url)
         // |> jfieldopt<Result2, int   , Result2>                "title" (fun x -> x.title)
-        let remainingTypeExpression = 
-            match nextFieldType with 
-            | Some nextFieldType ->
-                FSharpType.MakeFunctionType(typedefof<Option<_>>.MakeGenericType(nextFieldType), recordType)
-            | None -> recordType
+
         
         let jfieldoptMethodInfo = Expr.methoddefof <@ jfieldOpt<_,string,_> x x x @>
         //                          Record    ; fieldType; nextFieldType -> Record
-        let jFieldTypeArguments = [recordType; fieldType; remainingTypeExpression]
+        let jFieldTypeArguments = [recordType; fieldType; nextFieldType]
         let jfieldoptMethodInfoTyped = 
             ProvidedTypeBuilder.MakeGenericMethod(jfieldoptMethodInfo, jFieldTypeArguments)
         let formattedjfieldoptMethodInfoTyped = sprintf "%s" (jfieldoptMethodInfoTyped.ToString() |> cleanUpTypeName)
         
-        let fieldName = Expr.Value "url"
+        let fieldName = Expr.Value fieldType.Name //should ideally be protodecriptor.name
         
         let xvar = Var("x", recordType)
         
@@ -233,12 +228,17 @@ module temp =
             let currentField = typedefof<Option<_>>.MakeGenericType(fieldType)
             
             let functionType =
-                match nextFieldType with 
-                | Some nextFieldType ->
-                    let nextField = typedefof<Option<_>>.MakeGenericType(nextFieldType)
-                    makeFunctionTypeFromElements [currentField; nextField; recordType]
-                | None ->
-                    FSharpType.MakeFunctionType(currentField, recordType)
+//                match nextFieldTypes with
+//                | [] ->
+                    FSharpType.MakeFunctionType(currentField, nextFieldType)
+//                | xs ->
+//                    let nextFieldType =
+//                        xs
+//                        |> List.map (fun (pi: PropertyInfo) -> pi.PropertyType)
+//                        |> makeFunctionTypeFromElements 
+//                    let nextField = typedefof<Option<_>>.MakeGenericType(nextFieldType)
+//                    
+//                    makeFunctionTypeFromElements [currentField; nextField; recordType]
             
             //IReadOnlyDictionary<String,JToken> -> Result<Option<String> -> Option<Int32>   -> Result2, String>
             //IReadOnlyDictionary<String,JToken> -> Result<Option<Int32>                     -> Result2, String>
@@ -362,19 +362,32 @@ module temp =
             | None -> recordType
         TypeTemplate.create callJfieldopt3<_,string,_> "callJfieldopt3" [recordType; fieldType; typeC] propertyInfo
         
-    let createRecordJFieldOpts recordFields recordType =
-        let final = recordFields |> List.last
-        let pairs = recordFields |> List.pairwise
-        let optionType (o: Type) =
-            o.GetGenericArguments().[0]
+    let createRecordJFieldOpts (recordFields: #PropertyInfo list) (recordType: Type) =
+
+        let fieldTypeWithRest =
+            let rec loop (recordFields: #PropertyInfo list) =
+                [
+                    match recordFields with
+                    | [] -> ()
+                    | h :: [] ->
+                        yield h, recordType
+                    | h :: t ->
+                        let rest = (t |> List.map (fun pt -> pt.PropertyType)) @ [recordType]
+                        let all = makeFunctionTypeFromElements rest
+                        yield h, all
+                        yield! loop t
+                    | [h] -> yield h, recordType
+                ]
+            loop recordFields
+            
+        let optionType (o: Type) = o.GetGenericArguments().[0]
         
         let jFieldOptions =
-            pairs
-            |> List.map (fun (first, second) -> callJfieldopt recordType first (optionType first.PropertyType) (Some (optionType second.PropertyType)))
-        let finalJField = callJfieldopt recordType final (optionType final.PropertyType) None
+            fieldTypeWithRest
+            |> List.map (fun (field, rest) ->
+                callJfieldopt recordType field (optionType field.PropertyType) rest)
         
-        [ yield! jFieldOptions
-          yield finalJField ]
+        jFieldOptions
         
     let quotationsTypePrinter expr =
     
@@ -414,7 +427,7 @@ module temp =
         let mapping = callMapping lambdaRecord
         let pipeLambdaToMapping = callPipeRight lambdaRecord mapping
         
-        let recordFields = ProvidedRecord.getRecordFields recordType        
+        let recordFields = ProvidedRecord.getRecordFields recordType
             
         let jFieldOpts = createRecordJFieldOpts recordFields recordType
         let allPipedFunctions = [yield lambdaRecord; yield mapping; yield! jFieldOpts]
