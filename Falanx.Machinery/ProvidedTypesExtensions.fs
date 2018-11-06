@@ -131,5 +131,5 @@ module ProvidedUnion =
 module ProvidedRecord =
     let getRecordFields (providedRecord: ProvidedRecord) =
         providedRecord.GetProperties()
-        |> Array.choose (function :? ProvidedProperty as pp -> Some pp | _ -> None)
+        |> Array.choose (function :? ProvidedProperty as pp -> Some (pp :> PropertyInfo) | _ -> None)
         |> Array.toList
