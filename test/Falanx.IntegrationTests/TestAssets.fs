@@ -50,6 +50,14 @@ let ``template4 scala`` =
     AssemblyName = "src"/"main"/"scala"
     ProtoFile = "src"/"main"/"protobuf"/"ItemLevelOrderHistory.proto" }
 
+let ``template5 scala json`` =
+  { ProjDir = "template5 scala json"
+    Language = Scala
+    RequiredFormats = [Json]
+    ProjectFile = "src"/"main"/"scala"/"Program.scala"
+    AssemblyName = "src"/"main"/"scala"
+    ProtoFile = "src"/"main"/"protobuf"/"ItemLevelOrderHistory.proto" }
+
 type FalanxMock =
   { ProjDir: string
     FileName: string }
@@ -75,5 +83,9 @@ let ``sample6 bundle`` =
 
 let ``sample7 itemLevelOrderHistory`` =
   { ExampleDir = "sample7 itemLevelOrderHistory"
-    FileNames = [FSharp, Binary, "BinaryExample.fs"; FSharp, Json, "JsonExample.fs"; Scala, Binary, "BinaryExample.scala"]
+    FileNames =
+      [ FSharp, Binary, "BinaryExample.fs"
+        FSharp, Json, "JsonExample.fs"
+        Scala, Binary, "BinaryExample.scala"
+        Scala, Json, "JsonExample.scala" ]
     ProtoFile = "ItemLevelOrderHistory.proto" }
