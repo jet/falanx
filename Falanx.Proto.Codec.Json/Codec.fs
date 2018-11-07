@@ -135,12 +135,6 @@ module temp =
         let replaceLambdaArgs (mi: MethodInfo) (lambda:Type) =
             let lambdaReturn = getFunctionReturnType lambda
             ProvidedTypeBuilder.MakeGenericMethod(mi, [lambda; typeof<IReadOnlyDictionary<string,JsonValue>>; typeof<string>; lambdaReturn; typeof<string>; typeof<JToken>] )
-//            mi.MakeGenericMethod([|lambda
-//                                   typeof<IReadOnlyDictionary<string,JsonValue>>
-//                                   typeof<string>
-//                                   lambdaReturn
-//                                   typeof<string>
-//                                   typeof<JToken>|])
 
         //mapping f: 'a -> ('b -> Result<'a,'c>) * ('d -> IReadOnlyDictionary<'e,'f>)
         
@@ -180,9 +174,7 @@ module temp =
     let callPipeRight (arg:Expr) (func:Expr) =
         let methodInfoGeneric = Expr.methoddefof<@ (|>) @>
         let funcTypeReturn = getFunctionReturnType func.Type
-        
         let methodInfoTyped = ProvidedTypeBuilder.MakeGenericMethod(methodInfoGeneric, [arg.Type; funcTypeReturn])
-        //methodInfoGeneric.MakeGenericMethod([|arg.Type; funcTypeReturn|])
         let expr = Expr.CallUnchecked(methodInfoTyped, [arg; func])
         expr
         
@@ -202,7 +194,6 @@ module temp =
 
         
     let callJfieldopt (recordType: Type) propertyInfo (fieldType: Type ) (nextFieldType: Type) =
-        //
         // fun u t -> { url = u; title= t }
         // |> mapping<Option<String> -> Option<int> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken>
         // |> jfieldopt<Result2, string, Option<int> -> Result2> "url"   (fun x -> x.url)
@@ -210,7 +201,7 @@ module temp =
 
         
         let jfieldoptMethodInfo = Expr.methoddefof <@ jfieldOpt<_,string,_> x x x @>
-        //                          Record    ; fieldType; nextFieldType -> Record
+
         let jFieldTypeArguments = [recordType; fieldType; nextFieldType]
         let jfieldoptMethodInfoTyped = 
             ProvidedTypeBuilder.MakeGenericMethod(jfieldoptMethodInfo, jFieldTypeArguments)
@@ -226,19 +217,7 @@ module temp =
         let domain = typeof<IReadOnlyDictionary<String, JToken>>
         let range =
             let currentField = typedefof<Option<_>>.MakeGenericType(fieldType)
-            
-            let functionType =
-//                match nextFieldTypes with
-//                | [] ->
-                    FSharpType.MakeFunctionType(currentField, nextFieldType)
-//                | xs ->
-//                    let nextFieldType =
-//                        xs
-//                        |> List.map (fun (pi: PropertyInfo) -> pi.PropertyType)
-//                        |> makeFunctionTypeFromElements 
-//                    let nextField = typedefof<Option<_>>.MakeGenericType(nextFieldType)
-//                    
-//                    makeFunctionTypeFromElements [currentField; nextField; recordType]
+            let functionType = FSharpType.MakeFunctionType(currentField, nextFieldType)
             
             //IReadOnlyDictionary<String,JToken> -> Result<Option<String> -> Option<Int32>   -> Result2, String>
             //IReadOnlyDictionary<String,JToken> -> Result<Option<Int32>                     -> Result2, String>
@@ -256,13 +235,11 @@ module temp =
         
         // Record -> IReadOnlyDictionary<String, JToken>
         let encoderType = FSharpType.MakeFunctionType(recordType, typeof<IReadOnlyDictionary<String, JToken>>)
-        //let formattedEncoderType = sprintf "%a" sprintfsimpleTypeFormatter encoderType
         let encoder = Var("encode", encoderType)
         
         // decoder * encoder
         // ( IReadOnlyDictionary<String, JToken> -> Result<Option<fieldType> -> Option<nextFieldType> -> Record, String>) * (Record -> IReadOnlyDictionary<String, JToken> )
         let codecType = FSharpType.MakeTupleType [|decoderType; encoderType|]
-        //let formattedCodecType = sprintf "%a" sprintfsimpleTypeFormatter codecType
         let codec = Var("codec", codecType)
         
         Expr.Lambda(codec,
