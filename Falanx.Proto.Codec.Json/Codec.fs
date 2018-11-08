@@ -35,7 +35,7 @@ module Quotations =
           for ex in args do yield! traverseForCall ex
       | Quotations.ExprShape.ShapeVar _ -> () ]
 
-module temp =    
+module Codec =    
     let cleanUpTypeName (str:string) =
         let sb = Text.StringBuilder(str)
         sb.Replace("System.", "")
@@ -88,7 +88,7 @@ module temp =
     
     let createLambdaRecord (recordType: ProvidedRecord) =
         //Lambda (u, Lambda (t, NewRecord (Result2, u, t))
-        let recordFields = ProvidedRecord.getRecordFields recordType
+        let recordFields = recordType.RecordFields
         let recordVars =
             recordFields
             |> List.map(fun pi -> Var(pi.Name, pi.PropertyType))
@@ -397,26 +397,19 @@ module temp =
                                        None
                                     | _ -> None) expr
 
-    let tryCode (typeDescriptor: TypeDescriptor) =
+    let createJsonObjCodec (typeDescriptor: TypeDescriptor) =
 
         let recordType = typeDescriptor.Type :?> ProvidedRecord
         let lambdaRecord = createLambdaRecord recordType
         let mapping = callMapping lambdaRecord
         let pipeLambdaToMapping = callPipeRight lambdaRecord mapping
         
-        let recordFields = ProvidedRecord.getRecordFields recordType
+        let recordFields = recordType.RecordFields
             
         let jFieldOpts = createRecordJFieldOpts recordFields recordType
         let allPipedFunctions = [yield lambdaRecord; yield mapping; yield! jFieldOpts]
         let foldedFunctions = allPipedFunctions |> List.reduce callPipeRight
                          
-
-//        let firstJfieldOpt = callJfieldopt recordType (Expr.propertyof<@ (x:Result2).url @>) typeof<string> (Some typeof<int>)
-//        let secondJFieldOpt = callJfieldopt recordType (Expr.propertyof<@ (x:Result2).title @>) typeof<int> None
-//        
-//        let pipeLambdaToMappingToFirstJFieldOpt = callPipeRight pipeLambdaToMapping firstJfieldOpt
-//        let pipeLambdaToMappingToFirstJFieldOptToSecondJFieldOpt = callPipeRight pipeLambdaToMappingToFirstJFieldOpt secondJFieldOpt
-//        
 //        let qs = ProviderImplementation.ProvidedTypes.QuotationSimplifier(true)
 //        let simplified = qs.Simplify pipeLambdaToMappingToFirstJFieldOptToSecondJFieldOpt
         

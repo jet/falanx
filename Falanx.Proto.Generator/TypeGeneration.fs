@@ -34,8 +34,10 @@ module TypeGeneration =
     
         let property, backingField = 
             match field.Rule with
-            | Repeated -> ProvidedTypeDefinition.mkPropertyWithField propertyType propertyName true
-            | _ -> ProvidedTypeDefinition.mkPropertyWithField propertyType propertyName false
+            | Repeated ->
+                ProvidedTypeDefinition.mkRecordPropertyWithField propertyType propertyName true
+            | _ ->
+                ProvidedTypeDefinition.mkRecordPropertyWithField propertyType propertyName false
             
         //apply custom attributes for record field
         let constructor = typeof<CompilationMappingAttribute>.TryGetConstructor([|typeof<SourceConstructFlags>; typeof<int> |])
@@ -278,7 +280,7 @@ module TypeGeneration =
                                  providedType.AddMember serializedLengthMethod
                                  providedType.DefineMethodOverride(serializedLengthMethod, typeof<IMessage>.GetMethod("SerializedLength"))
                           | Json ->
-                              let jsonObjCodec = Falanx.Proto.Codec.Json.temp.tryCode typeInfo
+                              let jsonObjCodec = Falanx.Proto.Codec.Json.Codec.createJsonObjCodec typeInfo
                               providedType.AddMember jsonObjCodec
                          )
                           
