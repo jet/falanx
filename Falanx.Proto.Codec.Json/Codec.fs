@@ -441,5 +441,5 @@ module temp =
             let def = typedefof<Codec<IReadOnlyDictionary<string,JsonValue>,_>>
             def.MakeGenericType [|typeof<IReadOnlyDictionary<string,JsonValue>>; typeDescriptor.Type :> _ |]
             
-        let createJsonObjCodec = ProvidedMethod("JsonObjCodec", [], signatureType, invokeCode = (fun args -> foldedFunctions), isStatic = true )
+        let createJsonObjCodec = ProvidedProperty("JsonObjCodec",signatureType, getterCode = (fun args -> foldedFunctions), isStatic = true )
         createJsonObjCodec
