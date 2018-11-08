@@ -54,7 +54,7 @@ module Proto =
             [ yield providedTypeRoot.Namespace
               yield "System"
               yield "System.Collections.Generic"
-              if codecs |> Set.contains Binary then
+              if codecs.Contains Binary then
                   yield "Froto.Serialization"
                   yield "Falanx.Proto.Codec.Binary"
                   yield "Falanx.Proto.Codec.Binary.Primitives"
@@ -93,7 +93,7 @@ module Proto =
                         {SynModuleOrNamespaceRcd.CreateNamespace(Ident.CreateLong providedTypeRoot.Namespace) with IsRecursive = true}
                             .AddDeclarations ( [ yield openSystem
                                                  yield openSystemCollectionsGeneric
-                                                 if codecs |> Set.contains Binary then
+                                                 if codecs.Contains Binary then
                                                      yield openFrotoSerialization
                                                      yield openBinaryCodec
                                                      yield openBinaryCodecPrimitive
