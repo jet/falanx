@@ -230,7 +230,6 @@ module TypeGeneration =
                                      Some(createOneOfDescriptor nestedScope lookup name members)
                                  | _ -> None)
 
-                     
              for oneOfDescriptor in oneOfDescriptors do
                  providedType.AddMembers [ oneOfDescriptor.OneOfType :> MemberInfo
                                            oneOfDescriptor.CaseField :> _
@@ -242,15 +241,14 @@ module TypeGeneration =
         
              for prop in properties do
                  providedType.AddMember prop.ProvidedProperty
-                 providedType.AddMember prop.ProvidedField.Value
+                 prop.ProvidedField |> Option.iter providedType.AddMember
         
              let maps = 
                  message.Parts
-                 |> Seq.choose (function
+                 |> List.choose (function
                                 | TMap(name, keyTy, valueTy, position, _) ->
                                     Some(createMapDescriptor nestedScope lookup name keyTy valueTy position)
                                 | _ -> None)
-                 |> List.ofSeq
         
              for map in maps do
                  providedType.AddMember map.ProvidedField
