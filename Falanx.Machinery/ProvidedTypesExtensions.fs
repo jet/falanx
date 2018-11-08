@@ -89,7 +89,18 @@ type ProvidedUnion(isTgt: bool, container:TypeContainer, className: string, getB
                          unionCaseType = unionCaseType }
         
     member __.UnionCases = unionCases.ToArray()
- 
+
+type ProvidedRecordProperty(isTgt: bool, propertyName: string, attrs: PropertyAttributes, propertyType: Type, isStatic: bool, getter: (unit -> MethodInfo) option, setter: (unit -> MethodInfo) option, indexParameters: ProvidedParameter[], customAttributesData) =
+    inherit ProvidedProperty(isTgt, propertyName, attrs, propertyType, isStatic, getter, setter, indexParameters, customAttributesData)
+    
+    new (propertyName, propertyType, ?getterCode, ?setterCode, ?isStatic, ?indexParameters) =
+            let isStatic = defaultArg isStatic false
+            let indexParameters = defaultArg indexParameters []
+            let pattrs = (if isStatic then MethodAttributes.Static else enum<MethodAttributes>(0)) ||| MethodAttributes.Public ||| MethodAttributes.SpecialName
+            let getter = getterCode |> Option.map (fun _ -> ProvidedMethod(false, "get_" + propertyName, pattrs, Array.ofList indexParameters, propertyType, getterCode, [], None, K [| |]) :> MethodInfo)
+            let setter = setterCode |> Option.map (fun _ -> ProvidedMethod(false, "set_" + propertyName, pattrs, [| yield! indexParameters; yield ProvidedParameter(false, "value",propertyType,isOut=Some false,optionalValue=None) |], typeof<Void>, setterCode, [], None, K [| |]) :> MethodInfo)
+            ProvidedRecordProperty(false, propertyName, PropertyAttributes.None, propertyType, isStatic, Option.map K getter, Option.map K setter, Array.ofList indexParameters, K [| |])
+
 type ProvidedRecord(isTgt: bool, container:TypeContainer, className: string, getBaseType: (unit -> Type option), attrs: TypeAttributes, getEnumUnderlyingType, staticParams, staticParamsApply, backingDataSource, customAttributesData, nonNullable, hideObjectMethods) =
     inherit ProvidedTypeDefinition(isTgt, container, className, getBaseType, attrs,  getEnumUnderlyingType, staticParams, staticParamsApply, backingDataSource, customAttributesData, nonNullable, hideObjectMethods)
     
@@ -115,6 +126,11 @@ type ProvidedRecord(isTgt: bool, container:TypeContainer, className: string, get
         
     override this.GetCustomAttributes(_inherit) = recordAttribs
     override this.GetCustomAttributes(_attributeType, _inherit) = recordAttribs
+    
+    member this.RecordFields =
+        this.GetProperties()
+        |> Array.choose (function :? ProvidedRecordProperty as prp -> Some (prp :> PropertyInfo) | _ -> None)
+        |> Array.toList
 
 module ProvidedUnion =
     let inline private apply (uc: ProvidedUnion) f = uc.UnionCases |> Seq.tryFind f
@@ -126,10 +142,3 @@ module ProvidedUnion =
         
     let tryGetUnionCaseByPosition position (uc:ProvidedUnion) =
         apply uc (fun uc -> uc.position = position)
-        
-        
-module ProvidedRecord =
-    let getRecordFields (providedRecord: ProvidedRecord) =
-        providedRecord.GetProperties()
-        |> Array.choose (function :? ProvidedProperty as pp -> Some (pp :> PropertyInfo) | _ -> None)
-        |> Array.toList

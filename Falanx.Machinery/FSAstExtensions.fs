@@ -67,18 +67,20 @@ namespace Falanx.Machinery
             static member CreateFromPropertyInfo(pp: Reflection.PropertyInfo, isMutable, ?ommitEnclosingType) =
                 let typeName = SynType.CreateFromType(pp.PropertyType, ?ommitEnclosingType = ommitEnclosingType)
                 SynFieldRcd.Create(Ident.Create(pp.Name), typeName, isMutable)
+                
+            static member CreateFromFieldInfo(fi: Reflection.FieldInfo, isMutable, ?ommitEnclosingType) =
+                let typeName = SynType.CreateFromType(fi.FieldType, ?ommitEnclosingType = ommitEnclosingType)
+                SynFieldRcd.Create(Ident.Create(fi.Name), typeName, isMutable)
         
         type SynModuleDecl with
-            static member CreateRecord (pt: ProvidedRecord, ?ommitEnclosingType, ?knownNamespaces) =
+            static member CreateRecord (pr: ProvidedRecord, ?ommitEnclosingType, ?knownNamespaces) =
                 let recordFields =
                     let props =
-                        pt.GetProperties()
-                        |> Seq.choose (function :? ProvidedProperty as pp -> Some pp | _ -> None)
-                        |> Seq.map (fun pp -> SynFieldRcd.CreateFromPropertyInfo(pp, true, ?ommitEnclosingType = ommitEnclosingType))
-                        |> Seq.toList
+                        pr.RecordFields
+                        |> List.map (fun pi -> SynFieldRcd.CreateFromPropertyInfo(pi, true, ?ommitEnclosingType = ommitEnclosingType))
                     props
                     
-                let interfacesAndMembers = ProvidedTypeDefinition.getMethodOverridesByInterfaceType pt
+                let interfacesAndMembers = ProvidedTypeDefinition.getMethodOverridesByInterfaceType pr
                 let membersInInterfaces = interfacesAndMembers |> Array.collect (fun (_, m) -> m |> Array.map fst ) |> ResizeArray
                     
                 let interfaces =
@@ -91,7 +93,7 @@ namespace Falanx.Machinery
                     ]
                 
                 let staticMethods =
-                    pt.GetMethods()
+                    pr.GetMethods()
                     |> Seq.choose(fun pm ->  match pm with
                                              | :? ProvidedMethod as pm when pm.IsStatic ->
                                                  let name = pm.Name
@@ -102,7 +104,7 @@ namespace Falanx.Machinery
                     |> Seq.toList
                     
                 let instanceMethodsNotInInterface =
-                    pt.GetMethods()
+                    pr.GetMethods()
                     |> Seq.choose(fun pm ->  match pm with
                                              | :? ProvidedMethod as pm when not pm.IsStatic && not (membersInInterfaces.Contains pm)  ->
                                                  let name = pm.Name
@@ -118,8 +120,8 @@ namespace Falanx.Machinery
                     [cliMutableAttribute]
                    
                 SynModuleDecl.CreateSimpleType (
-                    { SynComponentInfoRcd.Create (Ident.CreateLong pt.Name) with
-                          XmlDoc = PreXmlDoc.Create (ProvidedTypeDefinition.getXmlDocs pt)
+                    { SynComponentInfoRcd.Create (Ident.CreateLong pr.Name) with
+                          XmlDoc = PreXmlDoc.Create (ProvidedTypeDefinition.getXmlDocs pr)
                           Attributes = attributes },
                     SynTypeDefnSimpleReprRecordRcd.Create(recordFields) |> SynTypeDefnSimpleReprRcd.Record,
                     members = [ yield! staticMethods

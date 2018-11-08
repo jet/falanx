@@ -65,7 +65,32 @@ module ProvidedTypeDefinition =
                                 |> Expr.callStatic [Expr.Value name; Expr.box args.[1]],
                                 setter)))
     
-        property, field   
+        property, field
+        
+    let mkRecordPropertyWithField propertyType name readonly =
+        let field = ProvidedField(Naming.pascalToCamel name, propertyType)
+        field.SetFieldAttributes(Reflection.FieldAttributes.InitOnly ||| Reflection.FieldAttributes.Private)
+        let property = 
+            ProvidedRecordProperty(
+                name, 
+                propertyType, 
+                getterCode = (fun args -> Expr.FieldGet(args.[0], field)),
+                ?setterCode =
+                    if readonly then None
+                    else Some(fun args ->
+                        let setter = Expr.FieldSet(args.[0], field, args.[1])
+                        if propertyType.IsValueType || 
+                            // None appears to be represented as null.
+                            (propertyType.IsGenericType && propertyType.GetGenericTypeDefinition() = typedefof<option<_>>)
+                        then setter
+                        else
+                            Expr.Sequential(
+                                <@@ argNotNull x x @@>
+                                |> Expr.methoddefof
+                                |> Expr.callStatic [Expr.Value name; Expr.box args.[1]],
+                                setter)))
+    
+        property, field 
   
 module TypeProviderConfig =                                
     let makeConfig resolutionFolder runtimeAssembly runtimeAssemblyRefs =
