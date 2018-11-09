@@ -9,8 +9,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Falanx.Proto.Codec.Binary" Version="$(FalanxVersion)" />
-    <PackageReference Include="Falanx.Sdk" Version="$(FalanxVersion)" PrivateAssets="All" />
+    <PackageReference Include="Falanx.Proto.Codec.Binary" Version="0.3.0" />
+    <PackageReference Include="Falanx.Sdk" Version="0.3.0" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>
