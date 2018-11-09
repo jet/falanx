@@ -1,5 +1,6 @@
 import java.nio.file.{Files, Paths}
 import java.nio.charset.StandardCharsets
+import scala.collection.JavaConverters._
 
 object Program {
 
@@ -27,8 +28,8 @@ object Program {
         Files.write(Paths.get(path), bytes)
       }
       case Deserialize(path, out) => {
-        val lines = Files.readAllLines(Paths.get(path))
-        val jsonText = lines.get(0)
+        val lines = Files.readAllLines(Paths.get(path)).asScala.toList
+        val jsonText = lines.mkString(System.lineSeparator())
         val item2 = example.deserialize(jsonText)
         println(item2)
         Files.write(Paths.get(out), item2.toString().getBytes(StandardCharsets.UTF_8))
