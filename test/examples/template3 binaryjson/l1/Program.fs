@@ -15,12 +15,12 @@ module Program =
         printfn "[BINARY] Deserialized:"
         printfn "%A" s
 
-        let bytes = JsonExample.serialize ()
+        let jsonText = JsonExample.serialize ()
 
         printfn "[JSON] Serialized:"
-        printfn "%A" bytes
+        printfn "%A" jsonText
 
-        let s = JsonExample.deserialize bytes
+        let s = JsonExample.deserialize jsonText
 
         printfn "[JSON] Deserialized:"
         printfn "%A" s

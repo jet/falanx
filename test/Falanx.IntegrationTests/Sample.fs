@@ -19,8 +19,15 @@ let TestRunDirToolDir = TestRunDir/"tool"
 let NupkgsDir = RepoDir/"artifact"/"nupkg"
 let NugetOrgV3Url = "https://api.nuget.org/v3/index.json"
 
+let stdOutLines (cmd: Command) =
+    cmd.Result.StandardOutput
+    |> fun s -> s.Trim()
+    |> fun s -> s.Split(Environment.NewLine)
+    |> List.ofArray
+
 let checkExitCodeZero (cmd: Command) =
-    Expect.equal 0 cmd.Result.ExitCode "command finished with exit code non-zero."
+    "command finished with exit code non-zero"
+    |> Expect.equal cmd.Result.ExitCode 0
 
 let dotnetCmd (fs: FileUtils) args =
     fs.shellExecRun "dotnet" args
@@ -156,14 +163,6 @@ let tests pkgUnderTestVersion =
     fs.cd outDir
     outDir
 
-  let asLines (s: string) =
-    s.Split(Environment.NewLine) |> List.ofArray
-
-  let stdOutLines (cmd: Command) =
-    cmd.Result.StandardOutput
-    |> fun s -> s.Trim()
-    |> asLines
-
   let generalTests =
     testList "general" [
       testCase |> withLog "can show help" (fun _ fs ->
@@ -224,7 +223,7 @@ let tests pkgUnderTestVersion =
       testCase |> withLog "can build sample3 json" (fun _ fs ->
         let testDir = inDir fs "sanity_check_sample3_json"
 
-        Tests.skiptest "only json doesnt work yet"
+        Tests.skiptest "schema with collection and json format doesnt work yet"
 
         testDir
         |> buildExampleWithTemplate fs ``template2 json`` ``sample6 bundle``
@@ -233,7 +232,7 @@ let tests pkgUnderTestVersion =
       testCase |> withLog "can build sample4 binary+json" (fun _ fs ->
         let testDir = inDir fs "sanity_check_sample4_binaryjson"
 
-        Tests.skiptest "doesnt contains a json serialization/deserialization"
+        Tests.skiptest "schema with collection and json format doesnt work yet"
 
         testDir
         |> buildExampleWithTemplate fs ``template3 binary+json`` ``sample6 bundle``
@@ -244,6 +243,13 @@ let tests pkgUnderTestVersion =
 
         testDir
         |> buildExampleWithTemplate fs ``template1 binary`` ``sample5 pkg``
+      )
+
+      testCase |> withLog "can build sample7 json" (fun _ fs ->
+        let testDir = inDir fs "sanity_check_sample7_json"
+
+        testDir
+        |> buildExampleWithTemplate fs ``template2 json`` ``sample7 itemLevelOrderHistory``
       )
 
     ]
@@ -381,7 +387,7 @@ let tests pkgUnderTestVersion =
         |> Expect.equal text "ItemLevelOrderHistory(client1,sku1,12.3,brandA,product1,45.6)"
       )
 
-      testCase |> withLog ".net -> scala" (fun _ fs ->
+      testCase |> withLog ".net -> binary -> scala" (fun _ fs ->
         let testDir = inDir fs "interop_net_scala"
 
         let scalaApp = testDir/"scala-app"
@@ -423,7 +429,7 @@ let tests pkgUnderTestVersion =
         |> Expect.equal text "ItemLevelOrderHistory(clientA,sku12345,78.91,myBrand1,p100,43.21)"
       )
 
-      testCase |> withLog "scala -> .net" (fun _ fs ->
+      testCase |> withLog "scala -> binary -> .net" (fun _ fs ->
         let testDir = inDir fs "interop_scala_net"
 
         let scalaApp = testDir/"scala-app2"
@@ -472,6 +478,133 @@ let tests pkgUnderTestVersion =
         "check deserialize"
         |> Expect.equal textLines expected
       )
+
+      testCase |> withLog "scala json sanity check" (fun _ fs ->
+        let testDir = inDir fs "sanity_check_scala_json"
+
+        let jsonFilePath = testDir/"a.txt"
+        let outFilePath = testDir/"out.txt"
+
+        // copy the template and add the sample
+        testDir
+        |> copyExampleWithTemplate fs ``template5 scala json`` ``sample7 itemLevelOrderHistory``
+
+        requireSbt ()
+
+        fs.cd testDir
+
+        // serialize
+        sbt_run fs ["--serialize"; jsonFilePath]
+        |> checkExitCodeZero
+
+        "check serialized file exists"
+        |> Expect.isTrue (File.Exists jsonFilePath)
+
+        // deserialize
+        sbt_run fs ["--deserialize"; jsonFilePath; "--out"; outFilePath]
+        |> checkExitCodeZero
+
+        "check out file exists"
+        |> Expect.isTrue (File.Exists outFilePath)
+
+        let text = File.ReadAllText(outFilePath)
+
+        "check deserialize"
+        |> Expect.equal text "ItemLevelOrderHistory(client1,sku1,12.3,brandA,product1,45.6)"
+      )
+
+      testCase |> withLog ".net -> json -> scala" (fun _ fs ->
+        let testDir = inDir fs "interop_net_scala_json"
+
+        let scalaApp = testDir/"scala-app"
+        let netApp = testDir/"net-app"
+
+        let jsonFilePath = testDir/"a.json"
+        let outFilePath = testDir/"out.txt"
+
+        // copy the template and add the sample
+        scalaApp
+        |> copyExampleWithTemplate fs ``template5 scala json`` ``sample7 itemLevelOrderHistory``
+
+        netApp
+        |> copyExampleWithTemplate fs ``template2 json`` ``sample7 itemLevelOrderHistory``
+
+        // serialize with .net
+        fs.cd netApp
+
+        dotnetCmd fs ["run"; "-p"; ``template2 json``.AssemblyName; "--"; "--serialize"; jsonFilePath]
+        |> checkExitCodeZero
+
+        "check serialized file exists"
+        |> Expect.isTrue (File.Exists jsonFilePath)
+
+        // deserialize with scala
+        requireSbt ()
+
+        fs.cd scalaApp
+
+        sbt_run fs ["--deserialize"; jsonFilePath; "--out"; outFilePath]
+        |> checkExitCodeZero
+
+        "check out file exists"
+        |> Expect.isTrue (File.Exists outFilePath)
+
+        let text = File.ReadAllText(outFilePath)
+
+        "check deserialize"
+        |> Expect.equal text "ItemLevelOrderHistory(clientA,sku12345,78.91,myBrand1,p100,43.21)"
+      )
+
+      testCase |> withLog "scala -> json -> .net" (fun _ fs ->
+        let testDir = inDir fs "interop_scala_net_json"
+
+        let scalaApp = testDir/"scala-app2"
+        let netApp = testDir/"net-app2"
+
+        let jsonFilePath = testDir/"b.json"
+        let outFilePath = testDir/"out2.txt"
+
+        // copy the template and add the sample
+        scalaApp
+        |> copyExampleWithTemplate fs ``template5 scala json`` ``sample7 itemLevelOrderHistory``
+
+        netApp
+        |> copyExampleWithTemplate fs ``template2 json`` ``sample7 itemLevelOrderHistory``
+
+        // serialize with scala
+        requireSbt ()
+
+        fs.cd scalaApp
+
+        sbt_run fs ["--serialize"; jsonFilePath]
+        |> checkExitCodeZero
+
+        "check out file exists"
+        |> Expect.isTrue (File.Exists jsonFilePath)
+
+        // deserialize with .net
+        fs.cd netApp
+
+        dotnetCmd fs ["run"; "-p"; ``template2 json``.AssemblyName; "--"; "--deserialize"; jsonFilePath; "--out"; outFilePath]
+        |> checkExitCodeZero
+
+        "check deserialized file exists"
+        |> Expect.isTrue (File.Exists outFilePath)
+
+        let textLines = File.ReadAllLines(outFilePath) |> List.ofArray
+
+        let expected =
+          ["""{clientId = Some "client1";"""
+           """ retailSkuId = Some "sku1";"""
+           """ categoryId = Some 12.3;"""
+           """ brand = Some "brandA";"""
+           """ product = Some "product1";"""
+           """ orderTss = Some 45.5999985f;}""" ]
+
+        "check deserialize"
+        |> Expect.equal textLines expected
+      )
+
     ]
 
   [ generalTests

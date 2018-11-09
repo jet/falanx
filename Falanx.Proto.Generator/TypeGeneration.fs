@@ -34,8 +34,10 @@ module TypeGeneration =
     
         let property, backingField = 
             match field.Rule with
-            | Repeated -> ProvidedTypeDefinition.mkPropertyWithField propertyType propertyName true
-            | _ -> ProvidedTypeDefinition.mkPropertyWithField propertyType propertyName false
+            | Repeated ->
+                ProvidedTypeDefinition.mkRecordPropertyWithField propertyType propertyName true
+            | _ ->
+                ProvidedTypeDefinition.mkRecordPropertyWithField propertyType propertyName false
             
         //apply custom attributes for record field
         let constructor = typeof<CompilationMappingAttribute>.TryGetConstructor([|typeof<SourceConstructFlags>; typeof<int> |])
@@ -230,7 +232,6 @@ module TypeGeneration =
                                      Some(createOneOfDescriptor nestedScope lookup name members)
                                  | _ -> None)
 
-                     
              for oneOfDescriptor in oneOfDescriptors do
                  providedType.AddMembers [ oneOfDescriptor.OneOfType :> MemberInfo
                                            oneOfDescriptor.CaseField :> _
@@ -242,15 +243,14 @@ module TypeGeneration =
         
              for prop in properties do
                  providedType.AddMember prop.ProvidedProperty
-                 providedType.AddMember prop.ProvidedField.Value
+                 prop.ProvidedField |> Option.iter providedType.AddMember
         
              let maps = 
                  message.Parts
-                 |> Seq.choose (function
+                 |> List.choose (function
                                 | TMap(name, keyTy, valueTy, position, _) ->
                                     Some(createMapDescriptor nestedScope lookup name keyTy valueTy position)
                                 | _ -> None)
-                 |> List.ofSeq
         
              for map in maps do
                  providedType.AddMember map.ProvidedField
@@ -280,7 +280,7 @@ module TypeGeneration =
                                  providedType.AddMember serializedLengthMethod
                                  providedType.DefineMethodOverride(serializedLengthMethod, typeof<IMessage>.GetMethod("SerializedLength"))
                           | Json ->
-                              let jsonObjCodec = Falanx.Proto.Codec.Json.temp.tryCode typeInfo
+                              let jsonObjCodec = Falanx.Proto.Codec.Json.Codec.createJsonObjCodec typeInfo
                               providedType.AddMember jsonObjCodec
                          )
                           

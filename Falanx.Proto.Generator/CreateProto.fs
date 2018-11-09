@@ -51,17 +51,19 @@ module Proto =
         let openBinaryCodecPrimitive = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "Falanx.Proto.Codec.Binary.Primitives")
         
         let knownNamespaces =
-            [ providedTypeRoot.Namespace
-              "System"
-              "Froto.Serialization"
-              "System.Collections.Generic"
-              "Falanx.Proto.Codec.Binary"
-              "Falanx.Proto.Codec.Binary.Primitives"
-              "Microsoft.FSharp.Core"
-              "Microsoft.FSharp.Core.Operators"
-              "Microsoft.FSharp.Collections"
-              "Microsoft.FSharp.Control"
-              "Microsoft.FSharp.Text" ]
+            [ yield providedTypeRoot.Namespace
+              yield "System"
+              yield "System.Collections.Generic"
+              if codecs.Contains Binary then
+                  yield "Froto.Serialization"
+                  yield "Falanx.Proto.Codec.Binary"
+                  yield "Falanx.Proto.Codec.Binary.Primitives"
+              
+              yield "Microsoft.FSharp.Core"
+              yield "Microsoft.FSharp.Core.Operators"
+              yield "Microsoft.FSharp.Collections"
+              yield "Microsoft.FSharp.Control"
+              yield "Microsoft.FSharp.Text" ]
             |> Set.ofSeq
             
         let synTypes =   
@@ -90,10 +92,11 @@ module Proto =
                     .AddModule(
                         {SynModuleOrNamespaceRcd.CreateNamespace(Ident.CreateLong providedTypeRoot.Namespace) with IsRecursive = true}
                             .AddDeclarations ( [ yield openSystem
-                                                 yield openFrotoSerialization
                                                  yield openSystemCollectionsGeneric
-                                                 yield openBinaryCodec
-                                                 yield openBinaryCodecPrimitive
+                                                 if codecs.Contains Binary then
+                                                     yield openFrotoSerialization
+                                                     yield openBinaryCodec
+                                                     yield openBinaryCodecPrimitive
                                                  yield! synTypes] )
                     )
             )
