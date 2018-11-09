@@ -7,8 +7,4 @@
     </RestoreSources>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <FalanxVersion>0.2.0</FalanxVersion>
-  </PropertyGroup>
-
 </Project>

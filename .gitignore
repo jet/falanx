@@ -247,3 +247,5 @@ paket-files/
 /example-projects/dotnetsdk/hellow/Prova.fs
 /test/testrun/
 target/
+/example/bundle.fs
+.store

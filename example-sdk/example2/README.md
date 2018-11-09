@@ -7,9 +7,8 @@ Falax has been built to allow it to integrate into .NET Sdk projects, this examp
 Essentially you need to add the following packages into an `ItemGroup` of your project file.
 
 ```
-<PackageReference Include="Falanx.BinaryCodec" Version="0.2.0" />
-<PackageReference Include="Falanx.Sdk" Version="0.2.0" PrivateAssets="All" />
-<DotNetCliToolReference Include="dotnet-Falanx.BinaryGenerator" Version="0.2.0" />
+<PackageReference Include="Falanx.Proto.Codec.Binary" Version="0.3.0" />
+<PackageReference Include="Falanx.Sdk" Version="0.3.0" PrivateAssets="All" />
 ```
 
 and configure the source path of the proto file in a
@@ -20,7 +19,7 @@ and configure the source path of the proto file in a
 
 ## Usage
 
-The proto file specified is used to generate a temporary `.fs` source file, automatically added to the project.
+The proto file specified is used to generate a temporary `.fs` source file in `obj` directory, automatically added to the project.
 
 ```
 dotnet build l1

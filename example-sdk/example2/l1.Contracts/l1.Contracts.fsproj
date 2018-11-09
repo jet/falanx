@@ -9,9 +9,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Falanx.BinaryCodec" Version="$(FalanxVersion)" />
-    <PackageReference Include="Falanx.Sdk" Version="$(FalanxVersion)" PrivateAssets="All" />
-    <DotNetCliToolReference Include="dotnet-Falanx.BinaryGenerator" Version="$(FalanxVersion)" />
+    <PackageReference Include="Falanx.Proto.Codec.Binary" Version="0.3.0" />
+    <PackageReference Include="Falanx.Sdk" Version="0.3.0" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>
