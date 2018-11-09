@@ -1,43 +1,25 @@
-# How to use the falanx generator as a CLI tool
+# How to use the falanx generator as tool
 
-Falanx generator has been built to allow it to integrate into the CLI of .NET, this example shows how this works.
+Falanx generator works as console program
 
-## Usage with nuget
+## Install it with dotnet tool
 
-Essentially you need to add a `DotNetCliToolReference` by adding the following `ItemGroup` to your project file.
-
-```
-<DotNetCliToolReference Include="dotnet-Falanx.BinaryGenerator" Version="0.2.0" />
-```
-## Usage
+globally
 
 ```
-cd tools
-dotnet restore
-dotnet Falanx.BinaryGenerator --help
+dotnet tool install -g Falanx.Tool --version 0.3.0
+falanx --help
 ```
 
-## Usage with paket
+or locally
 
-Paket also has a way of providing this functionality by adding the following to you paket.references and paket.dependencies files:
-
-### paket.dependencies
 ```
-clitool dotnet-Falanx.BinaryGenerator 0.2.0
+dotnet tool install Falanx.Tool --version 0.3.0 --tool-path "tools"
+tools/falanx --help
 ```
-
-### paket.reference
-```
-clitool dotnet-Falanx.BinaryGenerator
-```
-
 
 ## sample1
 
 ```
-cd tools
-dotnet restore
-dotnet Falanx.BinaryGenerator --inputfile ../sample1/bundle.proto --defaultnamespace MyNamespace --outputfile bundle.fs
+falanx --inputfile ../sample1/bundle.proto --defaultnamespace MyNamespace --outputfile bundle.fs
 ```
-
-
