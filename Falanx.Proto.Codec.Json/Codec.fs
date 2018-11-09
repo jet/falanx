@@ -193,7 +193,7 @@ module Codec =
 //        expr
 
         
-    let callJfieldopt (recordType: Type) propertyInfo (fieldType: Type ) (nextFieldType: Type) =
+    let callJfieldopt (recordType: Type) (propertyInfo: PropertyInfo) (fieldType: Type ) (nextFieldType: Type) =
         // fun u t -> { url = u; title= t }
         // |> mapping<Option<String> -> Option<int> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken>
         // |> jfieldopt<Result2, string, Option<int> -> Result2> "url"   (fun x -> x.url)
@@ -207,7 +207,7 @@ module Codec =
             ProvidedTypeBuilder.MakeGenericMethod(jfieldoptMethodInfo, jFieldTypeArguments)
         let formattedjfieldoptMethodInfoTyped = sprintf "%s" (jfieldoptMethodInfoTyped.ToString() |> cleanUpTypeName)
         
-        let fieldName = Expr.Value fieldType.Name //should ideally be protodecriptor.name
+        let fieldName = Expr.Value propertyInfo.Name //should ideally be protodecriptor.name
         
         let xvar = Var("x", recordType)
         
