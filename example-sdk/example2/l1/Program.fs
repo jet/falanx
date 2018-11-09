@@ -12,13 +12,13 @@ module Program =
               channelType = None
               retailSkus = new ResizeArray<string>() }
 
-        let buffer = new Froto.Serialization.ZeroCopyBuffer(1000);
+        let buffer = new Froto.Serialization.ZeroCopyBuffer(1000)
         BundleRequest.Serialize(r, buffer)
 
         printfn "Serialized:"
-        printfn "%A" (buffer.Array)
+        printfn "%A" (buffer.ToArray())
 
-        let buffer2 = new Froto.Serialization.ZeroCopyBuffer(buffer.Array);
+        let buffer2 = new Froto.Serialization.ZeroCopyBuffer(buffer.ToArray())
         let s = BundleRequest.Deserialize(buffer2)
 
         printfn "Deserialized:"
