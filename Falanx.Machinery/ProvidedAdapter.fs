@@ -4,23 +4,30 @@ open Microsoft.FSharp.Quotations
 open ProviderImplementation.ProvidedTypes
 open Falanx.Machinery.Prelude
 open Falanx.Machinery.Expr
+open Utils
 
 [<RequireQualifiedAccess>]
 module ProvidedMethod =
-    open Utils
-
     let toExpr (m:ProvidedMethod) =
-                            
-        let parameters=
+
+        let parameters =
             [  if not m.IsStatic then
                    yield Expr.Var <| Var(thisPrefix, m.DeclaringType)
-                    
+
                for p in m.GetParameters() do
                    yield Expr.Var <| Var(p.Name, p.ParameterType) ]
-    
-        m.GetInvokeCode |> function Some ik -> ik parameters | _ -> <@@ () @@>
 
-[<RequireQualifiedAccess>]    
+        m.GetInvokeCode |> function Some ik -> ik parameters | _ -> <@@ () @@>
+        
+[<RequireQualifiedAccess>]
+module ProvidedProperty =
+    let toExpr (m:ProvidedProperty) =
+        let getter = match m.Getter with Some getter -> getter() | _ -> failwith "No getter"
+        match getter with
+        | :? ProvidedMethod as pm -> ProvidedMethod.toExpr pm
+        | _ -> failwith "Unknown type"
+
+[<RequireQualifiedAccess>]  
 module ProvidedTypeDefinition =
     let getXmlDocs (providedType: ProvidedTypeDefinition) =
         providedType.GetCustomAttributesData()

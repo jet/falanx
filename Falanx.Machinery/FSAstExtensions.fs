@@ -63,6 +63,26 @@ namespace Falanx.Machinery
                             Expr = synExpr
                             ValData = SynValData(flags, SynValInfo.Empty, None)
                         }
+                        
+                static member  CreateFromProvidedProperty (pp:ProvidedProperty, ?ommitEnclosingType : Type, ?knownNamespaces: _ Set) =
+                    let ident =
+                        let ident = if pp.IsStatic then pp.Name else (thisPrefix +.+ pp.Name)
+                        LongIdentWithDots.CreateString ident
+                        
+                    let synExpr, _parseTree =
+                        Quotations.ToAst(ProvidedProperty.toExpr pp, ?ommitEnclosingType = ommitEnclosingType, ?knownNamespaces = knownNamespaces)
+                    
+                    let flags =
+                        if pp.IsStatic then Some MemberFlags.StaticMember else Some MemberFlags.InstanceMember
+                        
+                    let parameters = []
+                       
+                    SynMemberDefn.CreateMember
+                        { SynBindingRcd.Null with
+                            Pattern = SynPatRcd.CreateLongIdent(ident, [ SynPatRcd.CreateParen(SynPatRcd.CreateTuple parameters) ] )
+                            Expr = synExpr
+                            ValData = SynValData(flags, SynValInfo.Empty, None)
+                        }
         type SynFieldRcd with               
             static member CreateFromPropertyInfo(pp: Reflection.PropertyInfo, isMutable, ?ommitEnclosingType) =
                 let typeName = SynType.CreateFromType(pp.PropertyType, ?ommitEnclosingType = ommitEnclosingType)
@@ -114,6 +134,20 @@ namespace Falanx.Machinery
                                              | _ -> None)
                     |> Seq.toList
                     
+                let properties =
+                    let recordProperties = pr.RecordFields
+                    let props =
+                        pr.GetProperties()
+                        |> Array.choose (fun prop -> if recordProperties |> List.contains prop
+                                                     then None
+                                                     else Some (prop :?> ProvidedProperty))
+                    props
+                    
+                let properties =
+                    properties
+                    |> Seq.map (fun pp ->
+                                    SynMemberDefn.CreateFromProvidedProperty(pp, ?ommitEnclosingType = ommitEnclosingType, ?knownNamespaces = knownNamespaces))
+                    
                 let attributes =
                     let cliMutableAttribute =
                         SynModuleDecl.CreateAttribute(LongIdentWithDots.CreateString("CLIMutable"),  SynExpr.CreateConst SynConst.Unit, false)
@@ -124,7 +158,8 @@ namespace Falanx.Machinery
                           XmlDoc = PreXmlDoc.Create (ProvidedTypeDefinition.getXmlDocs pr)
                           Attributes = attributes },
                     SynTypeDefnSimpleReprRecordRcd.Create(recordFields) |> SynTypeDefnSimpleReprRcd.Record,
-                    members = [ yield! staticMethods
+                    members = [ yield! properties
+                                yield! staticMethods
                                 yield! instanceMethodsNotInInterface
                                 yield! interfaces ]
                 )
