@@ -21,6 +21,7 @@ module ProvidedMethod =
         
 [<RequireQualifiedAccess>]
 module ProvidedProperty =
+    ///Note: this only support Properties with a getter
     let toExpr (m:ProvidedProperty) =
         let getter = match m.Getter with Some getter -> getter() | _ -> failwith "No getter"
         match getter with

@@ -72,17 +72,15 @@ namespace Falanx.Machinery
                     let synExpr, _parseTree =
                         Quotations.ToAst(ProvidedProperty.toExpr pp, ?ommitEnclosingType = ommitEnclosingType, ?knownNamespaces = knownNamespaces)
                     
-                    let flags =
-                        if pp.IsStatic then Some MemberFlags.StaticMember else Some MemberFlags.InstanceMember
-                        
-                    let parameters = []
+                    let flags = if pp.IsStatic then Some MemberFlags.StaticMember else Some MemberFlags.InstanceMember
                        
                     SynMemberDefn.CreateMember
                         { SynBindingRcd.Null with
-                            Pattern = SynPatRcd.CreateLongIdent(ident, [ SynPatRcd.CreateParen(SynPatRcd.CreateTuple parameters) ] )
+                            Pattern = SynPatRcd.CreateLongIdent(ident, [ ] )
                             Expr = synExpr
                             ValData = SynValData(flags, SynValInfo.Empty, None)
                         }
+                        
         type SynFieldRcd with               
             static member CreateFromPropertyInfo(pp: Reflection.PropertyInfo, isMutable, ?ommitEnclosingType) =
                 let typeName = SynType.CreateFromType(pp.PropertyType, ?ommitEnclosingType = ommitEnclosingType)
