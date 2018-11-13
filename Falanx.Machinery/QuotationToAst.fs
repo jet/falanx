@@ -60,12 +60,12 @@ type Quotations() =
             
             | Lambda(v, body) ->
                 //dependencies.Append v.Type
-                let vType = sysTypeToSynType range v.Type knownNamespaces ommitEnclosingType
-                let spat = SynSimplePat.Id(mkIdent range v.Name, None, false ,false ,false, range)
-                let untypedPat = SynSimplePats.SimplePats([spat], range)
-                let typedPat = SynSimplePats.Typed(untypedPat, vType, range)
-                let bodyAst = exprToAst body
-                SynExpr.Lambda(false, false, typedPat, bodyAst, range)
+                let id = SynSimplePat.Id(mkIdent range v.Name, None, false ,false ,false, range)
+                let vtype = sysTypeToSynType range v.Type knownNamespaces ommitEnclosingType
+                let simplePat = SynSimplePat.Typed(id, vtype, range)
+                let lambda = SynExpr.Lambda(false, true, SynSimplePats.SimplePats([simplePat], range), exprToAst body, range)
+                lambda
+
     
             | LetRecursive(bindings, body) ->
                 let mkBinding (v : Var, bind : Expr) =
