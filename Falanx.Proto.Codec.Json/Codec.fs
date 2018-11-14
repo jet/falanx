@@ -7,6 +7,7 @@ open Fleece.Newtonsoft
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Quotations.Patterns
 open Falanx.Machinery
+open Falanx.Machinery.Expr
 open System.Runtime.CompilerServices
 open ProviderImplementation.ProvidedTypes.UncheckedQuotations
 open Falanx.Proto.Core.Model
@@ -36,29 +37,6 @@ module Quotations =
       | Quotations.ExprShape.ShapeVar _ -> () ]
 
 module Codec =    
-    let cleanUpTypeName (str:string) =
-        let sb = Text.StringBuilder(str)
-        sb.Replace("System.", "")
-          .Replace("Microsoft.FSharp.Core.", "")
-          .Replace("Collections.Generic.","")
-          .Replace("Falanx.JsonCodec.", "")
-          .Replace("Newtonsoft.Json.Linq.", "") 
-          .Replace("`2", "")
-          .Replace("`1", "")
-          .Replace("FSharp", "")
-          .Replace("Int32", "int") |> ignore
-        sb.ToString()
-            
-    let simpleTypeFormatter (a:IO.TextWriter) (b:Type) =
-        b.ToString()
-        |> cleanUpTypeName
-        |> a.Write
-        
-    let sprintfsimpleTypeFormatter () (b:Type) =
-        b.ToString()
-        |> cleanUpTypeName
-
-    let x<'T> : 'T = Unchecked.defaultof<'T>
     let knownNamespaces = ["System"; "System.Collections.Generic"; "Fleece.Newtonsoft"; "Microsoft.FSharp.Core"; "Newtonsoft.Json.Linq"] |> Set.ofList
     let qs = QuotationSimplifier(true)                          
      
@@ -192,20 +170,15 @@ module Codec =
 //            | _ -> Expr.Call(methodInfoTyped, [arg; func])
 //        expr
 
-        
+    // fun u t -> { url = u; title= t }
+    // |> mapping<Option<String> -> Option<int> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken>
+    // |> jfieldopt<Result2, string, Option<int> -> Result2> "url"   (fun x -> x.url)
+    // |> jfieldopt<Result2, int   , Result2>                "title" (fun x -> x.title)   
     let callJfieldopt (recordType: Type) (propertyInfo: PropertyInfo) (fieldType: Type ) (nextFieldType: Type) =
-        // fun u t -> { url = u; title= t }
-        // |> mapping<Option<String> -> Option<int> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken>
-        // |> jfieldopt<Result2, string, Option<int> -> Result2> "url"   (fun x -> x.url)
-        // |> jfieldopt<Result2, int   , Result2>                "title" (fun x -> x.title)
-
-        
         let jfieldoptMethodInfo = Expr.methoddefof <@ jfieldOpt<_,string,_> x x x @>
 
         let jFieldTypeArguments = [recordType; fieldType; nextFieldType]
-        let jfieldoptMethodInfoTyped = 
-            ProvidedTypeBuilder.MakeGenericMethod(jfieldoptMethodInfo, jFieldTypeArguments)
-        let formattedjfieldoptMethodInfoTyped = sprintf "%s" (jfieldoptMethodInfoTyped.ToString() |> cleanUpTypeName)
+        let jfieldoptMethodInfoTyped = ProvidedTypeBuilder.MakeGenericMethod(jfieldoptMethodInfo, jFieldTypeArguments)
         
         let fieldName = Expr.Value propertyInfo.Name //should ideally be protodecriptor.name
         
@@ -224,10 +197,7 @@ module Codec =
             typedefof<Result<_,_>>.MakeGenericType( [| functionType; typeof<string> |] )
             
         let decoderType = FSharpType.MakeFunctionType(domain, range)
-        //let formattedDecoderType = sprintf "%a" sprintfsimpleTypeFormatter decoderType
-        //decoder is:
-        //IReadOnlyDictionary<String,JToken> -> Result< Result2 -> Option<String> -> Option<Int32>, String>
-        
+
         //decoder should be:
         //IReadOnlyDictionary<String,JToken> -> Result< Option<String> -> Option<Int32> -> Result2, String>
         //IReadOnlyDictionary<String,JToken> -> Result<Result2, String>
@@ -366,37 +336,6 @@ module Codec =
         
         jFieldOptions
         
-    let quotationsTypePrinter expr =
-    
-        let rec traverseQuotation f q = 
-          let q = defaultArg (f q) q
-          match q with     
-          | ExprShape.ShapeLambda(v, body)  -> Expr.Lambda(v, traverseQuotation f body)
-          | ExprShape.ShapeCombination(comb, args) -> ExprShape.RebuildShapeCombination(comb, List.map (traverseQuotation f) args )          
-          | ExprShape.ShapeVar _ -> q
-             
-        traverseQuotation (fun e -> match e with
-                                    | Call(_,mi,args) when mi.IsGenericMethod -> 
-                                       printfn "Call: %s" mi.Name
-                                       printfn "    Args: %A" args
-                                       printfn "    Type: %a" simpleTypeFormatter e.Type
-                                       printfn "    MI_RType: %a" simpleTypeFormatter mi.ReturnType
-                                       mi.GetGenericArguments()
-                                       |> Array.iteri (fun i a -> printfn "    %i: %a" i simpleTypeFormatter a)
-                                       printfn ""
-                                       None
-                                    | Let(v,mi,_) ->
-                                        printfn "Let:\n    Var: %s\n    Type: %a\n" v.Name simpleTypeFormatter v.Type
-                                        None
-                                    | Lambda(v, expr) ->
-                                       printfn "Lambda:"
-                                       printfn "    Var: %s\n    Type: %a" v.Name simpleTypeFormatter v.Type
-                                       printfn "    expr: %A" expr
-                                       printfn "    Type: %a" simpleTypeFormatter expr.Type
-                                       
-                                       None
-                                    | _ -> None) expr
-
     let createJsonObjCodec (typeDescriptor: TypeDescriptor) =
 
         let recordType = typeDescriptor.Type :?> ProvidedRecord
