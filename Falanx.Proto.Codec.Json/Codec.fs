@@ -216,123 +216,32 @@ module Codec =
             Expr.Let(decoder, Expr.TupleGet(Expr.Var codec, 0),
                 Expr.Let(encoder, Expr.TupleGet(Expr.Var codec, 1),
                     Expr.CallUnchecked(jfieldoptMethodInfoTyped, [fieldName; getter; Expr.Var decoder; Expr.Var encoder]))))
-                    
-                    
-    type TypeChainCache<'a> = 
-        | Lookup of ConditionalWeakTable<Type,TypeChainCache<'a>>
-        | Value of 'a
-        member x.GetOrAdd(tl : Type list, f) = 
-            match tl with 
-            | h :: t -> 
-                match x with 
-                | Lookup d -> 
-                    let v = 
-                        let scc,v = d.TryGetValue(h)
-                        if scc then
-                            v
-                        else
-                            let v = 
-                                match t with 
-                                | [] -> f() |> Value
-                                | _ -> ConditionalWeakTable<Type,TypeChainCache<'a>>() |> Lookup
-                            d.Add(h,v)
-                            v
-                    v.GetOrAdd(t,f)
-                | Value v -> failwith "Bad type list length"
-            | [] -> 
-                match x with 
-                | Lookup d -> failwith "Bad type list length"
-                | Value v -> v
-        static member Create() = ConditionalWeakTable<Type,TypeChainCache<'a>>() |> Lookup
-    type TypeTemplate<'a,'b>() =
-        //static let cache = TypeChainCache.Create()
-        static let cache = System.Collections.Generic.Dictionary<string,TypeChainCache<_>>()
-        static member bleh ([<ReflectedDefinition(true)>] f : Expr<'a -> 'b>) = printfn "%A" f
-        static member create ([<ReflectedDefinition(false)>] f : Expr<'a -> 'b>) : string -> Type list -> ('a -> 'b)  = 
-            fun cacheName -> 
-                let cache = 
-                    let scc,v = cache.TryGetValue cacheName
-                    if scc then 
-                        v
-                    else
-                        let v = TypeChainCache.Create()
-                        cache.Add(cacheName,v)
-                        v
-                let f() =
-                    let v = 
-                        let rec extractCall e = 
-                            match e with
-                            | Patterns.Lambda(_,body) -> extractCall body
-                            | Patterns.Call(_o,minfo,_args) -> minfo
-                            | _ -> failwithf "Expression not of expected form %A" e
-                        let rec replaceMethod minfo e = 
-                            match e with
-                            | Patterns.Lambda(v,body) -> Expr.Lambda(v, replaceMethod minfo body)
-                            | Patterns.Call(Some o,_,args) -> Expr.Call(o,minfo,args)
-                            | Patterns.Call(None,_,args) -> Expr.Call(minfo,args)
-                            | _ -> failwithf "Expression not of expected form %A" e
-                        match f with
-                        | Patterns.Lambda (_,e) -> 
-                            let minfo = extractCall e
-                            let makeMethod =
-                                if minfo.IsGenericMethod then
-                                    let minfodef = minfo.GetGenericMethodDefinition()
-                                    fun types -> 
-                                        minfodef.MakeGenericMethod(types |> Seq.toArray)
-                                else
-                                    fun _ -> minfo
-                            fun types -> 
-                                let method = makeMethod types
-                                let lambda = replaceMethod method f
-                                FSharp.Linq.RuntimeHelpers.LeafExpressionConverter.EvaluateQuotation lambda :?> ('a -> 'b)
-                        | _ -> failwithf "Expression not of expected form %A" f
-                    v
-                fun types -> 
-                    cache.GetOrAdd(types, fun () -> f() types)
-                    
-    let inline callJfieldopt3< ^a,^b,^c when (OfJson or ^b) : (static member OfJson : ^b*OfJson -> (JsonValue -> ^b ParseResult)) 
-                                        and  (ToJson or ^b) : (static member ToJson : ^b*ToJson -> JsonValue) > propertyInfo =
-        let getter = 
-            let x = Var("x",typeof< ^a>)
-            <@ %%(Expr.Lambda(x, Expr.PropertyGet(Expr.Var x,propertyInfo))) : ^a -> ^b option@>
-        <@@
-            fun codec ->
-                let decode = fst codec
-                let encode = snd codec
-                Fleece.Newtonsoft.jfieldOpt "url" %getter ((decode,encode) : SplitCodec<_,_ -> ^c,_>)
-        @@>
-
-    let callJfieldoptNew (recordType: Type) propertyInfo (fieldType: Type ) (nextFieldType: Type option) =
-        let typeC =
-            match nextFieldType with 
-            | Some t -> FSharpType.MakeFunctionType(typedefof<Option<_>>.MakeGenericType(t), recordType)
-            | None -> recordType
-        TypeTemplate.create callJfieldopt3<_,string,_> "callJfieldopt3" [recordType; fieldType; typeC] propertyInfo
-        
-    let createRecordJFieldOpts (recordFields: #PropertyInfo list) (recordType: Type) =
-
+                        
+    let createRecordJFieldOpts (typeDescriptor: TypeDescriptor) =
+        let recordType = typeDescriptor.Type :> Type
+        let recordFields = typeDescriptor.Properties
         let fieldTypeWithRest =
-            let rec loop (recordFields: #PropertyInfo list) =
+            let rec loop (recordFields: PropertyDescriptor list) =
                 [
                     match recordFields with
                     | [] -> ()
                     | h :: [] ->
                         yield h, recordType
                     | h :: t ->
-                        let rest = (t |> List.map (fun pt -> pt.PropertyType)) @ [recordType]
+                        let rest = (t |> List.map (fun pt -> pt.ProvidedProperty.PropertyType)) @ [recordType]
                         let all = makeFunctionTypeFromElements rest
                         yield h, all
                         yield! loop t
                     | [h] -> yield h, recordType
                 ]
             loop recordFields
-            
+  
         let optionType (o: Type) = o.GetGenericArguments().[0]
         
         let jFieldOptions =
             fieldTypeWithRest
-            |> List.map (fun (field, rest) ->
-                callJfieldopt recordType field (optionType field.PropertyType) rest)
+            |> List.map (fun (propertyDescriptor, rest) ->
+                callJfieldopt typeDescriptor.Type propertyDescriptor.ProvidedProperty (optionType propertyDescriptor.ProvidedProperty.PropertyType) rest)
         
         jFieldOptions
         
@@ -342,10 +251,9 @@ module Codec =
         let lambdaRecord = createLambdaRecord recordType
         let mapping = callMapping lambdaRecord
         let pipeLambdaToMapping = callPipeRight lambdaRecord mapping
+
+        let jFieldOpts = createRecordJFieldOpts typeDescriptor
         
-        let recordFields = recordType.RecordFields
-            
-        let jFieldOpts = createRecordJFieldOpts recordFields recordType
         let allPipedFunctions = [yield lambdaRecord; yield mapping; yield! jFieldOpts]
         let foldedFunctions = allPipedFunctions |> List.reduce callPipeRight
                          
