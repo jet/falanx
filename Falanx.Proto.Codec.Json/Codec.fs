@@ -14,6 +14,7 @@ open Falanx.Proto.Core.Model
 open ProviderImplementation.ProvidedTypes
 open Newtonsoft.Json.Linq
 open Reflection
+open Froto.Parser.ClassModel
 
 
 [<CLIMutable>]
@@ -174,17 +175,17 @@ module Codec =
     // |> mapping<Option<String> -> Option<int> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken>
     // |> jfieldopt<Result2, string, Option<int> -> Result2> "url"   (fun x -> x.url)
     // |> jfieldopt<Result2, int   , Result2>                "title" (fun x -> x.title)   
-    let callJfieldopt (recordType: Type) (propertyInfo: PropertyInfo) (fieldType: Type ) (nextFieldType: Type) =
+    let callJfieldopt (recordType: Type) (propertyDescriptor: PropertyDescriptor) (fieldType: Type ) (nextFieldType: Type) =
         let jfieldoptMethodInfo = Expr.methoddefof <@ jfieldOpt<_,string,_> x x x @>
 
         let jFieldTypeArguments = [recordType; fieldType; nextFieldType]
         let jfieldoptMethodInfoTyped = ProvidedTypeBuilder.MakeGenericMethod(jfieldoptMethodInfo, jFieldTypeArguments)
         
-        let fieldName = Expr.Value propertyInfo.Name //should ideally be protodecriptor.name
+        let fieldName = Expr.Value propertyDescriptor.ProvidedProperty.Name
         
         let xvar = Var("x", recordType)
         
-        let getter = Expr.Lambda(xvar, Expr.PropertyGet( Expr.Var xvar, propertyInfo) )
+        let getter = Expr.Lambda(xvar, Expr.PropertyGet( Expr.Var xvar, propertyDescriptor.ProvidedProperty) )
 
         // IReadOnlyDictionary<String, JToken> -> Result<Option<fieldType> -> Option<nextFieldType> -> Record, String>
         let domain = typeof<IReadOnlyDictionary<String, JToken>>
@@ -216,6 +217,49 @@ module Codec =
             Expr.Let(decoder, Expr.TupleGet(Expr.Var codec, 0),
                 Expr.Let(encoder, Expr.TupleGet(Expr.Var codec, 1),
                     Expr.CallUnchecked(jfieldoptMethodInfoTyped, [fieldName; getter; Expr.Var decoder; Expr.Var encoder]))))
+        
+    let callJfield (recordType: Type) (propertyDescriptor: PropertyDescriptor) (fieldType: Type ) (nextFieldType: Type) =
+        let jfieldMethodInfo = Expr.methoddefof <@ jfield<_,string,_> x x x @>
+
+        let jFieldTypeArguments = [recordType; fieldType; nextFieldType]
+        let jfieldMethodInfoTyped = ProvidedTypeBuilder.MakeGenericMethod(jfieldMethodInfo, jFieldTypeArguments)
+        
+        let fieldName = Expr.Value propertyDescriptor.ProvidedProperty.Name
+        
+        let xvar = Var("x", recordType)
+        
+        let getter = Expr.Lambda(xvar, Expr.PropertyGet( Expr.Var xvar, propertyDescriptor.ProvidedProperty) )
+
+        // IReadOnlyDictionary<String, JToken> -> Result<Option<fieldType> -> Option<nextFieldType> -> Record, String>
+        let domain = typeof<IReadOnlyDictionary<String, JToken>>
+        let range =
+            let currentField = fieldType //typedefof<Option<_>>.MakeGenericType(fieldType)
+            let functionType = FSharpType.MakeFunctionType(currentField, nextFieldType)
+            
+            //IReadOnlyDictionary<String,JToken> -> Result<Option<String> -> Option<Int32>   -> Result2, String>
+            //IReadOnlyDictionary<String,JToken> -> Result<Option<Int32>                     -> Result2, String>
+            typedefof<Result<_,_>>.MakeGenericType( [| functionType; typeof<string> |] )
+            
+        let decoderType = FSharpType.MakeFunctionType(domain, range)
+
+        //decoder should be:
+        //IReadOnlyDictionary<String,JToken> -> Result< Option<String> -> Option<Int32> -> Result2, String>
+        //IReadOnlyDictionary<String,JToken> -> Result<Result2, String>
+        let decoder = Var("decode", decoderType)
+        
+        // Record -> IReadOnlyDictionary<String, JToken>
+        let encoderType = FSharpType.MakeFunctionType(recordType, typeof<IReadOnlyDictionary<String, JToken>>)
+        let encoder = Var("encode", encoderType)
+        
+        // decoder * encoder
+        // ( IReadOnlyDictionary<String, JToken> -> Result<Option<fieldType> -> Option<nextFieldType> -> Record, String>) * (Record -> IReadOnlyDictionary<String, JToken> )
+        let codecType = FSharpType.MakeTupleType [|decoderType; encoderType|]
+        let codec = Var("codec", codecType)
+        
+        Expr.Lambda(codec,
+            Expr.Let(decoder, Expr.TupleGet(Expr.Var codec, 0),
+                Expr.Let(encoder, Expr.TupleGet(Expr.Var codec, 1),
+                    Expr.CallUnchecked(jfieldMethodInfoTyped, [fieldName; getter; Expr.Var decoder; Expr.Var encoder]))))
                         
     let createRecordJFieldOpts (typeDescriptor: TypeDescriptor) =
         let recordType = typeDescriptor.Type :> Type
@@ -241,8 +285,15 @@ module Codec =
         let jFieldOptions =
             fieldTypeWithRest
             |> List.map (fun (propertyDescriptor, rest) ->
-                callJfieldopt typeDescriptor.Type propertyDescriptor.ProvidedProperty (optionType propertyDescriptor.ProvidedProperty.PropertyType) rest)
-        
+                match propertyDescriptor.Rule with
+                | ProtoFieldRule.Optional ->
+                    let fieldType = optionType propertyDescriptor.ProvidedProperty.PropertyType
+                    callJfieldopt typeDescriptor.Type propertyDescriptor fieldType rest
+                | ProtoFieldRule.Repeated ->
+                    let fieldType = propertyDescriptor.ProvidedProperty.PropertyType
+                    callJfield typeDescriptor.Type propertyDescriptor fieldType rest
+                | ProtoFieldRule.Required ->
+                    failwith "not supported")        
         jFieldOptions
         
     let createJsonObjCodec (typeDescriptor: TypeDescriptor) =
