@@ -49,6 +49,8 @@ module Proto =
         let openSystemCollectionsGeneric = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "System.Collections.Generic")
         let openBinaryCodec = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "Falanx.Proto.Codec.Binary")
         let openBinaryCodecPrimitive = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "Falanx.Proto.Codec.Binary.Primitives")
+        let openJsonLinq = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "Newtonsoft.Json.Linq")
+        let openFleeceNewtonsoft = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "Fleece.Newtonsoft")
         
         let knownNamespaces =
             [ yield providedTypeRoot.Namespace
@@ -58,6 +60,10 @@ module Proto =
                   yield "Froto.Serialization"
                   yield "Falanx.Proto.Codec.Binary"
                   yield "Falanx.Proto.Codec.Binary.Primitives"
+                  
+              if codecs.Contains Json then
+                  yield "Newtonsoft.Json.Linq"
+                  yield "Fleece.Newtonsoft"
               
               yield "Microsoft.FSharp.Core"
               yield "Microsoft.FSharp.Core.Operators"
@@ -85,6 +91,8 @@ module Proto =
                         | _ -> () 
                 ]
             loop providedTypeRoot
+            
+        let cleanTypes = ASTCleaner.untypeSynModuleDecls synTypes
                              
         let parseTree =
             ParsedInput.CreateImplFile(
@@ -97,7 +105,10 @@ module Proto =
                                                      yield openFrotoSerialization
                                                      yield openBinaryCodec
                                                      yield openBinaryCodecPrimitive
-                                                 yield! synTypes] )
+                                                 if codecs.Contains Json then
+                                                     yield openJsonLinq
+                                                     yield openFleeceNewtonsoft
+                                                 yield! cleanTypes] )
                     )
             )
         let formattedCode = formatAst parseTree

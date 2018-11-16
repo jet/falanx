@@ -22,6 +22,7 @@
     <Compile Include="TypeHelpers.fs" />
     <Compile Include="Utils.fs" />
     <Compile Include="QuotationToAst.fs" />
+    <Compile Include="ASTCleaner.fs" />
     <Compile Include="ProvidedAdapter.fs" />
     <Compile Include="FSAstExtensions.fs" />
   </ItemGroup>
