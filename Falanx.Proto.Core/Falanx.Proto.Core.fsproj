@@ -7,6 +7,9 @@
     <Compile Include="Model.fs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="paket.references" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Falanx.Machinery\Falanx.Machinery.fsproj" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />

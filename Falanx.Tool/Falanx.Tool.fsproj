@@ -16,6 +16,9 @@
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="paket.references" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Falanx.Proto.Codec.Json\Falanx.Proto.Codec.Json.fsproj" />
     <ProjectReference Include="..\Falanx.Proto.Generator\Falanx.Proto.Generator.fsproj" />
   </ItemGroup>

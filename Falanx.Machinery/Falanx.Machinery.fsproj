@@ -25,5 +25,8 @@
     <Compile Include="ProvidedAdapter.fs" />
     <Compile Include="FSAstExtensions.fs" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="paket.references" />
+  </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
