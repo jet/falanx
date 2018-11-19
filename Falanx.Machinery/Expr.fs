@@ -173,9 +173,7 @@ namespace Falanx.Machinery
                 when createEvent.Name = "CreateEvent" && add.Name.StartsWith ("add_")
                                                       && remove.Name.StartsWith ("remove_")
                                                       && arg1 = var1 && arg2 = var2 ->
-                    add.DeclaringType.GetEvent(
-                    add.Name.[0..4], BindingFlags.Public ||| BindingFlags.Instance ||| BindingFlags.Static ||| BindingFlags.NonPublic)
-            
+                    add.DeclaringType.GetEvent(add.Name.[0..4], BindingFlags.Public ||| BindingFlags.Instance ||| BindingFlags.Static ||| BindingFlags.NonPublic)
             | _ -> failwith "Not a event expression"
         
         /// Get UnionCaseInfo from an expression
