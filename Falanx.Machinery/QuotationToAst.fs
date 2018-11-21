@@ -213,7 +213,8 @@ type Quotations() =
                     | _ ->
                         let synParam = SynExpr.Tuple(synArgs, [], range)
                         SynExpr.App(ExprAtomicFlag.Atomic, false, uciCtor, synParam, range)
-                SynExpr.Typed(ctorExpr, synTy, range)
+                let newUnionCase = SynExpr.Typed(ctorExpr, synTy, range)
+                SynExpr.Paren(newUnionCase, range, None, range)
     
             | NewDelegate(t, vars, body) ->
                 //dependencies.Append t
