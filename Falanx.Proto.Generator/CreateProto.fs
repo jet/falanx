@@ -92,7 +92,7 @@ module Proto =
                 ]
             loop providedTypeRoot
             
-        let cleanTypes = ASTCleaner.untypeSynModuleDecls synTypes
+        let cleanTypes = synTypes//ASTCleaner.untypeSynModuleDecls synTypes
                              
         let parseTree =
             ParsedInput.CreateImplFile(
