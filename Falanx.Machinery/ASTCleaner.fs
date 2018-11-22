@@ -70,7 +70,7 @@ module ASTCleaner =
             SynExpr.App(atomic, isInfix, untypeSynExpr expr, untypeSynExpr expr2, range)
             
         | SynExpr.TypeApp(expr, lessRange, typeNames, commaRanges, greaterRange, typeArgsRange, range) ->
-            untypeSynExpr expr
+            SynExpr.TypeApp(expr, lessRange, typeNames, commaRanges, greaterRange, typeArgsRange, range)
             
         | SynExpr.LetOrUse(a,b,bindings,expr,range) ->
             SynExpr.LetOrUse(a,b, bindings |> List.map untypeSynBinding, untypeSynExpr expr,range)
