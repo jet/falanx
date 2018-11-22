@@ -72,7 +72,18 @@ module Deserialization =
                           
     let private handleOptional this propertyDescriptor field =
         let value = deserializeField propertyDescriptor field
-        Expr.PropertySet(this, propertyDescriptor.ProvidedProperty, <@@  Some value @@>)
+        let unionCase = 
+            //An alternative method here is to use:
+            //FSharpType.GetUnionCases(
+            // TypeSymbol(
+            //   TypeSymbolKind.OtherGeneric(typedefof<option<_>>),[|propertyDescriptor.Type.UnderlyingType|])) 
+            FSharp.Reflection.FSharpType.GetUnionCases(propertyDescriptor.Type.RuntimeType)
+            |> Seq.find (fun x -> x.Name = "Some")
+        let value = Expr.NewUnionCaseUnchecked(unionCase, [value] )
+        Expr.PropertySet(this, propertyDescriptor.ProvidedProperty, value)
+        
+            
+   
         
     let private handleOptionalUnion (this: Expr) (unionProp : ProvidedProperty) (propertyDescriptor: PropertyDescriptor) (providedUnion: ProvidedUnion) (field: Expr) =
         let value = deserializeField propertyDescriptor field

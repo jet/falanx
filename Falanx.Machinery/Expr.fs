@@ -13,6 +13,59 @@ namespace Falanx.Machinery
         open ProviderImplementation.ProvidedTypes
         open ProviderImplementation.ProvidedTypes.UncheckedQuotations
         
+        let cleanUpTypeName (str:string) =
+            let sb = Text.StringBuilder(str)
+            sb.Replace("System.", "")
+              .Replace("Microsoft.FSharp.Core.", "")
+              .Replace("Collections.Generic.","")
+              .Replace("Falanx.JsonCodec.", "")
+              .Replace("Newtonsoft.Json.Linq.", "") 
+              .Replace("`2", "")
+              .Replace("`1", "")
+              .Replace("FSharp", "")
+              .Replace("Int32", "int") |> ignore
+            sb.ToString()
+            
+        let simpleTypeFormatter (a:IO.TextWriter) (b:Type) =
+            b.ToString()
+            |> cleanUpTypeName
+            |> a.Write
+            
+        let sprintfsimpleTypeFormatter () (b:Type) =
+            b.ToString()
+            |> cleanUpTypeName
+        
+        let quotationsTypePrinter expr =
+        
+            let rec traverseQuotation f q = 
+              let q = defaultArg (f q) q
+              match q with     
+              | ExprShape.ShapeLambda(v, body)  -> Expr.Lambda(v, traverseQuotation f body)
+              | ExprShape.ShapeCombination(comb, args) -> ExprShape.RebuildShapeCombination(comb, List.map (traverseQuotation f) args )          
+              | ExprShape.ShapeVar _ -> q
+                 
+            traverseQuotation (fun e -> match e with
+                                        | Call(_,mi,args) when mi.IsGenericMethod -> 
+                                           printfn "Call: %s" mi.Name
+                                           printfn "    Args: %A" args
+                                           printfn "    Type: %a" simpleTypeFormatter e.Type
+                                           printfn "    MI_RType: %a" simpleTypeFormatter mi.ReturnType
+                                           mi.GetGenericArguments()
+                                           |> Array.iteri (fun i a -> printfn "    %i: %a" i simpleTypeFormatter a)
+                                           printfn ""
+                                           None
+                                        | Let(v,mi,_) ->
+                                            printfn "Let:\n    Var: %s\n    Type: %a\n" v.Name simpleTypeFormatter v.Type
+                                            None
+                                        | Lambda(v, expr) ->
+                                           printfn "Lambda:"
+                                           printfn "    Var: %s\n    Type: %a" v.Name simpleTypeFormatter v.Type
+                                           printfn "    expr: %A" expr
+                                           printfn "    Type: %a" simpleTypeFormatter expr.Type
+                                           
+                                           None
+                                        | _ -> None) expr
+        
         let x<'T> : 'T = Unchecked.defaultof<'T>
         let private onlyVar = function Var v -> Some v | _ -> None
         
@@ -117,12 +170,10 @@ namespace Falanx.Machinery
             | Call(None, createEvent, [Lambda (arg1, Call (_, add, [Var var1]))
                                        Lambda (arg2, Call (_, remove, [Var var2]))
                                        Lambda (_, NewDelegate _)] )
-                when createEvent.Name = "CreateEvent"
-                && add.Name.StartsWith ("add_") && remove.Name.StartsWith ("remove_")
-                && arg1 = var1 && arg2 = var2 ->
-                    add.DeclaringType.GetEvent(
-                    add.Name.[0..4], BindingFlags.Public ||| BindingFlags.Instance ||| BindingFlags.Static ||| BindingFlags.NonPublic)
-            
+                when createEvent.Name = "CreateEvent" && add.Name.StartsWith ("add_")
+                                                      && remove.Name.StartsWith ("remove_")
+                                                      && arg1 = var1 && arg2 = var2 ->
+                    add.DeclaringType.GetEvent(add.Name.[0..4], BindingFlags.Public ||| BindingFlags.Instance ||| BindingFlags.Static ||| BindingFlags.NonPublic)
             | _ -> failwith "Not a event expression"
         
         /// Get UnionCaseInfo from an expression
