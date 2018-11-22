@@ -97,18 +97,21 @@ module Serialization =
                 let intMethod = 
                     let arg = Var("x",prop.Type.UnderlyingType)
                     Expr.Lambda(arg, Expr.callStaticGeneric [prop.Type.UnderlyingType] [Expr.Var arg] <@int x@>)
-                let optMap = Expr.callStaticGeneric [prop.Type.UnderlyingType; typeof<int>] [intMethod; value] <@Option.map x x@>
                 match rule with 
                 | Optional -> 
+                    let optMap = Expr.callStaticGeneric [prop.Type.UnderlyingType; typeof<int>] [intMethod; value] <@Option.map x x@>
                     Expr.callStaticGeneric 
                         [typeof<int>]
                         [ <@@ writeInt32 @@> ;position; buffer; optMap]
                         <@@ writeOption x x x x @@>
-                | Required -> Expr.apply <@@ writeInt32 @@> [position; buffer; optMap]
+                | Required ->
+                    let optMap = Expr.callStaticGeneric [prop.Type.UnderlyingType; typeof<int>] [intMethod; value] <@Option.map x x@>
+                    Expr.apply <@@ writeInt32 @@> [position; buffer; optMap]
                 | Repeated -> 
+                    let seqMap = Expr.callStaticGeneric [prop.Type.UnderlyingType; typeof<int>] [intMethod; value] <@Seq.map x x@>
                     Expr.callStaticGeneric 
                         [typeof<int>]
-                        [ <@@ writeInt32 @@> ;position; buffer; optMap]
+                        [ <@@ writeInt32 @@> ;position; buffer; seqMap]
                         <@@ writeRepeated x x x x @@>
             | Primitive, rule ->
                 callPrimitive (primitiveWriter prop.Type.ProtobufType) prop rule position buffer value
