@@ -170,7 +170,6 @@ namespace Falanx.Machinery
             | Call(None, createEvent, [Lambda (arg1, Call (_, add, [Var var1]))
                                        Lambda (arg2, Call (_, remove, [Var var2]))
                                        Lambda (_, NewDelegate _)] )
-
                 when createEvent.Name = "CreateEvent" && add.Name.StartsWith ("add_")
                                                       && remove.Name.StartsWith ("remove_")
                                                       && arg1 = var1 && arg2 = var2 ->
