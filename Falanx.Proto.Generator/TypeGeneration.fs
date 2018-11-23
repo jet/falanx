@@ -262,28 +262,28 @@ module TypeGeneration =
              |> Set.iter (
                 fun codec -> 
                     match codec with
-                        | Binary ->
-                            let staticSerializeMethod = Falanx.Proto.Codec.Binary.Serialization.createSerializeMethod typeInfo
-                            let staticDeserializeMethod = Falanx.Proto.Codec.Binary.Deserialization.createDeserializeMethod typeInfo
-                            providedType.AddMember staticSerializeMethod
-                            providedType.AddMember staticDeserializeMethod
-                                 
-                            providedType.AddInterfaceImplementation typeof<IMessage>
-                                 
-                            let serializeMethod = Falanx.Proto.Codec.Binary.Serialization.createInstanceSerializeMethod typeInfo staticSerializeMethod
-                            providedType.AddMember serializeMethod
-                            providedType.DefineMethodOverride(serializeMethod, typeof<IMessage>.GetMethod("Serialize"))
-                                 
-                            let readFromMethod = Falanx.Proto.Codec.Binary.Deserialization.createReadFromMethod typeInfo
-                            providedType.AddMember readFromMethod
-                            providedType.DefineMethodOverride(readFromMethod, typeof<IMessage>.GetMethod("ReadFrom"))
-                                 
-                            let serializedLengthMethod = Falanx.Proto.Codec.Binary.Serialization.createSerializedLength typeInfo
-                            providedType.AddMember serializedLengthMethod
-                            providedType.DefineMethodOverride(serializedLengthMethod, typeof<IMessage>.GetMethod("SerializedLength"))
-                        | Json ->
-                            let jsonObjCodec = Falanx.Proto.Codec.Json.Codec.createJsonObjCodec typeInfo
-                            providedType.AddMember jsonObjCodec
+                    | Binary ->
+                        let staticSerializeMethod = Falanx.Proto.Codec.Binary.Serialization.createSerializeMethod typeInfo
+                        let staticDeserializeMethod = Falanx.Proto.Codec.Binary.Deserialization.createDeserializeMethod typeInfo
+                        providedType.AddMember staticSerializeMethod
+                        providedType.AddMember staticDeserializeMethod
+
+                        providedType.AddInterfaceImplementation typeof<IMessage>
+
+                        let serializeMethod = Falanx.Proto.Codec.Binary.Serialization.createInstanceSerializeMethod typeInfo staticSerializeMethod
+                        providedType.AddMember serializeMethod
+                        providedType.DefineMethodOverride(serializeMethod, typeof<IMessage>.GetMethod("Serialize"))
+
+                        let readFromMethod = Falanx.Proto.Codec.Binary.Deserialization.createReadFromMethod typeInfo
+                        providedType.AddMember readFromMethod
+                        providedType.DefineMethodOverride(readFromMethod, typeof<IMessage>.GetMethod("ReadFrom"))
+
+                        let serializedLengthMethod = Falanx.Proto.Codec.Binary.Serialization.createSerializedLength typeInfo
+                        providedType.AddMember serializedLengthMethod
+                        providedType.DefineMethodOverride(serializedLengthMethod, typeof<IMessage>.GetMethod("SerializedLength"))
+                    | Json ->
+                        let jsonObjCodec = Falanx.Proto.Codec.Json.Codec.createJsonObjCodec typeInfo
+                        providedType.AddMember jsonObjCodec
                         )
                           
              providedType
