@@ -190,14 +190,13 @@ namespace Falanx.Machinery
         /// creates a union case identifier
         let mkUciIdent range (ucDeclaringType : Type) (ucName : string) knownNamespaces ommitEnclosingType=
             let ident =
-                match ucDeclaringType.IsGenericType with
-                | true when ucDeclaringType.GetGenericTypeDefinition().Name = typeof<int option>.GetGenericTypeDefinition().Name ->
-                        [mkIdent range ucName]
-                | false -> 
-                        let path = 
-                            let fullPath = getMemberPath range ucDeclaringType knownNamespaces ommitEnclosingType
-                            List.truncate (fullPath.Length - 1) fullPath //do not include union type
-                        path @ [mkIdent range ucName]
+                if ucDeclaringType.IsGenericType && ucDeclaringType.GetGenericTypeDefinition().Name = typeof<int option>.GetGenericTypeDefinition().Name then
+                    [mkIdent range ucName]
+                else
+                    let path = 
+                        let fullPath = getMemberPath range ucDeclaringType knownNamespaces ommitEnclosingType
+                        List.truncate (fullPath.Length - 1) fullPath //do not include union type
+                    path @ [mkIdent range ucName]
             
             LongIdentWithDots(ident, [range])
         

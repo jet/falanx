@@ -60,11 +60,12 @@ type Quotations() =
             
             | Lambda(v, body) ->
                 //dependencies.Append v.Type
-                let vType = sysTypeToSynType range v.Type knownNamespaces ommitEnclosingType
-                let spat = SynSimplePat.Id(mkIdent range v.Name, None, false ,false ,false, range)
-                let typedPat = SynSimplePats.SimplePats([SynSimplePat.Typed(spat, vType, range)], range)
-                let bodyAst = exprToAst body
-                SynExpr.Lambda(false, false, typedPat, bodyAst, range)
+                let id = SynSimplePat.Id(mkIdent range v.Name, None, false ,false ,false, range)
+                let vtype = sysTypeToSynType range v.Type knownNamespaces ommitEnclosingType
+                let simplePat = SynSimplePat.Typed(id, vtype, range)
+                let lambda = SynExpr.Lambda(false, true, SynSimplePats.SimplePats([simplePat], range), exprToAst body, range)
+                lambda
+
     
             | LetRecursive(bindings, body) ->
                 let mkBinding (v : Var, bind : Expr) =
@@ -212,11 +213,8 @@ type Quotations() =
                     | _ ->
                         let synParam = SynExpr.Tuple(synArgs, [], range)
                         SynExpr.App(ExprAtomicFlag.Atomic, false, uciCtor, synParam, range)
-                ctorExpr  
-                //we use untyped here, maybe this should be constrained somewhat,
-                //the problem is we dont know if there was a type annotation in the input
-                //this suppresses annotations like `: ``Option`1``<String>`
-                //SynExpr.Typed(ctorExpr, synTy, range)
+                let newUnionCase = SynExpr.Typed(ctorExpr, synTy, range)
+                SynExpr.Paren(newUnionCase, range, None, range)
     
             | NewDelegate(t, vars, body) ->
                 //dependencies.Append t

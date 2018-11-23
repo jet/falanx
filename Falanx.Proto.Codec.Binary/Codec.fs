@@ -115,9 +115,6 @@ namespace Falanx.Proto.Codec.Binary
                 match value with
                 | Some union ->
                     cases
-    //                match union with
-    //                | SampleMessage.Name n -> (Codec.writeString 4 buffer) (n)
-    //                | SampleMessage.Age a -> (Codec.writeInt32 9 buffer) (a)
                 | _ -> ()
                 
         let writeRepeated (writeItem: Writer<'T>) position buffer value =
