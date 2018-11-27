@@ -103,7 +103,7 @@ module TypeGeneration =
         
         let mapType = Expr.makeGenericType [ keyType; valueType] typedefof<proto_map<_, _>>
     
-        let property, field = ProvidedTypeDefinition.mkPropertyWithField mapType (Naming.snakeToPascal name) true
+        let property, field = ProvidedTypeDefinition.mkRecordPropertyWithField mapType (Naming.snakeToPascal name) true
         
         { KeyType = 
             { ProtobufType = keyTypeName
@@ -314,3 +314,4 @@ module TypeGeneration =
             let deepest = loop rest root
             root, deepest
         | _ -> invalidArg "package" "Package name cannot be empty."
+
