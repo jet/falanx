@@ -45,7 +45,7 @@ module Serialization =
         | Class(_scope, _name) -> 
             Expr.callStaticGeneric
                 [keyType; valueType]
-                [keyWriter; positionExpr; buffer; Expr.box mapExpr]
+                [keyWriter; positionExpr; buffer; mapExpr]
                 <@@ writeMessageMap x x x x @@>
         | Union _ -> failwith "oneOf map type are not currently supported"
         | Enum(_scope, _name) ->
