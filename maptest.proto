@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+message SomeMessage {
+    int64 id = 1;
+}
+
+message SomeMessageWithMap {
+    map<string, SomeMessage> some_map = 1;
+}
