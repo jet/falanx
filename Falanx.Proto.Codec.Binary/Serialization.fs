@@ -33,7 +33,7 @@ module Serialization =
         let keyWriter = primitiveWriter map.KeyType.ProtobufType
         let keyType = map.ProvidedProperty.PropertyType.GenericTypeArguments.[0]
         let valueType = map.ProvidedProperty.PropertyType.GenericTypeArguments.[1]
-        let positionExpr = Expr.Value(map.Position)
+        let positionExpr = Expr.Value(int map.Position)
         let mapExpr = Expr.PropertyGet(this, map.ProvidedProperty)
         
         match map.ValueType.Kind with
