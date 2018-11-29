@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ProjectSchemaDefinitions xmlns="http://schemas.microsoft.com/build/2009/properties">
+    <ContentType Name="ProtobufSchema" DisplayName="Protobuf file" ItemType="ProtobufSchema" />
+    <ItemType Name="ProtobufSchema" DisplayName="Protobuf compiler"/>
+    <FileExtension Name=".proto" ContentType="ProtobufSchema"/>
+</ProjectSchemaDefinitions>
+
