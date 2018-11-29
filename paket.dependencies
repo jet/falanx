@@ -28,7 +28,7 @@ nuget Expecto ~> 8.4
 nuget Expecto.TestResults ~> 8.4
 nuget MedallionShell ~> 1.5
 
-github enricosada/dotnet-proj-info test/dotnet-proj-info.Tests/FileUtils.fs
+github enricosada/dotnet-proj-info test/dotnet-proj.Tests/FileUtils.fs
 
 group MergeNupkgTool
 source https://www.nuget.org/api/v2
