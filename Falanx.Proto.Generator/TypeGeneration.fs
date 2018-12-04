@@ -153,7 +153,7 @@ module TypeGeneration =
        
         let propertyType = applyRule ProtoFieldRule.Optional unionType
         let propertyName = Naming.snakeToCamel name                
-        let caseProperty, caseField = ProvidedTypeDefinition.mkPropertyWithField propertyType propertyName false
+        let caseProperty, caseField = ProvidedTypeDefinition.mkRecordPropertyWithField propertyType propertyName false
    
         let propertyDescriptors = 
             members
