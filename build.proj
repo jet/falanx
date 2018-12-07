@@ -12,7 +12,8 @@
 
   <Target Name="Pack" DependsOnTargets="Build">
     <RemoveDir Directories="$(NupkgsDir)" />
-    <Exec Command='nuget.exe pack nuget\Falanx.Tool.nuspec -OutputDirectory artifact\nupkg\' />
+    <Exec Command='$(NuGetPackageRoot)nuget.commandline\4.7.1\tools\nuget.exe pack nuget\Falanx.Tool.nuspec -OutputDirectory artifact\nupkg\' />
+
   </Target>
 
   <Target Name="Test">

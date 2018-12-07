@@ -13,7 +13,7 @@ nuget Froto.Parser
 nuget Froto.Serialization
 nuget Fleece.NewtonsoftJson 0.7.0
 nuget Newtonsoft.Json 11.0.2
-nuget NuGet.CommandLine 4.7.1 
+nuget NuGet.CommandLine == 4.7.1 
 
 nuget Microsoft.SourceLink.GitHub copy_local: true
 
@@ -28,5 +28,3 @@ group IntegrationTests
     nuget FSharp.Core
     nuget Expecto ~> 8.4
     nuget Expecto.TestResults ~> 8.4
-
-    #github enricosada/dotnet-proj-info test/dotnet-proj-info.Tests/FileUtils.fs
