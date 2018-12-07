@@ -1,12 +1,6 @@
 image:
   - Visual Studio 2017
 
-install:
-  - cmd: choco install sbt -ia "INSTALLDIR=""C:\sbt"""
-  - cmd: SET SBT_HOME=C:\sbt\bin
-  - cmd: SET PATH=%SBT_HOME%;%JAVA_HOME%\bin;%PATH%
-  - cmd: SET SBT_OPTS=-XX:MaxPermSize=2g -Xmx4g
-
 before_build:
   - ps: >-
       $buildId = $env:APPVEYOR_BUILD_NUMBER.PadLeft(5, '0');
@@ -36,5 +30,3 @@ on_finish:
         }
       }
 
-cache:
-  - C:\sbt\
