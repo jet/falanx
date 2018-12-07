@@ -10,7 +10,7 @@
     <Exec Command='dotnet build Falanx.Tool -c Release' />
   </Target>
 
-  <Target Name="Pack" DependsOnTargets="Restore">
+  <Target Name="Pack" DependsOnTargets="Build">
     <RemoveDir Directories="$(NupkgsDir)" />
     <Exec Command='nuget.exe pack nuget\Falanx.Tool.nuspec -OutputDirectory artifact\nupkg\' />
   </Target>
