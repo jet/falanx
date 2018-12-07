@@ -13,7 +13,7 @@ nuget Froto.Parser
 nuget Froto.Serialization
 nuget Fleece.NewtonsoftJson 0.7.0
 nuget Newtonsoft.Json 11.0.2
-nuget NuGet.CommandLine == 4.7.1 
+nuget NuGet.CommandLine  == 4.7.1 storage: packages
 
 nuget Microsoft.SourceLink.GitHub copy_local: true
 
