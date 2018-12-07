@@ -30,6 +30,12 @@
   </StringProperty>
 
   <StringProperty
+    Name="CustomToolNamespace"
+    Category="Advanced"
+    DisplayName="Custom Tool Namespace"
+    Description="The namespace into which the output of the custom tool is placed." />
+
+  <StringProperty
       Name="FileNameAndExtension"
       DisplayName="File Name"
       ReadOnly="true"

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
-    <!-- Register.proto association with ProtobufSchema item type -->
+    <!-- Register .proto association with ProtobufSchema item type -->
     <ItemGroup>
         <PropertyPageSchema Include="$(MSBuildThisFileDirectory)ProtobufItemsSchema.xaml">
             <Context>Project</Context>
@@ -18,28 +18,34 @@
         </ProtobufSchema>
     </ItemDefinitionGroup>
 
-    <!-- Compile items generated from .proto are appended to fsproj Compile items which makes Program.fs not last item in the group,
+    <!-- "Compile" items generated from .proto are appended to fsproj "Compile" items, which makes Program.fs not the last item in the group,
         which in order triggers fsc error about entry point not being last file. Do ordering gymnastics here to prepend generated files
         before existing items in the group -->
     <ItemGroup><Compile1 Include="@(Compile)" /></ItemGroup>
     <ItemGroup><Compile Remove="@(Compile)" /></ItemGroup>
     <ItemGroup>
         <!-- Note, that DependentUpon does not work: https://developercommunity.visualstudio.com/content/problem/106280/dependentupon-files-in-new-csproj-format-not-group.html -->
-        <!-- Nesting files in VS2017: https://github.com/aspnet/Tooling/issues/889 -->
+        <!-- Nesting files in VS2017 is screed too: https://github.com/aspnet/Tooling/issues/889 -->
         <Compile Include="@(ProtobufSchema -> '%(ProtobufOutputFile)'); @(Compile1)" />
     </ItemGroup>
 
     <Target Name="ProtobufCompile" BeforeTargets="CoreCompile" Inputs="@(ProtobufSchema)" Outputs="@(ProtobufSchema -> '%(ProtobufOutputFile)')">
-        <!-- TODO: autodetect, are we running from under falanx solution or project referencing falanx nuget and set up command appropriately -->
+        <!-- Autodetect, are we running from under falanx solution or project referencing falanx nuget -->
         <PropertyGroup>
-            <!-- <FalanxToolPath>dotnet "$(MSBuildProjectDirectory)\..\..\Falanx.Tool\bin\Release\netcoreapp2.1\publish\falanx.dll"</FalanxToolPath> -->
-            <FalanxToolPath>dotnet run -p "$(MSBuildProjectDirectory)\..\..\Falanx.Tool\Falanx.Tool.fsproj" -- </FalanxToolPath>
+            <FalanxToolPath Condition="Exists('$(MSBuildThisFileDirectory)..\tools\falanx.dll')">dotnet "$(MSBuildThisFileDirectory)..\tools\falanx.dll"</FalanxToolPath>
+            <FalanxToolPath Condition="Exists('$(MSBuildProjectDirectory)..\..\Falanx.Tool\Falanx.Tool.fsproj')">dotnet run -p "$(MSBuildProjectDirectory)..\..\Falanx.Tool\Falanx.Tool.fsproj" --</FalanxToolPath>
+        </PropertyGroup>
+        <Error Condition=" '$(FalanxToolPath)' == '' " Text="Can not find falanx.dll" />
+
+        <PropertyGroup>
+            <FalanxNamespace>%(ProtobufSchema.CustomToolNamespace)</FalanxNamespace>
+            <FalanxNamespace Condition=" '$(FalanxNamespace)' == '' ">amnesiac</FalanxNamespace>
         </PropertyGroup>
 
         <MakeDir Directories="%(ProtobufSchema.ProtobufOutputDir)"/>
         <Message Importance="High" Text="Protobuf compiling: %(ProtobufSchema.Identity)" />
         <!-- TODO: how to set serialization options? Hardcoded to both for now. -->
-        <Exec Command="$(FalanxToolPath) --defaultnamespace test1 --serializer json --serializer binary --inputfile &quot;%(ProtobufSchema.FullPath)&quot; --outputfile &quot;%(ProtobufSchema.ProtobufOutputFile)&quot;"
+        <Exec Command="$(FalanxToolPath) --defaultnamespace &quot;$(FalanxNamespace)&quot; --serializer json --serializer binary --inputfile &quot;%(ProtobufSchema.FullPath)&quot; --outputfile &quot;%(ProtobufSchema.ProtobufOutputFile)&quot;"
                 ConsoleToMsBuild="true" />
     </Target>
 </Project>

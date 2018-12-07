@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Authors>Dave Thomas</Authors>
     <PackageProjectUrl>https://github.com/jet/falanx/</PackageProjectUrl>
-    <PackageTags>proto;fsharp</PackageTags>
+    <PackageTags>protobuf;fsharp</PackageTags>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/jet/falanx.git</RepositoryUrl>
     <PackageLicenseUrl>https://github.com/jet/falanx/blob/master/LICENSE</PackageLicenseUrl>

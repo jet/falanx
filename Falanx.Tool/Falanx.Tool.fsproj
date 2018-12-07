@@ -3,7 +3,6 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-    <PackAsTool>true</PackAsTool>
     <PackageId>Falanx.Tool</PackageId>
     <AssemblyName>falanx</AssemblyName>
   </PropertyGroup>
@@ -14,9 +13,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Program.fs" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="paket.references" />
+    <None Include="build\Falanx.Tool.targets" />
+    <None Include="build\Protobuf.xaml" />
+    <None Include="build\ProtobufItemsSchema.xaml" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Falanx.Proto.Codec.Json\Falanx.Proto.Codec.Json.fsproj" />

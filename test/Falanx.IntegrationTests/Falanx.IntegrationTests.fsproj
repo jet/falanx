@@ -8,13 +8,7 @@
     <EmbeddedResource Remove="schemas\**" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\paket-files\integrationtests\enricosada\dotnet-proj-info\test\dotnet-proj-info.Tests\FileUtils.fs">
-      <Paket>True</Paket>
-      <Link>paket-files/FileUtils.fs</Link>
-    </Compile>
     <Compile Include="JsonTests.fs" />
-    <Compile Include="TestAssets.fs" />
-    <Compile Include="Sample.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
@@ -27,6 +21,6 @@
   <ItemGroup>
     <ProtobufSchema Include="schemas\falanx_test.proto" />
   </ItemGroup>
-  <Import Project="..\..\Falanx.Tool\targets\falanx.targets" />
+  <Import Project="..\..\Falanx.Tool\build\Falanx.Tool.targets" />
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

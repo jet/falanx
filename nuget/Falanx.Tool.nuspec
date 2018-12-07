@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>Falanx.Tool</id>
+    <version>0.4.0-alpha1</version>
+    <authors>Dave Thomas</authors>
+    <owners>Dave Thomas</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <licenseUrl>https://github.com/jet/falanx/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/jet/falanx/</projectUrl>
+    <description>Package Description</description>
+    <tags>protobuf fsharp</tags>
+    <developmentDependency>true</developmentDependency>
+    <repository type="git" url="https://github.com/jet/falanx.git" commit="228e4becd82145ee58cc29b8bc6cade0345e3331" />
+    <dependencies>
+      <group targetFramework=".NETStandard2.0">
+        <dependency id="Argu" version="5.1.0" exclude="Build,Analyzers" />
+        <dependency id="FSharp.Compiler.Service" version="25.0.1" exclude="Build,Analyzers" />
+        <dependency id="FSharp.Core" version="4.5.2" exclude="Build,Analyzers" />
+        <dependency id="Fantomas" version="2.9.0" exclude="Build,Analyzers" />
+        <dependency id="Froto.Parser" version="0.6.2" exclude="Build,Analyzers" />
+        <dependency id="Froto.Serialization" version="0.6.2" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="..\Falanx.Tool\bin\Release\netcoreapp2.1\Falanx*" target="tools\" />
+    <file src="..\Falanx.Tool\build\*" target="build\" />
+  </files>
+</package>

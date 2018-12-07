@@ -1,3 +1,4 @@
+version: 5.193.0
 source https://www.nuget.org/api/v2
 framework: netcoreapp2.1, netstandard2.0
 storage: none
@@ -12,6 +13,7 @@ nuget Froto.Parser
 nuget Froto.Serialization
 nuget Fleece.NewtonsoftJson 0.7.0
 nuget Newtonsoft.Json 11.0.2
+nuget NuGet.CommandLine 4.7.1 
 
 nuget Microsoft.SourceLink.GitHub copy_local: true
 
@@ -19,20 +21,12 @@ github 7sharp9/FSharp.TypeProviders.SDK:generator src/ProvidedTypes.fs
 github 7sharp9/FSharp.TypeProviders.SDK:generator src/ProvidedTypesTesting.fs 
 
 group IntegrationTests
-source https://www.nuget.org/api/v2
-framework: netcoreapp2.1, netstandard2.0
-storage: none
+    source https://www.nuget.org/api/v2
+    framework: netcoreapp2.1, netstandard2.0
+    storage: none
 
-nuget FSharp.Core
-nuget Expecto ~> 8.4
-nuget Expecto.TestResults ~> 8.4
-nuget MedallionShell ~> 1.5
+    nuget FSharp.Core
+    nuget Expecto ~> 8.4
+    nuget Expecto.TestResults ~> 8.4
 
-github enricosada/dotnet-proj-info test/dotnet-proj-info.Tests/FileUtils.fs
-
-group MergeNupkgTool
-source https://www.nuget.org/api/v2
-frameworks: netcoreapp2.0, netstandard2.0
-storage: none
-
-clitool dotnet-mergenupkg ~> 2.4
+    #github enricosada/dotnet-proj-info test/dotnet-proj-info.Tests/FileUtils.fs

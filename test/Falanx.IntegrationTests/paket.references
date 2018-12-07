@@ -6,6 +6,3 @@ group IntegrationTests
 	FSharp.Core
 	Expecto
 	Expecto.TestResults
-	MedallionShell
-
-	File: FileUtils.fs
