@@ -7,7 +7,7 @@
     <AssemblyName>falanx</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(EnableSourceLink)' == 'true' ">
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>

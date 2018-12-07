@@ -62,7 +62,7 @@ module Deserialization =
                 [map; keyReader; <@@ readInt32 @@>; field]
             | Class(_scope, _name) -> 
                 <@@ readMessageMapElement<_, Template> x x x @@>,
-                [Expr.box map; keyReader; field ]
+                [map; keyReader; field ]
             | Union _ -> failwith "Not implemented"
                     
         Expr.callStaticGeneric

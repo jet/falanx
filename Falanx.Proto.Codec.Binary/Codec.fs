@@ -138,15 +138,15 @@ namespace Falanx.Proto.Codec.Binary
         let writePrimitiveMap writeKey writeValue : Writer<proto_map<'Key, 'Value>> =
             fun position buffer value -> writeMap writeKey writeValue id position buffer value
             
-        let writeMessageMap<'Key, 'Value when 'Value :> IMessage> writeKey : Writer<obj> =
-            fun position buffer value ->
+        let writeMessageMap<'Key, 'Value when 'Value :> IMessage> writeKey =
+            fun position buffer (value: proto_map<'Key, 'Value>) ->
                 writeMap
                     writeKey
                     writeEmbedded
-                    (fun msg -> msg :> IMessage)
+                    id
                     position
                     buffer
-                    (value :?> proto_map<'Key, 'Value>)
+                    value
         
         let writeEnumMap<'Key> writeKey : Writer<proto_map<'Key, proto_int32>> =
             fun position buffer value ->
@@ -183,13 +183,13 @@ namespace Falanx.Proto.Codec.Binary
             | LengthDelimited(_, segment) -> ZeroCopyBuffer segment |> deserialize<'T>
             | _ -> failwithf "Invalid format of the field: %O" field
         
-        let readMapElement<'Key, 'Value> (map: proto_map<_, _>) keyReader (valueReader: Reader<'Value>) field =
+        let readMapElement<'Key, 'Value> (map: proto_map<'Key, 'Value>) keyReader (valueReader: Reader<'Value>) field =
             match field with
             | LengthDelimited(_, segment) ->
                 let item = MapItem(keyReader, valueReader, Unchecked.defaultof<_>, Unchecked.defaultof<_>) 
-                (item :> IMessage).ReadFrom <| ZeroCopyBuffer segment
-                (map :?> proto_map<'Key, 'Value>).Add(item.Key, item.Value)
+                (item :> IMessage).ReadFrom (ZeroCopyBuffer segment)
+                map.Add(item.Key, item.Value)
             | _ -> failwithf "Invalid format of the field: %O" field
         
-        let readMessageMapElement<'Key, 'Value when 'Value :> IMessage and 'Value : (new: unit -> 'Value)> (map: obj) keyReader field =
-            readMapElement (map :?> proto_map<'Key, 'Value>) keyReader readEmbedded<'Value> field
+        let readMessageMapElement<'Key, 'Value when 'Value :> IMessage and 'Value : (new: unit -> 'Value)> (map: proto_map<'Key, 'Value>) keyReader field =
+            readMapElement map keyReader readEmbedded<'Value> field

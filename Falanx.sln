@@ -12,6 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		bundle.proto = bundle.proto
 		oneOf.proto = oneOf.proto
 		searchResponse.proto = searchResponse.proto
+		maptest.proto = maptest.proto
 	EndProjectSection
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Falanx.Proto.Codec.Json", "Falanx.Proto.Codec.Json\Falanx.Proto.Codec.Json.fsproj", "{2E5DF937-250F-4C52-8EE5-3DEC728EECD9}"

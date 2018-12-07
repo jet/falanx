@@ -276,7 +276,6 @@ module Codec =
                         let all = makeFunctionTypeFromElements rest
                         yield h, all
                         yield! loop t
-                    | [h] -> yield h, recordType
                 ]
             loop recordFields
   
