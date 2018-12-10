@@ -234,11 +234,19 @@ module TypeGeneration =
                                  | TOneOf(name, members) ->
                                      Some(createOneOfDescriptor nestedScope lookup name members)
                                  | _ -> None)
-
-             for oneOfDescriptor in oneOfDescriptors do
-                 providedType.AddMembers [ oneOfDescriptor.OneOfType :> MemberInfo
-                                           oneOfDescriptor.CaseField :> _
-                                           oneOfDescriptor.CaseProperty :> _ ]
+                 
+             if not oneOfDescriptors.IsEmpty then
+                 oneOfDescriptors
+                 |> List.iter (fun oneOfDescriptor ->
+                     providedType.AddMembers [ oneOfDescriptor.OneOfType :> MemberInfo
+                                               oneOfDescriptor.CaseField :> _
+                                               oneOfDescriptor.CaseProperty :> _ ] 
+                     //also add json static property for json codec if present
+                     if codecs.Contains Json then
+                         let jsonObjCodec = Falanx.Proto.Codec.Json.Codec.createJsonObjCodecFromoneOf oneOfDescriptor
+                         //oneOfDescriptor.OneOfType.AddMember jsonObjCodec
+                         ()
+                          )
 
              let properties =
                  message.Fields

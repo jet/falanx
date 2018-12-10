@@ -4,6 +4,7 @@ open System.Reflection
 open System.Collections.Generic
 open Fleece
 open Fleece.Newtonsoft
+open Fleece.Newtonsoft.Operators
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Quotations.Patterns
 open Falanx.Machinery
@@ -27,6 +28,21 @@ type Result3 =
     { mutable url : string option 
       mutable title : int option
       mutable snippets : ResizeArray<string> }
+    
+type test_oneof =
+    | First_name of First_name : string
+    | Age of Age : int
+    | Last_name of Last_name : string
+    with
+        [<ReflectedDefinition>]
+        static member JsonObjCodec = // : ConcreteCodec<list<KeyValuePair<string, JToken>>, list<KeyValuePair<string, JToken>>, test_oneof, test_oneof> =
+            Operators.jchoice//<list<KeyValuePair<string,JToken>>,test_oneof, test_oneof>
+                (seq {
+                    yield FSharpPlus.Operators.map First_name (jreq "First_name" (function First_name x -> Some x | _ -> None))
+                    yield FSharpPlus.Operators.map Age        (Operators.jreq "age" (function Age x -> Some x | _ -> None))
+                    yield FSharpPlus.Operators.map Last_name  (Operators.jreq "last_name" (function Last_name x -> Some (x) | _ -> None))
+                })
+
       
 module Quotations =
     let rec traverseForCall q = [
@@ -313,19 +329,6 @@ module Codec =
         let ctast, ctpt = Quotations.ToAst( foldedFunctions, knownNamespaces = knownNamespaces )
         let code = Fantomas.CodeFormatter.FormatAST(ctpt, "test", None, Fantomas.FormatConfig.FormatConfig.Default)
         //FsAst.PrintAstInfo.printAstInfo "/Users/dave.thomas/codec.fs"                           
-           
-//        type Person = { 
-//            name : string * string
-//            age : int option
-//            children: Person list }
-//            with
-//            static member JsonObjCodec : Codec<IReadOnlyDictionary<string,JsonValue>,Person> =
-//                fun f l a c -> { name = (f, l); age = a; children = c }
-//                |> withFields
-//                |> jfield    "firstName" (fun x -> fst x.name)
-//                |> jfield    "lastName"  (fun x -> snd x.name)
-//                |> jfieldOpt "age"       (fun x -> x.age)
-//                |> jfield    "children"  (fun x -> x.children)
 
         let signatureType =
             let def = typedefof<Codec<IReadOnlyDictionary<string,JsonValue>,_>>
@@ -333,3 +336,25 @@ module Codec =
             
         let createJsonObjCodec = ProvidedProperty("JsonObjCodec",signatureType, getterCode = (fun args -> foldedFunctions), isStatic = true )
         createJsonObjCodec
+    
+    let calljchoice =
+        let pi = Expr.propertyof <@ test_oneof.JsonObjCodec @>
+        let rd = Expr.TryGetReflectedDefinition pi.GetMethod
+        match rd with
+        | Some expr ->
+            Falanx.Machinery.Expr.quotationsTypePrinter expr
+            ()
+        | _ -> ()
+ 
+        let jchoiceMethodInfo = Expr.methoddefof <@ Newtonsoft.Operators.jchoice<seq<_>,_,_> x @>
+        ()
+        
+    let createJsonObjCodecFromoneOf (descriptor: OneOfDescriptor) =
+//        static member JsonObjCodec =
+                   //            jchoice
+                   //                [
+                   //                    Rectangle <!> jreq "rectangle" (function Rectangle (x, y) -> Some (x, y) | _ -> None)
+                   //                    Circle    <!> jreq "radius"    (function Circle x -> Some x | _ -> None)
+                   //                    Prism     <!> jreq "prism"     (function Prism (x, y, z) -> Some (x, y, z) | _ -> None)
+                   //                ]
+           ()

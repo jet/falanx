@@ -10,7 +10,7 @@ nuget Fantomas
 nuget FParsec 1.0.3
 nuget Froto.Parser
 nuget Froto.Serialization
-nuget Fleece.NewtonsoftJson 0.7.0
+nuget Fleece.NewtonsoftJson 0.8.0-alpha-2
 nuget Newtonsoft.Json 11.0.2
 
 nuget Microsoft.SourceLink.GitHub copy_local: true

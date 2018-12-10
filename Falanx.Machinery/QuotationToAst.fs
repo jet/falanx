@@ -24,26 +24,26 @@ type Quotations() =
             match expr with
             // parse for constants
             | Value(obj, t) ->
-                match obj with
-                | :? bool as b when t = typeof<bool> -> SynExpr.Const(SynConst.Bool b, range)
-                | :? byte as b when t = typeof<byte> -> SynExpr.Const(SynConst.Byte b, range)
-                | :? sbyte as b when t = typeof<sbyte> -> SynExpr.Const(SynConst.SByte b, range)
-                | :? char as c when t = typeof<char> -> SynExpr.Const(SynConst.Char c, range)
-                | :? decimal as d when t = typeof<decimal> -> SynExpr.Const(SynConst.Decimal d, range)
-                | :? int16 as i when t = typeof<int16> -> SynExpr.Const(SynConst.Int16 i, range)
-                | :? int32 as i when t = typeof<int32> -> SynExpr.Const(SynConst.Int32 i, range)
-                | :? int64 as i when t = typeof<int64> -> SynExpr.Const(SynConst.Int64 i, range)
-                | :? uint16 as i when t = typeof<uint16> -> SynExpr.Const(SynConst.UInt16 i, range)
-                | :? uint32 as i when t = typeof<uint32> -> SynExpr.Const(SynConst.UInt32 i, range)
-                | :? uint64 as i when t = typeof<uint64> -> SynExpr.Const(SynConst.UInt64 i, range)
-                | :? IntPtr as i when t = typeof<IntPtr> -> SynExpr.Const(SynConst.IntPtr(int64 i), range)
-                | :? UIntPtr as i when t = typeof<UIntPtr> -> SynExpr.Const(SynConst.UIntPtr(uint64 i), range)
-                | :? single as f when t = typeof<single> -> SynExpr.Const(SynConst.Single f, range)
-                | :? double as f when t = typeof<double> -> SynExpr.Const(SynConst.Double f, range)
-                | :? string as s when t = typeof<string> -> SynExpr.Const(SynConst.String(s, range), range)
-                | :? unit when t = typeof<unit> -> SynExpr.Const(SynConst.Unit, range)
-                | :? (byte[]) as bs when t = typeof<byte[]> -> SynExpr.Const(SynConst.Bytes(bs, range), range)
-                | :? (uint16[]) as is when t = typeof<uint16[]> -> SynExpr.Const(SynConst.UInt16s is, range)
+                match (obj) with
+                | :? bool as b -> SynExpr.Const(SynConst.Bool b, range)
+                | :? byte as b -> SynExpr.Const(SynConst.Byte b, range) 
+                | :? sbyte as b -> SynExpr.Const(SynConst.SByte b, range)
+                | :? char as c -> SynExpr.Const(SynConst.Char c, range)
+                | :? decimal as d -> SynExpr.Const(SynConst.Decimal d, range)
+                | :? int16 as i -> SynExpr.Const(SynConst.Int16 i, range)
+                | :? int32 as i -> SynExpr.Const(SynConst.Int32 i, range)
+                | :? int64 as i -> SynExpr.Const(SynConst.Int64 i, range)
+                | :? uint16 as i -> SynExpr.Const(SynConst.UInt16 i, range)
+                | :? uint32 as i -> SynExpr.Const(SynConst.UInt32 i, range)
+                | :? uint64 as i -> SynExpr.Const(SynConst.UInt64 i, range)
+                | :? IntPtr as i -> SynExpr.Const(SynConst.IntPtr(int64 i), range)
+                | :? UIntPtr as i -> SynExpr.Const(SynConst.UIntPtr(uint64 i), range)
+                | :? single as f -> SynExpr.Const(SynConst.Single f, range)
+                | :? double as f -> SynExpr.Const(SynConst.Double f, range)
+                | :? string as s -> SynExpr.Const(SynConst.String(s, range), range)
+                | :? unit -> SynExpr.Const(SynConst.Unit, range)
+                | :? (byte[]) as bs -> SynExpr.Const(SynConst.Bytes(bs, range), range)
+                | :? (uint16[]) as is -> SynExpr.Const(SynConst.UInt16s is, range)
                 // null literal support
                 | null -> //when not <| t.GetCompilationRepresentationFlags().HasFlag CompilationRepresentationFlags.UseNullAsTrueValue ->
                     let synTy = sysTypeToSynType range t knownNamespaces ommitEnclosingType
@@ -53,7 +53,7 @@ type Quotations() =
                   //  let ident = pickles.Append(obj, t)                
                     //SynExpr.Ident(ident)
     
-            | Var v ->
+            | Var v -> 
                 //dependencies.Append v.Type
                 let ident = mkIdent range v.Name
                 SynExpr.Ident ident
