@@ -12,8 +12,10 @@
 
   <Target Name="Pack" DependsOnTargets="Build">
     <RemoveDir Directories="$(NupkgsDir)" />
-    <Exec Command='packages\Nuget.CommandLine\tools\NuGet.exe pack nuget\Falanx.Tool.nuspec -OutputDirectory artifact\nupkg\' />
-
+    <Exec Command='dotnet pack Falanx.Machinery -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' ConsoleToMSBuild="true" />
+    <Exec Command='dotnet pack Falanx.Proto.Core -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' ConsoleToMSBuild="true" />
+    <Exec Command='dotnet pack Falanx.Proto.Codec.Binary -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' ConsoleToMSBuild="true" />
+    <Exec Command='packages\Nuget.CommandLine\tools\NuGet.exe pack nuget\Falanx.Tool.nuspec -OutputDirectory artifact\nupkg\ -Version "$(Version)"' />
   </Target>
 
   <Target Name="Test">
