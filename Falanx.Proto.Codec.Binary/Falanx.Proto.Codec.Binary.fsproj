@@ -15,7 +15,7 @@
     <Compile Include="Serialization.fs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Falanx.Machinery\Falanx.Machinery.fsproj" />
+    <!--<ProjectReference Include="..\Falanx.Machinery\Falanx.Machinery.fsproj" />-->
     <ProjectReference Include="..\Falanx.Proto.Core\Falanx.Proto.Core.fsproj" />
   </ItemGroup>
   <ItemGroup>
