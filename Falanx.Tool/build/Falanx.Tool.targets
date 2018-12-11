@@ -29,7 +29,9 @@
         <Compile Include="@(ProtobufSchema -> '%(ProtobufOutputFile)'); @(Compile1)" />
     </ItemGroup>
 
-    <Target Name="ProtobufCompile" BeforeTargets="CoreCompile" Inputs="@(ProtobufSchema)" Outputs="@(ProtobufSchema -> '%(ProtobufOutputFile)')">
+    <!-- Source does include MSBuildProjectFullPath because protobuf generated code depends on default namespace 
+        defined in project file, also serialization type is defined there -->
+    <Target Name="ProtobufCompile" BeforeTargets="CoreCompile" Inputs="@(ProtobufSchema);$(MSBuildProjectFullPath)" Outputs="@(ProtobufSchema -> '%(ProtobufOutputFile)')">
         <!-- Autodetect, are we running from under falanx solution or project referencing falanx nuget -->
         <PropertyGroup>
             <FalanxToolPath Condition="Exists('$(MSBuildThisFileDirectory)..\tools\falanx.dll')">dotnet "$(MSBuildThisFileDirectory)..\tools\falanx.dll"</FalanxToolPath>
