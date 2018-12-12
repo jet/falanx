@@ -9,6 +9,42 @@ This repository contains the code generator to generate F# source (.fs files) fr
 * Code generation, to generate F# source code, rather than types being injected as a type provider.
 * Idiomatic F# code is generated rather than simple .NET 1.1 era code. This means records, discriminated unions, etc., are generated where appropriate.
 
+# How to use
+
+In a .NET Sdk library project, add the following packages
+
+```
+    <PackageReference Include="Falanx.Proto.Codec.Binary" Version="0.3.0" />
+    <PackageReference Include="Falanx.Sdk" Version="0.3.0" PrivateAssets="All" />
+```
+
+If you want to use the json format instead of binary, use the package
+
+```
+    <PackageReference Include="Falanx.Proto.Codec.Json" Version="0.3.0" />
+```
+
+NOTE It's possibile to use both in json and binary in the same project.
+
+Now specify the `.proto` file path like
+
+```
+  <ItemGroup>
+    <ProtoFile Include="..\proto\bundle.proto" />
+  </ItemGroup>
+```
+
+and an auto generated file will be created on `dotnet build`
+
+See an example of project in [example-sdk/example2/README.md](example-sdk/example2/README.md)
+
+It's also possibile to use falanx as command line .net global tool, see [example\README.md](example/README.md)
+
+```
+dotnet tool install -g Falanx.Tool --version 0.3.0
+falanx --help
+```
+
 # Project structure
 
 The solution has four projects.
