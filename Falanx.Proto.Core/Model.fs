@@ -45,9 +45,20 @@ module Model =
           Position: FieldNum
           ProvidedProperty: ProvidedProperty
           ProvidedField: ProvidedField }
+        
+    type FieldDescriptor =
+        | Property of PropertyDescriptor
+        | OneOf of OneOfDescriptor
+        | Map of MapDescriptor
           
     type TypeDescriptor = 
         { Type: ProvidedTypeDefinition
           Properties: PropertyDescriptor list
           OneOfGroups: OneOfDescriptor list
           Maps: MapDescriptor list }
+        member x.Fields : FieldDescriptor list =
+            [
+                yield! x.Properties |> List.map Property
+                yield! x.OneOfGroups |> List.map OneOf
+                yield! x.Maps |> List.map Map
+            ]

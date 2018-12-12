@@ -4,6 +4,7 @@ open System.Reflection
 open System.Collections.Generic
 open Fleece
 open Fleece.Newtonsoft
+open Fleece.Newtonsoft.Operators
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Quotations.Patterns
 open Falanx.Machinery
@@ -27,6 +28,26 @@ type Result3 =
     { mutable url : string option 
       mutable title : int option
       mutable snippets : ResizeArray<string> }
+
+[<AutoOpen>]
+module Rs =
+    [<ReflectedDefinition>]
+    let flatten = function None -> ResizeArray() | Some x -> x
+    [<ReflectedDefinition>]
+    let expand (x: ResizeArray<_>) = if isNull x || Seq.isEmpty x then None else Some x
+
+type Result =
+    { mutable url : string option
+      mutable title : string option
+      mutable snippets : string ResizeArray }
+    
+    [<ReflectedDefinition>]
+    static member JsonObjCodec =
+        fun url title snippets -> { url = url; title = title; snippets = flatten snippets }
+        |> withFields<Option<String> -> Option<String> -> Option<List<String>> -> Result, IReadOnlyDictionary<String, JToken>, DecodeError, Result, String, JToken>
+        |> jfieldOpt "url" (fun x -> x.url)
+        |> jfieldOpt "title"  (fun x -> x.title)
+        |> jfieldOpt "snippets"  (fun x -> expand x.snippets)
       
 module Quotations =
     let rec traverseForCall q = [
@@ -65,16 +86,41 @@ module Codec =
         else    
             generic t
     
-    let createLambdaRecord (recordType: ProvidedRecord) =
+    let flattenResizeArray = function None -> ResizeArray() | Some x -> x
+    let expandResizeArray = function (null: ResizeArray<_>) -> None | x  -> Some x
+    
+    let createLambdaRecord (typeDescriptor: TypeDescriptor) =
         //Lambda (u, Lambda (t, NewRecord (Result2, u, t))
+        let recordType = typeDescriptor.Type :?> ProvidedRecord
         let recordFields = recordType.RecordFields
+        let recordFields2 = typeDescriptor.Fields
+        
         let recordVars =
-            recordFields
-            |> List.map(fun pi -> Var(pi.Name, pi.PropertyType))
+            recordFields2
+            |> List.map(function
+                        | Property{PropertyDescriptor.Rule = ProtoFieldRule.Repeated; ProvidedProperty = pp} ->
+                            //For fleece processing we need to wrap repeat field types in option
+                            //We also add the flatten and expand methods in the to lambda construction and
+                            //field map respectively.
+                            Var(pp.Name, typedefof<Option<_>>.MakeGenericType(pp.PropertyType)), true
+                        | Property{ProvidedProperty = pp} ->
+                            Var(pp.Name, pp.PropertyType), false
+                        | OneOf oneOf ->
+                            Var(oneOf.CaseProperty.Name, oneOf.CaseProperty.PropertyType), false
+                        | Map m ->
+                            Var(m.ProvidedProperty.Name, m.ProvidedProperty.PropertyType), false )
 
-        let thing = 
-            List.foldBack (fun v acc -> Expr.Lambda(v,acc)) recordVars (Expr.NewRecordUnchecked(recordType, recordVars |> List.map (Expr.Var) ))
-        thing
+        let mapRepeatOrStandard =
+            fun (v, isRepeated) ->
+                if isRepeated then
+                    let v = Expr.Var v
+                    let call = <@@ Rs.flatten(x) @@>
+                    let exp = Expr.callStaticGeneric [v.Type] [v] call
+                    exp
+                else
+                    Expr.Var v
+            
+        List.foldBack (fun (v, isRepeated) acc -> Expr.Lambda(v,acc)) recordVars (Expr.NewRecordUnchecked(recordType, recordVars |> List.map mapRepeatOrStandard))
               
     let  getFunctionReturnType (typ: Type) =
         let rec loop (typ: Type) = 
@@ -107,8 +153,7 @@ module Codec =
     let makeFunctionTypeFromElements (xs: Type list) =
         let newFunction = xs |> List.reduceBack (fun a b -> FSharpType.MakeFunctionType(a, b) )
         newFunction
-        
-    
+           
     let callMapping (lambda:Expr) =
     
         let replaceLambdaArgs (mi: MethodInfo) (lambda:Type) =
@@ -296,9 +341,17 @@ module Codec =
         jFieldOptions
         
     let createJsonObjCodec (typeDescriptor: TypeDescriptor) =
+        
+        let prop = propertyof <@ Result.JsonObjCodec @>
+        let rd = Expr.TryGetReflectedDefinition prop.GetMethod
+        match rd with
+        | Some rd ->
+            ignore <| Expr.quotationsTypePrinter rd
+        | _ -> ()
+        
 
         let recordType = typeDescriptor.Type :?> ProvidedRecord
-        let lambdaRecord = createLambdaRecord recordType
+        let lambdaRecord = createLambdaRecord typeDescriptor
         let mapping = callMapping lambdaRecord
         let pipeLambdaToMapping = callPipeRight lambdaRecord mapping
 
@@ -313,19 +366,6 @@ module Codec =
         let ctast, ctpt = Quotations.ToAst( foldedFunctions, knownNamespaces = knownNamespaces )
         let code = Fantomas.CodeFormatter.FormatAST(ctpt, "test", None, Fantomas.FormatConfig.FormatConfig.Default)
         //FsAst.PrintAstInfo.printAstInfo "/Users/dave.thomas/codec.fs"                           
-           
-//        type Person = { 
-//            name : string * string
-//            age : int option
-//            children: Person list }
-//            with
-//            static member JsonObjCodec : Codec<IReadOnlyDictionary<string,JsonValue>,Person> =
-//                fun f l a c -> { name = (f, l); age = a; children = c }
-//                |> withFields
-//                |> jfield    "firstName" (fun x -> fst x.name)
-//                |> jfield    "lastName"  (fun x -> snd x.name)
-//                |> jfieldOpt "age"       (fun x -> x.age)
-//                |> jfield    "children"  (fun x -> x.children)
 
         let signatureType =
             let def = typedefof<Codec<IReadOnlyDictionary<string,JsonValue>,_>>

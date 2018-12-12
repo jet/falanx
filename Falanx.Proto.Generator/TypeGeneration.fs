@@ -259,7 +259,7 @@ module TypeGeneration =
                  providedType.AddMember map.ProvidedField
                  providedType.AddMember map.ProvidedProperty
         
-             let typeInfo = { Type = providedType; Properties = properties; OneOfGroups = oneOfDescriptors; Maps = maps }
+             let typeInfo = { Type = providedType; Properties = properties; OneOfGroups = oneOfDescriptors; Maps = maps}
         
              codecs
              |> Set.iter (
