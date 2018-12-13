@@ -1,5 +1,4 @@
-[![Build Status](https://travis-ci.org/jet/falanx.svg?branch=master)](https://travis-ci.org/jet/falanx)
-[![Build status](https://ci.appveyor.com/api/projects/status/rgnou677cvs890nt/branch/master?svg=true)](https://ci.appveyor.com/project/Jet/falanx/branch/master)
+[![Build Status](https://dev.azure.com/jet-opensource/opensource/_apis/build/status/jet.falanx?branchName=master)](https://dev.azure.com/jet-opensource/opensource/_build/latest?definitionId=8?branchName=master)
 
 # Falanx code generation
 
