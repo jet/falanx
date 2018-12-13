@@ -28,7 +28,7 @@ jobs:
     condition: succeededOrFailed()
   - task: PublishBuildArtifacts@1
     inputs:
-      pathtoPublish: 'bin/nupkg'
+      pathtoPublish: 'artifact/nupkg'
       artifactName: 'nupkgs'
 - job: Linux
   pool:
