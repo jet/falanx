@@ -12,14 +12,14 @@ This repository contains the code generator to generate F# source (.fs files) fr
 
 In a .NET Sdk library project, add the following packages
 
-```
+```xml
     <PackageReference Include="Falanx.Proto.Codec.Binary" Version="0.3.0" />
     <PackageReference Include="Falanx.Sdk" Version="0.3.0" PrivateAssets="All" />
 ```
 
 If you want to use the json format instead of binary, use the package
 
-```
+```xml
     <PackageReference Include="Falanx.Proto.Codec.Json" Version="0.3.0" />
 ```
 
@@ -27,7 +27,7 @@ NOTE It's possibile to use both in json and binary in the same project.
 
 Now specify the `.proto` file path like
 
-```
+```xml
   <ItemGroup>
     <ProtoFile Include="..\proto\bundle.proto" />
   </ItemGroup>
