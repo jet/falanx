@@ -51,7 +51,7 @@ jobs:
   steps:
   - script: echo "##vso[task.setvariable variable=FrameworkPathOverride]$(dirname $(which mono))/../lib/mono/4.5/"
     displayName: Workaround .NET reference assemblies on linux
-  - script: echo "##vso[task.setvariable variable=DOTNET_ROOT]$(dirname $(realpath $(which dotnet)))"
+  - script: echo "##vso[task.setvariable variable=DOTNET_ROOT]$(dirname $(which dotnet))"
     displayName: Workaround .NET Global Tool expect dotnet env var set
   - script: dotnet pack build.proj -v n
     displayName: Create package
