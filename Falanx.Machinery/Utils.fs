@@ -75,7 +75,13 @@ namespace Falanx.Machinery
         
         type MethodBase with
             member m.GetOptionalParameterInfo () =
-                let parameters = m.GetParameters()
+                let parameters =
+                    match m with
+                    | m when m.GetType().Name.Contains "MethodBuilderInstantiation" ->
+                        let mi = m :?> MethodInfo
+                        mi.GetGenericMethodDefinition().GetParameters()
+                    | _ -> m.GetParameters()
+                
                 parameters
                 |> Seq.map (fun p ->
                     try
