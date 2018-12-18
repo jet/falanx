@@ -12,7 +12,7 @@
     <Compile Include="Codec.fs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Falanx.Machinery\Falanx.Machinery.fsproj" />
+    <ProjectReference Condition=" '$(Configuration)' == 'Debug' " Include="..\Falanx.Machinery\Falanx.Machinery.fsproj" />
     <ProjectReference Include="..\Falanx.Proto.Core\Falanx.Proto.Core.fsproj" />
   </ItemGroup>
   <ItemGroup>
