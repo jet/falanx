@@ -65,6 +65,16 @@ namespace Falanx.Machinery
                                            
                                            None
                                         | _ -> None) expr
+            
+        let rec traverseForCall q = [
+          match q with
+          | Patterns.Call(_,_,exprs) as call ->
+              yield call
+              yield! exprs |> List.map traverseForCall |> List.concat
+          | ExprShape.ShapeLambda(v, body)  -> yield! traverseForCall body
+          | ExprShape.ShapeCombination(comb, args) -> 
+              for ex in args do yield! traverseForCall ex
+          | ExprShape.ShapeVar _ -> () ]
         
         let x<'T> : 'T = Unchecked.defaultof<'T>
         let private onlyVar = function Var v -> Some v | _ -> None
