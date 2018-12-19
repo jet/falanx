@@ -249,3 +249,4 @@ paket-files/
 target/
 /example/bundle.fs
 .store
+/test/Falanx.Tests/bundle.proto.fs

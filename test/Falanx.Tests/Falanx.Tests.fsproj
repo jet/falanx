@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProtoFile Include="bundle.proto" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Tests.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="paket.references" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Falanx.Proto.Codec.Binary\Falanx.Proto.Codec.Binary.fsproj" />
+    <ProjectReference Include="..\..\Falanx.Proto.Codec.Json\Falanx.Proto.Codec.Json.fsproj" />
+  </ItemGroup>
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
+
+  <!-- use the falanx generator binary directly -->
+  <PropertyGroup>
+    <FalanxSdk_GeneratorExeHost>dotnet </FalanxSdk_GeneratorExeHost>
+    <FalanxSdk_GeneratorExe>..\..\Falanx.Tool\bin\$(Configuration)\netcoreapp2.1\falanx.dll</FalanxSdk_GeneratorExe>
+  </PropertyGroup>
+
+  <!-- include to enable the generator for these formats -->
+  <Import Project="..\..\Falanx.Proto.Codec.Binary\build\Falanx.Proto.Codec.Binary.props" />
+  <Import Project="..\..\Falanx.Proto.Codec.Json\build\Falanx.Proto.Codec.Json.props" />
+
+  <!-- do import directly the falanx sdk target, instead from package -->
+  <Target Name="FalanxSdkGenerateCode"
+          BeforeTargets="BeforeCompile"
+          Inputs="@(ProtoFile)"
+          Outputs="%(Identity).fs">
+
+    <ItemGroup>
+      <FalanxSdk_CodeGenArgs Include='--inputfile "%(ProtoFile.Identity)"' />
+      <FalanxSdk_CodeGenArgs Include='--outputfile "%(ProtoFile.Identity).fs"' />
+      <FalanxSdk_CodeGenArgs Include='--defaultnamespace "$(RootNamespace)"' />
+      <FalanxSdk_CodeGenArgs Include='--serializer %(FalanxSdkSerializer.Identity)' />
+    </ItemGroup>
+
+    <!-- Use dotnet to execute the process. -->
+    <Exec Command="$(FalanxSdk_GeneratorExeHost)&quot;$(FalanxSdk_GeneratorExe)&quot; @(FalanxSdk_CodeGenArgs -> '%(Identity)', ' ')" />
+
+    <ItemGroup>
+      <CompileBefore Include="%(ProtoFile.Identity).fs" />
+      <FileWrites Include="%(ProtoFile.Identity).fs" />
+    </ItemGroup>
+  </Target>
+
+</Project>
