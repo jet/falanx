@@ -27,6 +27,30 @@ namespace Falanx.Machinery
         
         let isOptionType (t : Type) =
             t.IsGenericType && t.GetGenericTypeDefinition() = typedefof<option<_>>
+            
+        let typeName (m : Type) =
+            Microsoft.FSharp.Compiler.PrettyNaming.DemangleGenericTypeName  m.Name
+        
+        let rec generic (m : Type) = 
+            if m.IsGenericType then   
+                sprintf "%s%s" (typeName m) (m.GetGenericArguments() |> genericArgs)
+            else
+                typeName m
+            
+        and genericArgs (args : Type []) = 
+            let x = args |> Array.map generic |> String.concat ", "
+            sprintf "[%s]" x
+        
+        let rec fsSig (t : Type) = 
+            if FSharpType.IsFunction t then 
+                let a,b = FSharpType.GetFunctionElements t
+                sprintf "%s -> %s" (fsSig a) (fsSig b)
+            elif FSharpType.IsTuple t then 
+                let types = FSharpType.GetTupleElements t
+                let str = types |> Array.map fsSig |> String.concat ", " 
+                sprintf "(%i, %s)" types.Length str
+            else    
+                generic t
         
         let wrapDelegate<'Dele when 'Dele :> Delegate> (m : MethodInfo) =
             Delegate.CreateDelegate(typeof<'Dele>, m) :?> 'Dele
@@ -75,7 +99,13 @@ namespace Falanx.Machinery
         
         type MethodBase with
             member m.GetOptionalParameterInfo () =
-                let parameters = m.GetParameters()
+                let parameters =
+                    match m with
+                    | m when m.GetType().Name.Contains "MethodBuilderInstantiation" ->
+                        let mi = m :?> MethodInfo
+                        mi.GetGenericMethodDefinition().GetParameters()
+                    | _ -> m.GetParameters()
+                
                 parameters
                 |> Seq.map (fun p ->
                     try

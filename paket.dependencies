@@ -6,11 +6,11 @@ nuget ArgU
 nuget FSAst
 nuget FSharp.Compiler.Service
 nuget FSharp.Core
-nuget Fantomas
+nuget Fantomas 2.9.0
 nuget FParsec 1.0.3
 nuget Froto.Parser
 nuget Froto.Serialization
-nuget Fleece.NewtonsoftJson 0.7.0
+nuget Fleece.NewtonsoftJson 0.8.0-alpha-2
 nuget Newtonsoft.Json 11.0.2
 
 nuget Microsoft.SourceLink.GitHub copy_local: true
