@@ -84,11 +84,11 @@ module Codec =
         let newFunction = xs |> List.reduceBack (fun a b -> FSharpType.MakeFunctionType(a, b) )
         newFunction
            
-    let callMapping (lambda:Expr) =
+    let callwithFields (lambda:Expr) =
     
         let replaceLambdaArgs (mi: MethodInfo) (lambda:Type) =
             let lambdaReturn = getFunctionReturnType lambda
-            ProvidedTypeBuilder.MakeGenericMethod(mi, [lambda; typeof<IReadOnlyDictionary<string,JsonValue>>; typeof<string>; lambdaReturn; typeof<string>; typeof<JToken>] )
+            ProvidedTypeBuilder.MakeGenericMethod(mi, [lambda; typeof<IReadOnlyDictionary<string,JsonValue>>; typeof<DecodeError>; lambdaReturn; typeof<string>; typeof<JToken>] )
 
         //mapping f: 'a -> ('b -> Result<'a,'c>) * ('d -> IReadOnlyDictionary<'e,'f>)
         
@@ -101,7 +101,7 @@ module Codec =
         //for a Record3 we would have a type signature like this:
         //mapping<Option<String> -> Option<String> -> Result3, IReadOnlyDictionary<String, JToken>, String, Result3, String, JToken>
         
-        let mappingMethodInfo = Expr.methoddefof <@ withFields<_,IReadOnlyDictionary<string,JsonValue>,string,_,string,JToken> @>
+        let mappingMethodInfo = Expr.methoddefof <@ withFields<_,IReadOnlyDictionary<string,JsonValue>,DecodeError,_,string,JToken> @>
         
         let lambdaType = lambda.Type
         
@@ -289,7 +289,7 @@ module Codec =
     let createJsonObjCodec (typeDescriptor: TypeDescriptor) =     
         let recordType = typeDescriptor.Type :?> ProvidedRecord
         let lambdaRecord = createLambdaRecord typeDescriptor
-        let mapping = callMapping lambdaRecord
+        let mapping = callwithFields lambdaRecord
         let pipeLambdaToMapping = callPipeRight lambdaRecord mapping
 
         let jFieldOpts = createRecordJFieldOpts typeDescriptor
