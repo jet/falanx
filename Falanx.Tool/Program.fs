@@ -42,6 +42,8 @@ module main =
         with
         | :? FileNotFoundException as fnf ->
             printfn "ERROR: inputfile %s doesn not exist\n%s" fnf.FileName (parser.PrintUsage())
+        | :? FormatException as fex when fex.Source = "Froto.Parser" ->
+            printfn "ERROR: proto file was not able to be parsed.\n\n%s" fex.Message
         | ex -> printfn "%s\n%s" (parser.PrintUsage()) ex.Message
     
         0 // return an integer exit code
