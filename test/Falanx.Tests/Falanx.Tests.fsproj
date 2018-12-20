@@ -5,9 +5,7 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <ProtoFile Include="$(MSBuildThisFileDirectory)..\..\paket-files\prototests\protocolbuffers\protobuf\csharp\protos\unittest_proto3.proto">
-      <OutputPath>schemas\unittest_proto3.proto</OutputPath>
-    </ProtoFile>
+    <ProtoFile Include="schemas\falanx_test.proto" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Tests.fs" />
@@ -30,9 +28,13 @@
   <Import Project="..\..\Falanx.Proto.Codec.Json\build\Falanx.Proto.Codec.Json.props" />
   <!-- do import directly the falanx sdk target, instead from package -->
   <Target Name="FalanxSdkGenerateCode" BeforeTargets="BeforeCompile" Inputs="@(ProtoFile)" Outputs="%(Identity).fs">
+    <PropertyGroup>
+      <_FalanxOutPath>%(ProtoFile.OutputPath)</_FalanxOutPath>
+      <_FalanxOutPath Condition=" '$(_FalanxOutPath)' == '' ">%(ProtoFile.Identity).fs</_FalanxOutPath>
+    </PropertyGroup>
     <ItemGroup>
       <FalanxSdk_CodeGenArgs Include="--inputfile &quot;%(ProtoFile.Identity)&quot;" />
-      <FalanxSdk_CodeGenArgs Include="--outputfile &quot;$(MSBuildThisFileDirectory)%(ProtoFile.OutputPath).fs&quot;" />
+      <FalanxSdk_CodeGenArgs Include="--outputfile &quot;$(_FalanxOutPath)&quot;" />
       <FalanxSdk_CodeGenArgs Include="--defaultnamespace &quot;$(RootNamespace)&quot;" />
       <FalanxSdk_CodeGenArgs Include="--serializer %(FalanxSdkSerializer.Identity)" />
     </ItemGroup>
@@ -40,8 +42,8 @@
     <Exec Command="$(FalanxSdk_GeneratorExeHost)&quot;$(FalanxSdk_GeneratorExe)&quot; @(FalanxSdk_CodeGenArgs -&gt; '%(Identity)', ' ')"
           WorkingDirectory="$(MSBuildThisFileDirectory)" />
     <ItemGroup>
-      <CompileBefore Include="$(MSBuildThisFileDirectory)%(ProtoFile.OutputPath).fs" />
-      <FileWrites Include="$(MSBuildThisFileDirectory)%(ProtoFile.OutputPath).fs" />
+      <CompileBefore Include="$(_FalanxOutPath)" />
+      <FileWrites Include="$(_FalanxOutPath)" />
     </ItemGroup>
   </Target>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
