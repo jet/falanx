@@ -7,6 +7,7 @@
     <Compile Include="Model.fs" />
     <Compile Include="BinaryCodec\Deserialization.fs" />
     <Compile Include="BinaryCodec\Serialization.fs" />
+    <Compile Include="JsonCodec\Codec.fs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="paket.references" />
