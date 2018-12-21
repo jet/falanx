@@ -11,11 +11,6 @@
   <ItemGroup>
     <Compile Include="Extensions.fs" />
     <Compile Include="Codec.fs" />
-    <Compile Include="Deserialization.fs" />
-    <Compile Include="Serialization.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Falanx.Proto.Core\Falanx.Proto.Core.fsproj" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="build\Falanx.Proto.Codec.Binary.props">
