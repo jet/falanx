@@ -17,9 +17,7 @@
     <None Include="paket.references" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Falanx.Machinery\Falanx.Machinery.fsproj" />
-    <ProjectReference Include="..\Falanx.Proto.Codec.Binary\Falanx.Proto.Codec.Binary.fsproj" />
-    <ProjectReference Include="..\Falanx.Proto.Codec.Json\Falanx.Proto.Codec.Json.fsproj" />
+    <ProjectReference Include="..\Falanx.Proto.Core\Falanx.Proto.Core.fsproj" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
