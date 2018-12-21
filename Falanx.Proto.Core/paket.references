@@ -1,2 +1,4 @@
 Froto.Parser
 Froto.Serialization
+Fleece.NewtonsoftJson
+Newtonsoft.Json
