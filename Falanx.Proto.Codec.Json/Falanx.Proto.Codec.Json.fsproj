@@ -9,13 +9,6 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Codec.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Condition=" '$(Configuration)' == 'Debug' " Include="..\Falanx.Machinery\Falanx.Machinery.fsproj" />
-    <ProjectReference Include="..\Falanx.Proto.Core\Falanx.Proto.Core.fsproj" />
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="build\Falanx.Proto.Codec.Json.props">
       <Pack>true</Pack>
       <PackagePath>%(Identity)</PackagePath>
