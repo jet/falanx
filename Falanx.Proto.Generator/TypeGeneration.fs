@@ -153,7 +153,7 @@ module TypeGeneration =
        
         let propertyType = applyRule ProtoFieldRule.Optional unionType
         let propertyName = Naming.snakeToCamel name                
-        let caseProperty, caseField = ProvidedTypeDefinition.mkPropertyWithField propertyType propertyName false
+        let caseProperty, caseField = ProvidedTypeDefinition.mkRecordPropertyWithField propertyType propertyName false
    
         let propertyDescriptors = 
             members
@@ -235,10 +235,19 @@ module TypeGeneration =
                                      Some(createOneOfDescriptor nestedScope lookup name members)
                                  | _ -> None)
 
-             for oneOfDescriptor in oneOfDescriptors do
-                 providedType.AddMembers [ oneOfDescriptor.OneOfType :> MemberInfo
-                                           oneOfDescriptor.CaseField :> _
-                                           oneOfDescriptor.CaseProperty :> _ ]
+             if not oneOfDescriptors.IsEmpty then
+                 oneOfDescriptors
+                 |> List.iter (fun oneOfDescriptor ->
+                     providedType.AddMembers [ oneOfDescriptor.OneOfType :> MemberInfo
+                                               oneOfDescriptor.CaseField :> _
+                                               oneOfDescriptor.CaseProperty :> _ ] 
+                     //also add json static property for json codec if present
+                     if codecs.Contains Json then
+                         let jsonObjCodec = Falanx.Proto.Codec.Json.Codec.createJsonObjCodecFromoneOf oneOfDescriptor
+                         //TODO
+                         //oneOfDescriptor.OneOfType.AddMember jsonObjCodec
+                         ()
+                          )
 
              let properties =
                  message.Fields
