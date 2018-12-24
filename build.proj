@@ -8,7 +8,7 @@
   </Target>
 
   <Target Name="Build" DependsOnTargets="Restore">
-    <Exec Command='dotnet build Falanx.Generator -c Release' />
+    <Exec Command='dotnet build Falanx.Tool -c Release' />
   </Target>
 
   <Target Name="Pack" DependsOnTargets="Restore">
@@ -23,6 +23,8 @@
   </Target>
 
   <Target Name="Test">
+    <Exec Command='dotnet build test/Falanx.Tests -c Release' />
+    <Exec Command='dotnet run -c Release -- --fail-on-focused-tests --summary' WorkingDirectory="$(RepoRootDir)/test/Falanx.Tests" IgnoreStandardErrorWarningFormat="true" />
     <Exec Command='dotnet build test/Falanx.IntegrationTests' />
     <Exec Command='dotnet run -- "$(Version)" --fail-on-focused-tests --summary' WorkingDirectory="$(RepoRootDir)/test/Falanx.IntegrationTests" IgnoreStandardErrorWarningFormat="true" />
   </Target>
