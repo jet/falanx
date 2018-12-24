@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProtoFile Include="schemas\falanx_test.proto" />
+    <ProtoFile Include="schemas\bundle_with_package.proto" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Compatibility.fs" />
+    <Compile Include="Tests.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="paket.references" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Falanx.Proto.Codec.Binary\Falanx.Proto.Codec.Binary.fsproj" />
+    <ProjectReference Include="..\..\Falanx.Proto.Codec.Json\Falanx.Proto.Codec.Json.fsproj" />
+  </ItemGroup>
+  <!-- use the falanx generator binary directly -->
+  <PropertyGroup>
+    <FalanxSdk_GeneratorExeHost>dotnet </FalanxSdk_GeneratorExeHost>
+    <FalanxSdk_GeneratorExe>..\..\Falanx.Tool\bin\$(Configuration)\netcoreapp2.1\falanx.dll</FalanxSdk_GeneratorExe>
+  </PropertyGroup>
+  <!-- include to enable the generator for these formats -->
+  <Import Project="..\..\Falanx.Proto.Codec.Binary\build\Falanx.Proto.Codec.Binary.props" />
+  <Import Project="..\..\Falanx.Proto.Codec.Json\build\Falanx.Proto.Codec.Json.props" />
+  <!-- do import directly the falanx sdk target, instead from package -->
+  <Target Name="FalanxSdkGenerateCode" BeforeTargets="BeforeCompile" Inputs="@(ProtoFile)" Outputs="%(Identity).fs">
+    <PropertyGroup>
+      <_FalanxOutPath>%(ProtoFile.OutputPath)</_FalanxOutPath>
+      <_FalanxOutPath Condition=" '$(_FalanxOutPath)' == '' ">%(ProtoFile.Identity).fs</_FalanxOutPath>
+    </PropertyGroup>
+    <ItemGroup>
+      <FalanxSdk_CodeGenArgs Include="--inputfile &quot;%(ProtoFile.Identity)&quot;" />
+      <FalanxSdk_CodeGenArgs Include="--outputfile &quot;$(_FalanxOutPath)&quot;" />
+      <FalanxSdk_CodeGenArgs Include="--defaultnamespace &quot;$(RootNamespace)&quot;" />
+      <FalanxSdk_CodeGenArgs Include="--serializer %(FalanxSdkSerializer.Identity)" />
+    </ItemGroup>
+    <!-- Use dotnet to execute the process. -->
+    <Exec Command="$(FalanxSdk_GeneratorExeHost)&quot;$(FalanxSdk_GeneratorExe)&quot; @(FalanxSdk_CodeGenArgs -&gt; '%(Identity)', ' ')"
+          WorkingDirectory="$(MSBuildThisFileDirectory)" />
+    <ItemGroup>
+      <CompileBefore Include="$(_FalanxOutPath)" />
+      <FileWrites Include="$(_FalanxOutPath)" />
+    </ItemGroup>
+  </Target>
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
+</Project>
