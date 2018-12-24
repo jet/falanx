@@ -8,7 +8,7 @@
   </Target>
 
   <Target Name="Build" DependsOnTargets="Restore">
-    <Exec Command='dotnet build Falanx.Generator -c Release' />
+    <Exec Command='dotnet build Falanx.Tool -c Release' />
   </Target>
 
   <Target Name="Pack" DependsOnTargets="Restore">
