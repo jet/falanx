@@ -5,7 +5,8 @@ open System
 open System.IO
 
 let tests () =
-  [ GoogleProtobufTest.V3.CompatibilityTests.compatibilityTests ]
+  [ GoogleProtobufTest.V3.CompatibilityTests.tests
+    Falanx.Tests.tests ]
   |> testList "unit"
   |> testSequenced
 

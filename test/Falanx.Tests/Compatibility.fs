@@ -1,5 +1,7 @@
 module GoogleProtobufTest.V3.CompatibilityTests
 
+// based on https://github.com/protocolbuffers/protobuf/blob/d9ccd0c0e6bbda9bf4476088eeb46b02d7dcd327/csharp/compatibility_tests/v3.0.0/src/Google.Protobuf.Test/JsonParserTest.cs
+
 open System
 open System.IO
 open Expecto
@@ -23,7 +25,7 @@ let jsonTests =
     )
   ]
 
-let compatibilityTests =
+let tests =
   testList "compatibility" [
     jsonTests
   ]

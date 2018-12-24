@@ -6,9 +6,11 @@
   </PropertyGroup>
   <ItemGroup>
     <ProtoFile Include="schemas\falanx_test.proto" />
+    <ProtoFile Include="schemas\bundle_with_package.proto" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Compatibility.fs" />
+    <Compile Include="Tests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
