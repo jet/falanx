@@ -238,13 +238,6 @@ let tests pkgUnderTestVersion =
         |> buildExampleWithTemplate fs ``template3 binary+json`` ``sample6 bundle``
       )
 
-      testCase |> withLog "can build sample5 pkg" (fun _ fs ->
-        let testDir = inDir fs "sanity_check_sample5"
-
-        testDir
-        |> buildExampleWithTemplate fs ``template1 binary`` ``sample5 pkg``
-      )
-
       testCase |> withLog "can build sample7 json" (fun _ fs ->
         let testDir = inDir fs "sanity_check_sample7_json"
 

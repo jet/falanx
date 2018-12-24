@@ -71,11 +71,6 @@ type TestAssetExampleInfo =
     FileNames: (Language * FormatKind * string) list
     ProtoFile: string }
 
-let ``sample5 pkg`` =
-  { ExampleDir = "sample5 pkg"
-    FileNames = [FSharp, Binary, "BinaryExample.fs"]
-    ProtoFile = "bundle.proto" }
-
 let ``sample6 bundle`` =
   { ExampleDir = "sample6 bundle"
     FileNames = [FSharp, Binary, "BinaryExample.fs"; FSharp, Json, "JsonExample.fs"]
