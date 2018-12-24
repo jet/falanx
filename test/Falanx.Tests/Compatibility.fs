@@ -1,4 +1,4 @@
-module Falanx.UnitTests
+module GoogleProtobufTest.V3.CompatibilityTests
 
 open System
 open System.IO
@@ -23,7 +23,7 @@ let jsonTests =
     )
   ]
 
-let tests () =
-  [ jsonTests ]
-  |> testList "unit"
-  |> testSequenced
+let compatibilityTests =
+  testList "compatibility" [
+    jsonTests
+  ]

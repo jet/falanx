@@ -8,7 +8,7 @@
     <ProtoFile Include="schemas\falanx_test.proto" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Tests.fs" />
+    <Compile Include="Compatibility.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>

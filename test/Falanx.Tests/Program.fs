@@ -4,6 +4,11 @@ open Expecto
 open System
 open System.IO
 
+let tests () =
+  [ GoogleProtobufTest.V3.CompatibilityTests.compatibilityTests ]
+  |> testList "unit"
+  |> testSequenced
+
 [<EntryPoint>]
 let main argv =
     let artifactsDir =
@@ -15,4 +20,4 @@ let main argv =
     let writeResults = TestResults.writeNUnitSummary (resultsPath, "Falanx.Tests")
     let config = defaultConfig.appendSummaryHandler writeResults
 
-    Tests.runTestsWithArgs config argv (Falanx.UnitTests.tests ())
+    Tests.runTestsWithArgs config argv (tests ())
