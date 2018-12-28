@@ -250,10 +250,16 @@ let tests pkgUnderTestVersion =
   let sdkIntegrationMocks =
 
     let replaceRealFalanxEnvVar realPath mockFilename =
-        let mockPath = sprintf "%s.bat" mockFilename
-        let content = File.ReadAllText(mockPath)
-        let newContent = content.Replace("%REAL_FALANX%", realPath)
-        File.WriteAllText(mockPath, newContent)
+        let replaceText f path =
+          let content = File.ReadAllText(path)
+          let newContent = f content
+          File.WriteAllText(path, newContent)
+
+        (sprintf "%s.bat" mockFilename)
+        |> replaceText (fun text -> text.Replace("%REAL_FALANX%", realPath))
+
+        mockFilename
+        |> replaceText (fun text -> text.Replace("$REAL_FALANX", realPath))
 
     let dotnetBuildWithFalanxArgsMockAndArgs (fs: FileUtils) testDir args projPath =
 
