@@ -9,3 +9,5 @@ for ARG in "$@"
 do
     echo $ARG >> $SCRIPT_DIR/falanx-args.txt
 done
+
+"$REAL_FALANX" $@
