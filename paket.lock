@@ -603,7 +603,7 @@ NUGET
       System.Runtime.Handles (>= 4.3)
 GITHUB
   remote: enricosada/dotnet-proj-info
-    test/dotnet-proj.Tests/FileUtils.fs (c8644f0a9389a5800b2580ce410e7f45c1adf06b)
+    test/dotnet-proj.Tests/FileUtils.fs (b80e8c411169387ff92a3ce0e5b2b5fbd04e47e7)
 GROUP MergeNupkgTool
 STORAGE: NONE
 RESTRICTION: || (== netcoreapp2.0) (== netstandard2.0)
