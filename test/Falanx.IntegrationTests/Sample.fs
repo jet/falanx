@@ -249,62 +249,87 @@ let tests pkgUnderTestVersion =
 
   let sdkIntegrationMocks =
 
-    let dotnetBuildWithFalanxArgsMock (fs: FileUtils) testDir projPath =
+    let replaceRealFalanxEnvVar realPath mockFilename =
+        let replaceText f path =
+          let content = File.ReadAllText(path)
+          let newContent = f content
+          File.WriteAllText(path, newContent)
+
+        (sprintf "%s.bat" mockFilename)
+        |> replaceText (fun text -> text.Replace("%REAL_FALANX%", realPath))
+
+        mockFilename
+        |> replaceText (fun text -> text.Replace("$REAL_FALANX", realPath))
+
+    let dotnetBuildWithFalanxArgsMockAndArgs (fs: FileUtils) testDir args projPath =
 
         fs.mkdir_p (testDir/"mocktool")
         copyDirFromAssets fs ``mock write args``.ProjDir (testDir/"mocktool")
         let falanxMock = testDir/"mocktool"/``mock write args``.FileName
         let falanxMockArgsPath = testDir/"mocktool"/"falanx-args.txt"
 
+        falanxMock |> replaceRealFalanxEnvVar (TestRunDirToolDir/"bin"/"falanx")
+
+        fs.rm_rf falanxMockArgsPath
+
         fs.cd testDir
 
-        dotnet fs ["build"; projPath; sprintf "/p:FalanxSdk_GeneratorExe=%s" falanxMock; "/p:FalanxSdk_GeneratorExeHost=" ]
-        |> ignore
-
-        Expect.isTrue (File.Exists falanxMockArgsPath) "mock should create a file who contains the args of invocation"
+        let cmd = dotnet fs (["build"; projPath; sprintf "/p:FalanxSdk_GeneratorExe=%s" falanxMock; "/p:FalanxSdk_GeneratorExeHost=" ] @ args)
 
         let lines =
-          File.ReadLines falanxMockArgsPath
-          |> List.ofSeq
+          if File.Exists falanxMockArgsPath then
+            File.ReadLines falanxMockArgsPath
+            |> List.ofSeq
+          else
+            []
 
-        lines
+        cmd, lines
+
+    let dotnetBuildWithFalanxArgsMock fs testDir projPath =
+      dotnetBuildWithFalanxArgsMockAndArgs fs testDir [] projPath
 
     testList "sdk integration" [
 
       testCase |> withLog "check invocation binary" (fun _ fs ->
         let testDir = inDir fs "sdkint_invocation_binary"
-        copyDirFromAssets fs ``template1 binary``.ProjDir testDir
+
+        testDir
+        |> copyExampleWithTemplate fs ``template1 binary`` ``sample6 bundle``
 
         let projPath = testDir/ (``template1 binary``.ProjectFile)
 
-        let lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
+        let cmd, lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
 
         let expected =
           [ "--inputfile"
             (testDir/``template1 binary``.ProtoFile)
             "--outputfile"
-            (testDir/"l1.Contracts"/"obj"/"Debug"/"netstandard2.0"/"l1.Contracts.FalanxSdk.g.fs")
+            sprintf "%s.fs" (testDir/``template1 binary``.ProtoFile)
             "--defaultnamespace"
             "l1.Contracts"
             "--serializer"
             "binary" ]
 
         Expect.equal lines expected "check invocation args"
+
+        cmd |> checkExitCodeZero
       )
 
       testCase |> withLog "check invocation json" (fun _ fs ->
         let testDir = inDir fs "sdkint_invocation_json"
-        copyDirFromAssets fs ``template2 json``.ProjDir testDir
+
+        testDir
+        |> copyExampleWithTemplate fs ``template2 json`` ``sample6 bundle``
 
         let projPath = testDir/ (``template2 json``.ProjectFile)
 
-        let lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
+        let _, lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
 
         let expected =
           [ "--inputfile"
             (testDir/``template2 json``.ProtoFile)
             "--outputfile"
-            (testDir/"l1.Contracts"/"obj"/"Debug"/"netstandard2.0"/"l1.Contracts.FalanxSdk.g.fs")
+            sprintf "%s.fs" (testDir/``template2 json``.ProtoFile)
             "--defaultnamespace"
             "l1.Contracts"
             "--serializer"
@@ -315,17 +340,19 @@ let tests pkgUnderTestVersion =
 
       testCase |> withLog "check invocation binary+json" (fun _ fs ->
         let testDir = inDir fs "sdkint_invocation_binaryjson"
-        copyDirFromAssets fs ``template3 binary+json``.ProjDir testDir
+
+        testDir
+        |> copyExampleWithTemplate fs ``template3 binary+json`` ``sample6 bundle``
 
         let projPath = testDir/ (``template3 binary+json``.ProjectFile)
 
-        let lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
+        let _, lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
 
         let expected =
           [ "--inputfile"
             (testDir/``template3 binary+json``.ProtoFile)
             "--outputfile"
-            (testDir/"l1.Contracts"/"obj"/"Debug"/"netstandard2.0"/"l1.Contracts.FalanxSdk.g.fs")
+            sprintf "%s.fs" (testDir/``template3 binary+json``.ProtoFile)
             "--defaultnamespace"
             "l1.Contracts"
             "--serializer"
@@ -334,6 +361,95 @@ let tests pkgUnderTestVersion =
             "binary" ]
 
         Expect.equal lines expected "check invocation args"
+      )
+
+      testCase |> withLog "check custom namespace" (fun _ fs ->
+        let testDir = inDir fs "sdkint_custom_namespace"
+
+        testDir
+        |> copyExampleWithTemplate fs ``template1 binary`` ``sample6 bundle``
+
+        let projPath = testDir/ (``template1 binary``.ProjectFile)
+
+        let ns = "abcd"
+
+        let _, lines = dotnetBuildWithFalanxArgsMockAndArgs fs testDir [sprintf "/p:RootNamespace=%s" ns] projPath
+
+        let expected =
+          [ "--inputfile"
+            (testDir/``template1 binary``.ProtoFile)
+            "--outputfile"
+            sprintf "%s.fs" (testDir/``template1 binary``.ProtoFile)
+            "--defaultnamespace"
+            ns
+            "--serializer"
+            "binary" ]
+
+        Expect.equal lines expected "check custom namespace"
+      )
+
+      testCase |> withLog "check no double generation" (fun _ fs ->
+        let testDir = inDir fs "sdkint_no_regen"
+
+        testDir
+        |> copyExampleWithTemplate fs ``template1 binary`` ``sample6 bundle``
+
+        let projPath = testDir/ (``template1 binary``.ProjectFile)
+
+        let cmd, lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
+
+        let expected =
+          [ "--inputfile"
+            (testDir/``template1 binary``.ProtoFile)
+            "--outputfile"
+            sprintf "%s.fs" (testDir/``template1 binary``.ProtoFile)
+            "--defaultnamespace"
+            "l1.Contracts"
+            "--serializer"
+            "binary" ]
+
+        Expect.equal lines expected "check invocation args"
+
+        cmd |> checkExitCodeZero
+
+        let cmd, lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
+
+        Expect.equal lines [] "check is not invoked the second time"
+
+        cmd |> checkExitCodeZero
+      )
+
+      testCase |> withLog "check regen if proto file is changed" (fun _ fs ->
+        let testDir = inDir fs "sdkint_proto_changed"
+
+        testDir
+        |> copyExampleWithTemplate fs ``template1 binary`` ``sample6 bundle``
+
+        let projPath = testDir/ (``template1 binary``.ProjectFile)
+
+        let cmd, lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
+
+        let expected =
+          [ "--inputfile"
+            (testDir/``template1 binary``.ProtoFile)
+            "--outputfile"
+            sprintf "%s.fs" (testDir/``template1 binary``.ProtoFile)
+            "--defaultnamespace"
+            "l1.Contracts"
+            "--serializer"
+            "binary" ]
+
+        Expect.equal lines expected "check invocation args"
+
+        cmd |> checkExitCodeZero
+
+        fs.touch (testDir/``template1 binary``.ProtoFile)
+
+        let cmd, lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
+
+        Expect.equal lines expected "check is invoked the second time"
+
+        cmd |> checkExitCodeZero
       )
 
     ]
