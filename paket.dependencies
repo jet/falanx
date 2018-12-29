@@ -13,7 +13,7 @@ nuget Froto.Serialization
 nuget Fleece.NewtonsoftJson 0.8.0-alpha-2
 nuget Newtonsoft.Json 11.0.2
 
-nuget Microsoft.SourceLink.GitHub copy_local: true
+nuget Microsoft.SourceLink.GitHub 1.0.0-beta2-18618-05 copy_local: true
 
 github 7sharp9/FSharp.TypeProviders.SDK:generator src/ProvidedTypes.fs 
 github 7sharp9/FSharp.TypeProviders.SDK:generator src/ProvidedTypesTesting.fs 
