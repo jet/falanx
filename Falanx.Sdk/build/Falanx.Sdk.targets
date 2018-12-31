@@ -78,7 +78,7 @@
           BeforeTargets="CoreCompile"
           Condition=" '$(DesignTimeBuild)' == 'true' ">
     <ItemGroup>
-      <Compile Include="%(ProtoFileCodegen.OutputPath)" />
+      <CompileBefore Include="%(ProtoFileCodegen.OutputPath)" />
     </ItemGroup>
   </Target>
 
