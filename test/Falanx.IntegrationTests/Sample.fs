@@ -797,9 +797,82 @@ let tests pkgUnderTestVersion =
 
     ]
 
+  let template =
+
+    let uninstallTemplate fs =
+      dotnetCmd fs ["new"; "-u"; "Falanx.Templates" ]
+
+    let installTemplate fs =
+      dotnetCmd fs ["new"; "--nuget-source"; NupkgsDir; "-i"; sprintf "Falanx.Templates::%s" pkgUnderTestVersion ]
+
+    let withTemplate fs =
+      // uninstall if installed
+      uninstallTemplate fs |> ignore
+
+      installTemplate fs
+      |> checkExitCodeZero
+
+      { new IDisposable with
+          member __.Dispose() =
+            // uninstall if installed
+            uninstallTemplate fs |> ignore
+      }
+
+    testList "template" [
+
+      testCase |> withLog "codec all" (fun _ fs ->
+        let testDir = inDir fs "template_codec_all"
+
+        use _template = withTemplate fs
+
+        dotnetCmd fs ["new"; "falanx"; "--codec"; "all" ]
+        |> checkExitCodeZero
+
+        dotnet fs ["build" ]
+        |> checkExitCodeZero
+      )
+
+      testCase |> withLog "codec binary" (fun _ fs ->
+        let testDir = inDir fs "template_codec_binary"
+
+        use _template = withTemplate fs
+
+        dotnetCmd fs ["new"; "falanx"; "--codec"; "binary" ]
+        |> checkExitCodeZero
+
+        dotnet fs ["build" ]
+        |> checkExitCodeZero
+      )
+
+      testCase |> withLog "codec json" (fun _ fs ->
+        let testDir = inDir fs "template_codec_json"
+
+        use _template = withTemplate fs
+
+        dotnetCmd fs ["new"; "falanx"; "--codec"; "json" ]
+        |> checkExitCodeZero
+
+        dotnet fs ["build" ]
+        |> checkExitCodeZero
+      )
+
+      testCase |> withLog "default codec" (fun _ fs ->
+        let testDir = inDir fs "template_codec_default"
+
+        use _template = withTemplate fs
+
+        dotnetCmd fs ["new"; "falanx" ]
+        |> checkExitCodeZero
+
+        dotnet fs ["build" ]
+        |> checkExitCodeZero
+      )
+    ]
+
   [ generalTests
     sanityChecks
     sdkIntegrationMocks
+    template
     interop ]
   |> testList "suite"
   |> testSequenced

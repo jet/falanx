@@ -4,6 +4,7 @@
         "paket-files",
         "test/testrun",
         "test/examples",
+        "Falanx.Templates/ClassLibrary-FSharp",
         "packages"
     ]
 }

@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json.schemastore.org/dotnetcli.host",
+  "symbolInfo": {
+    "FalanxCodecFormat": {
+      "longName": "codec",
+      "shortName": ""
+    },
+    "TargetFrameworkOverride": {
+      "isHidden": "true",
+      "longName": "target-framework-override",
+      "shortName": ""
+    },
+    "Framework": {
+      "longName": "framework"
+    },
+    "skipRestore": {
+      "longName": "no-restore",
+      "shortName": ""
+    }
+  },
+  "usageExamples": [
+    "--codec all",
+    "--codec json",
+    "--codec binary"
+  ]
+}
