@@ -4,7 +4,6 @@ open System.IO
 open Argu
 open Falanx.Proto.Generator
 open Falanx.Proto.Generator.TypeGeneration
-open Falanx.Proto.Codec.Json
 
 module main =
 
