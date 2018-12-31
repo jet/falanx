@@ -4,13 +4,12 @@ open System.IO
 open Argu
 open Falanx.Proto.Generator
 open Falanx.Proto.Generator.TypeGeneration
-open Falanx.Proto.Codec.Json
 
 module main =
 
     type Arguments =
         | [<Mandatory>] InputFile of string
-        | [<Mandatory>] DefaultNamespace of string
+        | DefaultNamespace of string
         | [<Mandatory>] OutputFile of string
         | Serializer of Codec
     with
@@ -22,16 +21,19 @@ module main =
                 | OutputFile _ -> "Specify the file name that the generated code will be written to."
                 | Serializer _ -> "serialization format. default binary"
 
-    
-    let parser = ArgumentParser.Create<Arguments>(programName = "falanx")
-    
     [<EntryPoint>]
     let main argv =
+        let parser = ArgumentParser.Create<Arguments>(programName = "falanx")
+
         try
+
             let results = parser.Parse argv
             let inputFile = results.GetResult InputFile
             let outputFile = results.GetResult OutputFile
-            let defaultNamespace = results.GetResult DefaultNamespace
+            let defaultNamespace =
+                match results.TryGetResult DefaultNamespace with
+                | Some ns -> ns
+                | None -> Path.GetFileNameWithoutExtension(inputFile)
             let codecs =
                 match results.GetResults Serializer with
                 | [] -> Set.singleton Binary
@@ -39,11 +41,22 @@ module main =
             let protoDef = IO.File.ReadAllText inputFile
             printfn "Generating code for: %s" inputFile
             Proto.createFSharpDefinitions(protoDef, outputFile, defaultNamespace, codecs)
+            0
         with
+        | :? ArguParseException as ae ->
+            printfn "%s" ae.Message
+            match ae.ErrorCode with
+            | Argu.ErrorCode.HelpText -> 0
+            | _ -> 2
+        | :? ArguParseException as ae when ae.ErrorCode = Argu.ErrorCode.HelpText ->
+            printfn "%s" ae.Message
+            3
         | :? FileNotFoundException as fnf ->
             printfn "ERROR: inputfile %s doesn not exist\n%s" fnf.FileName (parser.PrintUsage())
+            4
         | :? FormatException as fex when fex.Source = "Froto.Parser" ->
             printfn "ERROR: proto file was not able to be parsed.\n\n%s" fex.Message
-        | ex -> printfn "%s\n%s" (parser.PrintUsage()) ex.Message
-    
-        0 // return an integer exit code
+            5
+        | ex ->
+            printfn "%s\n%s" (parser.PrintUsage()) ex.Message
+            1
