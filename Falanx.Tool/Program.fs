@@ -9,7 +9,7 @@ module main =
 
     type Arguments =
         | [<Mandatory>] InputFile of string
-        | [<Mandatory>] DefaultNamespace of string
+        | DefaultNamespace of string
         | [<Mandatory>] OutputFile of string
         | Serializer of Codec
     with
@@ -30,7 +30,10 @@ module main =
             let results = parser.Parse argv
             let inputFile = results.GetResult InputFile
             let outputFile = results.GetResult OutputFile
-            let defaultNamespace = results.GetResult DefaultNamespace
+            let defaultNamespace =
+                match results.TryGetResult DefaultNamespace with
+                | Some ns -> ns
+                | None -> Path.GetFileNameWithoutExtension(inputFile)
             let codecs =
                 match results.GetResults Serializer with
                 | [] -> Set.singleton Binary
