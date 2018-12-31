@@ -29,6 +29,10 @@ let checkExitCodeZero (cmd: Command) =
     "command finished with exit code non-zero"
     |> Expect.equal cmd.Result.ExitCode 0
 
+let checkExitNonCodeZero (cmd: Command) =
+    "command finished with exit code zero"
+    |> Expect.notEqual cmd.Result.ExitCode 0
+
 let dotnetCmd (fs: FileUtils) args =
     fs.shellExecRun "dotnet" args
 
@@ -38,6 +42,11 @@ let dotnet (fs: FileUtils) args =
 let getEnv name =
   System.Environment.GetEnvironmentVariable(name)
   |> Option.ofObj
+
+let getTempFilePath () =
+  let tempFile = Path.GetTempFileName()
+  File.Delete(tempFile)
+  tempFile
 
 let sbtPath () =
   match getEnv "SBT_HOME" with
@@ -169,7 +178,41 @@ let tests pkgUnderTestVersion =
 
         falanx fs ["--help"]
         |> checkExitCodeZero
+      )
 
+      testCase |> withLog "failure if invalid compiler args" (fun _ fs ->
+
+        let cmd = falanx fs ["invalid"; "compiler"; "--args"]
+
+        "invalid args is exit code 2"
+        |> Expect.equal cmd.Result.ExitCode 2
+      )
+
+      testCase |> withLog "failure if file doesnt exists" (fun _ fs ->
+
+        let tempFile = getTempFilePath()
+
+        let cmd = falanx fs ["--inputfile"; "doesntexists.proto"; "--outputfile"; tempFile]
+
+        "non existing proto file is exit code 4"
+        |> Expect.equal cmd.Result.ExitCode 4
+      )
+
+      testCase |> withLog "failure if proto file cannot be parsed" (fun _ fs ->
+
+        let tempFile = getTempFilePath()
+
+        let protoFile = sprintf "%s.proto" (getTempFilePath())
+
+        // take a valid proto file  and make it invalid
+        File.ReadAllText( (ExamplesDir/``sample6 bundle``.ExampleDir/``sample6 bundle``.ProtoFile) )
+        |> fun text -> text.Replace("message", "messaAAAgEEE")
+        |> fun text -> File.WriteAllText(protoFile, text)
+
+        let cmd = falanx fs ["--inputfile"; protoFile; "--outputfile"; tempFile]
+
+        "existing but invalid proto file is exit code 5"
+        |> Expect.equal cmd.Result.ExitCode 5
       )
     ]
 
@@ -450,6 +493,44 @@ let tests pkgUnderTestVersion =
         Expect.equal lines expected "check is invoked the second time"
 
         cmd |> checkExitCodeZero
+      )
+
+      testCase |> withLog "proto file changed and now invalid make the build fail" (fun _ fs ->
+        let testDir = inDir fs "sdkint_now_invalid_fails"
+
+        testDir
+        |> copyExampleWithTemplate fs ``template1 binary`` ``sample6 bundle``
+
+        let projPath = testDir/ (``template1 binary``.ProjectFile)
+
+        let cmd, lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
+
+        let protoFile = testDir/``template1 binary``.ProtoFile
+
+        let expected =
+          [ "--inputfile"
+            protoFile
+            "--outputfile"
+            sprintf "%s.fs" (testDir/``template1 binary``.ProtoFile)
+            "--defaultnamespace"
+            "l1.Contracts"
+            "--serializer"
+            "binary" ]
+
+        Expect.equal lines expected "check invocation args"
+
+        cmd |> checkExitCodeZero
+
+        // make the .proto file invalid
+        File.ReadAllText(protoFile)
+        |> fun content -> content.Replace("message", "MESSAGGIO")
+        |> fun content -> File.WriteAllText(protoFile, content)
+
+        let cmd, lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
+
+        Expect.equal lines expected "check is invoked the second time"
+
+        cmd |> checkExitNonCodeZero
       )
 
     ]
