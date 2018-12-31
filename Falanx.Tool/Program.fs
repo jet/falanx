@@ -20,7 +20,7 @@ module main =
                 | DefaultNamespace _ -> "specify a default namespace to use for code generation."
                 | OutputFile _ -> "Specify the file name that the generated code will be written to."
                 | Serializer _ -> "serialization format. default binary"
-    
+
     [<EntryPoint>]
     let main argv =
         let parser = ArgumentParser.Create<Arguments>(programName = "falanx")
@@ -40,12 +40,20 @@ module main =
             Proto.createFSharpDefinitions(protoDef, outputFile, defaultNamespace, codecs)
             0
         with
+        | :? ArguParseException as ae ->
+            printfn "%s" ae.Message
+            match ae.ErrorCode with
+            | Argu.ErrorCode.HelpText -> 0
+            | _ -> 2
+        | :? ArguParseException as ae when ae.ErrorCode = Argu.ErrorCode.HelpText ->
+            printfn "%s" ae.Message
+            3
         | :? FileNotFoundException as fnf ->
             printfn "ERROR: inputfile %s doesn not exist\n%s" fnf.FileName (parser.PrintUsage())
-            2
+            4
         | :? FormatException as fex when fex.Source = "Froto.Parser" ->
             printfn "ERROR: proto file was not able to be parsed.\n\n%s" fex.Message
-            3
+            5
         | ex ->
             printfn "%s\n%s" (parser.PrintUsage()) ex.Message
             1
