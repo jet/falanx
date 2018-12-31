@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework Condition="'$(TargetFrameworkOverride)' == ''">netstandard2.0</TargetFramework>
+    <TargetFramework Condition="'$(TargetFrameworkOverride)' != ''">TargetFrameworkOverride</TargetFramework>
+    <RootNamespace Condition="'$(name)' != '$(name{-VALUE-FORMS-}safe_namespace)'">Company.ClassLibrary1</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProtoFile Include="bundle.proto" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Condition=" '$(FalanxJsonCodec)' == 'true' " Include="JsonSerializerExample.fs" />
+    <Compile Condition=" '$(FalanxBinaryCodec)' == 'true' " Include="BinarySerializerExample.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Condition=" '$(FalanxJsonCodec)' == 'true' " Include="Falanx.Proto.Codec.Json" Version="$(FalanxVersion)" />
+    <PackageReference Condition=" '$(FalanxBinaryCodec)' == 'true' " Include="Falanx.Proto.Codec.Binary" Version="$(FalanxVersion)" />
+    <PackageReference Include="Falanx.Sdk" Version="$(FalanxVersion)" PrivateAssets="All" />
+  </ItemGroup>
+
+</Project>

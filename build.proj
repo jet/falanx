@@ -19,6 +19,7 @@
     <Exec Command='dotnet pack Falanx.Proto.Core -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
     <Exec Command='dotnet pack Falanx.Sdk -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
     <Exec Command='dotnet pack Falanx.Tool -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
+    <Exec Command='dotnet pack Falanx.Templates -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
     <Exec Command='dotnet mergenupkg --source "$(NupkgsDir)/Falanx.Sdk.$(Version).nupkg" --other "$(NupkgsDir)/Falanx.Tool.$(Version).nupkg" --tools --only-files' WorkingDirectory="tools" />
   </Target>
 

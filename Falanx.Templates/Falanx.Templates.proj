@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
+    <PackProjectInputFile>$(MSBuildProjectFullPath)</PackProjectInputFile>
+    <NoBuild>true</NoBuild>
+
+    <PackageId>Falanx.Templates</PackageId>
+
+    <PackageType>Template</PackageType>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <Content Include="ClassLibrary-FSharp\**\*" Exclude="ClassLibrary-FSharp\bin\**;ClassLibrary-FSharp\obj\**">
+      <Pack>true</Pack>
+      <PackagePath>%(Identity)</PackagePath>
+      <Visible>true</Visible>
+    </Content>
+  </ItemGroup>
+
+</Project>
