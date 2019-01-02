@@ -251,6 +251,20 @@ module Codec =
             Expr.Let(decoder, Expr.TupleGet(Expr.Var codec, 0),
                 Expr.Let(encoder, Expr.TupleGet(Expr.Var codec, 1),
                     Expr.CallUnchecked(jfieldMethodInfoTyped, [fieldName; getter; Expr.Var decoder; Expr.Var encoder]))))
+        
+    let calljchoice =
+        let jchoiceMethodInfo = Expr.methoddefof <@ Newtonsoft.Operators.jchoice<seq<_>,_,_> x @>
+        <@@ () @@>
+        
+    let createJsonObjCodecFromoneOf (descriptor: OneOfDescriptor) =
+    //        static member JsonObjCodec =
+                       //            jchoice
+                       //                [
+                       //                    Rectangle <!> jreq "rectangle" (function Rectangle (x, y) -> Some (x, y) | _ -> None)
+                       //                    Circle    <!> jreq "radius"    (function Circle x -> Some x | _ -> None)
+                       //                    Prism     <!> jreq "prism"     (function Prism (x, y, z) -> Some (x, y, z) | _ -> None)
+                       //                ]
+               ()
                         
     let createRecordJFieldOpts (typeDescriptor: TypeDescriptor) =
         let recordType = typeDescriptor.Type :> Type
@@ -309,7 +323,8 @@ module Codec =
         let createJsonObjCodec = ProvidedProperty("JsonObjCodec",signatureType, getterCode = (fun args -> foldedFunctions), isStatic = true )
         createJsonObjCodec
  
-#if DEBUG       
+#if DEBUG
+#nowarn "686"
 [<CLIMutable>]
 type Result =
     { mutable url : string option
@@ -323,4 +338,18 @@ type Result =
         |> jfieldOpt "url" (fun x -> x.url)
         |> jfieldOpt "title"  (fun x -> x.title)
         |> jfieldOpt "snippets"  (fun x -> Codec.expand x.snippets)
+        
+    type test_oneof =
+        | First_name of First_name : string
+        | Age of Age : int
+        | Last_name of Last_name : string
+        with
+            [<ReflectedDefinition>]
+            static member JsonObjCodec = // : ConcreteCodec<list<KeyValuePair<string, JToken>>, list<KeyValuePair<string, JToken>>, test_oneof, test_oneof> =
+                Operators.jchoice//<list<KeyValuePair<string,JToken>>,test_oneof, test_oneof>
+                    (seq {
+                        yield FSharpPlus.Operators.map First_name (Operators.jreq "First_name" (function First_name x -> Some x | _ -> None))
+                        yield FSharpPlus.Operators.map Age        (Operators.jreq "age" (function Age x -> Some x | _ -> None))
+                        yield FSharpPlus.Operators.map Last_name  (Operators.jreq "last_name" (function Last_name x -> Some (x) | _ -> None))
+                    })
 #endif

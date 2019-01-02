@@ -171,12 +171,23 @@ namespace Falanx.Machinery
                                             let unioncaseType = SynUnionCaseType.Create(unionFields)
                                             SynUnionCaseRcd.Create(Ident.Create uc.name, unioncaseType) )
                     |> Array.toList
+                    
+                let staticMethods =
+                    pu.GetMethods()
+                    |> Seq.choose(function
+                                  | :? ProvidedMethod as pm when pm.IsStatic ->
+                                      let name = pm.Name
+                                      if name.StartsWith("get_") || name.StartsWith("set_")
+                                      then None
+                                      else Some(SynMemberDefn.CreateFromProvidedMethod(pm, ?ommitEnclosingType = ommitEnclosingType, ?knownNamespaces = knownNamespaces))
+                                  | _ -> None)
+                    |> Seq.toList
         
                 SynModuleDecl.CreateSimpleType (
                     { SynComponentInfoRcd.Create (Ident.CreateLong pu.Name) with
                           XmlDoc = PreXmlDoc.Create (ProvidedTypeDefinition.getXmlDocs pu) },
                     SynTypeDefnSimpleReprUnionRcd.Create(unionCases) |> SynTypeDefnSimpleReprRcd.Union,
-                    members = []
+                    members = [yield! staticMethods]
                 )
 
             static member CreateEnum(pe: ProvidedTypeDefinition) =
