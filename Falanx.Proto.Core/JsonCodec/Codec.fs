@@ -163,11 +163,7 @@ module Codec =
             | ProtoFieldRule.Optional ->
                 Expr.Lambda(xvar, property)
             | ProtoFieldRule.Repeated ->
-                let call = <@ expand x @>
-                let mi = call |> function Call(_,mi,_) -> mi.GetGenericMethodDefinition() | _ -> failwith "not a call"
-                let miclosed = mi.MakeGenericMethod([|property.Type|])
-                Expr.CallUnchecked(miclosed, [property])
-                let exp = Expr.callStaticGeneric [property.Type] [property] call
+                let exp = Expr.callStaticGeneric [property.Type] [property] <@ expand x @>
                 Expr.Lambda(xvar, exp)
             | ProtoFieldRule.Required ->
                 failwith "ProtoFieldRule Required is not supported"
