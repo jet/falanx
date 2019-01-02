@@ -323,7 +323,8 @@ module Codec =
         let createJsonObjCodec = ProvidedProperty("JsonObjCodec",signatureType, getterCode = (fun args -> foldedFunctions), isStatic = true )
         createJsonObjCodec
  
-#if DEBUG       
+#if DEBUG
+#nowarn "686"
 [<CLIMutable>]
 type Result =
     { mutable url : string option
