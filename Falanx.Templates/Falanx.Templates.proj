@@ -33,12 +33,9 @@
   <Target Name="UpdateTemplateJson"
           BeforeTargets="_GetPackageFiles">
 
-    <ReadLinesFromFile
-      File="$(TemplateJson)">
-        <Output
-            TaskParameter="Lines"
-            ItemName="_TemplateJsonLines"/>
-    </ReadLinesFromFile>
+    <ItemGroup>
+      <_TemplateJsonContents Include='$([System.IO.File]::ReadAllText("$(TemplateJson)"))' />
+    </ItemGroup>
 
     <WriteLinesToFile
       Overwrite="true"
