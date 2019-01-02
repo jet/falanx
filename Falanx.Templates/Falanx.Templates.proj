@@ -11,11 +11,19 @@
     <PackageId>Falanx.Templates</PackageId>
 
     <PackageType>Template</PackageType>
+
+    <TemplateJson>template.json</TemplateJson>
+    <TemplateJsonToPack>ClassLibrary-FSharp\.template.config\template.json</TemplateJsonToPack>
   </PropertyGroup>
 
-
   <ItemGroup>
-    <Content Include="ClassLibrary-FSharp\**\*" Exclude="ClassLibrary-FSharp\bin\**;ClassLibrary-FSharp\obj\**">
+    <Content Include="ClassLibrary-FSharp\**\*" Exclude="ClassLibrary-FSharp\bin\**;ClassLibrary-FSharp\obj\**;$(TemplateJsonToPack)">
+      <Pack>true</Pack>
+      <PackagePath>%(Identity)</PackagePath>
+      <Visible>true</Visible>
+    </Content>
+
+    <Content Include="$(TemplateJsonToPack)">
       <Pack>true</Pack>
       <PackagePath>%(Identity)</PackagePath>
       <Visible>true</Visible>
@@ -23,12 +31,7 @@
   </ItemGroup>
 
   <Target Name="UpdateTemplateJson"
-          >
-
-    <PropertyGroup>
-      <TemplateJson>$(MSBuildThisFileDirectory)template.json</TemplateJson>
-      <TemplateJsonToPack>$(MSBuildThisFileDirectory)ClassLibrary-FSharp\.template.config\template.json</TemplateJsonToPack>
-    </PropertyGroup>
+          BeforeTargets="_GetPackageFiles">
 
     <ReadLinesFromFile
       File="$(TemplateJson)">
