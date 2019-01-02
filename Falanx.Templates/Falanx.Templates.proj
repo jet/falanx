@@ -22,4 +22,27 @@
     </Content>
   </ItemGroup>
 
+  <Target Name="UpdateTemplateJson"
+          >
+
+    <PropertyGroup>
+      <TemplateJson>$(MSBuildThisFileDirectory)template.json</TemplateJson>
+      <TemplateJsonToPack>$(MSBuildThisFileDirectory)ClassLibrary-FSharp\.template.config\template.json</TemplateJsonToPack>
+    </PropertyGroup>
+
+    <ReadLinesFromFile
+      File="$(TemplateJson)">
+        <Output
+            TaskParameter="Lines"
+            ItemName="_TemplateJsonLines"/>
+    </ReadLinesFromFile>
+
+    <WriteLinesToFile
+      Overwrite="true"
+      File="$(TemplateJsonToPack)"
+      Lines="@(_TemplateJsonLines)"
+      WriteOnlyWhenDifferent="True" />
+
+  </Target>
+
 </Project>
