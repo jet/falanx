@@ -51,8 +51,8 @@ type ProvidedUnion(isTgt: bool, container:TypeContainer, className: string, getB
         //|> Array.filter (fun x -> x.GetType().IsAssignableFrom(_attributeType))
         
     //fields is set to just one for now
-    member this.AddUnionCase(tag: int, position: int, name: string, [field]: PropertyInfo list) =
-
+    member this.AddUnionCase(tag: int, position: int, name: string, fields: PropertyInfo list) =
+        let field = match fields with [field] -> field | _ -> failwith "Multiple fields are not yet supported as Union Cases"
         //Add tag to the `Tags` nested class
         tagsType.AddMember(ProvidedField.Literal(name, typeof<int>, tag))
         

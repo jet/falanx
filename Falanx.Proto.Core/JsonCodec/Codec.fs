@@ -14,8 +14,8 @@ open ProviderImplementation.ProvidedTypes
 open Newtonsoft.Json.Linq
 open Reflection
 open Froto.Parser.ClassModel
-     
-module Codec =    
+#nowarn "686"   
+module Codec =
     let knownNamespaces = ["System"; "System.Collections.Generic"; "Fleece.Newtonsoft"; "Microsoft.FSharp.Core"; "Newtonsoft.Json.Linq"] |> Set.ofList
     let qs = QuotationSimplifier(true)                          
          
@@ -47,11 +47,7 @@ module Codec =
             fun (v, isRepeated) ->
                 if isRepeated then
                     let v = Expr.Var v
-                    let call = <@ flatten x @>
-                    let mi = call |> function Call(_,mi,_) -> mi.GetGenericMethodDefinition() | _ -> failwith "not a call"
-                    let miclosed = mi.MakeGenericMethod([|v.Type|])
-                    Expr.CallUnchecked(miclosed, [v])
-                    let exp = Expr.callStaticGeneric [v.Type] [v] call
+                    let exp = Expr.callStaticGeneric [v.Type] [v] <@ flatten x @>
                     exp
                 else
                     Expr.Var v
