@@ -40,7 +40,7 @@
     <WriteLinesToFile
       Overwrite="true"
       File="$(TemplateJsonToPack)"
-      Lines="@(_TemplateJsonLines)"
+      Lines="@(_TemplateJsonContents -> Replace('FALANX_NUPKG_VERSION', '$(Version)'))"
       WriteOnlyWhenDifferent="True" />
 
   </Target>
