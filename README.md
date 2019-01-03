@@ -115,7 +115,7 @@ From root
 dotnet msbuild build.proj /t:Pack /p:Version=0.1.0-alpha7
 ```
 
-The nupkg will be in `artifact/nupkg`  
+The nupkg will be in `bin/nupkg`  
 
 ## Security
 This repository is actively monitored by Jet Engineers and the Jet Security team. Please monitor this repo for security updates and advisories. For more information and contacts, please see [SECURITY](security.md)
