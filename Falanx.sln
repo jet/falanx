@@ -11,12 +11,15 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Falanx.Proto.Codec.Binary",
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Falanx.Proto.Generator", "Falanx.Proto.Generator\Falanx.Proto.Generator.fsproj", "{4B5A54E7-7269-44EC-A205-E651B2FFE04F}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2F38C19C-607D-4B48-A479-4304245351DD}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{2F38C19C-607D-4B48-A479-4304245351DD}"
 	ProjectSection(SolutionItems) = preProject
-		bundle.proto = bundle.proto
-		maptest.proto = maptest.proto
-		oneOf.proto = oneOf.proto
-		searchResponse.proto = searchResponse.proto
+		azure-pipelines.yml = azure-pipelines.yml
+		build.proj = build.proj
+		CHANGELOG.md = CHANGELOG.md
+		Directory.Build.props = Directory.Build.props
+		paket.dependencies = paket.dependencies
+		paket.lock = paket.lock
+		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Falanx.Proto.Codec.Json", "Falanx.Proto.Codec.Json\Falanx.Proto.Codec.Json.fsproj", "{2E5DF937-250F-4C52-8EE5-3DEC728EECD9}"
@@ -28,6 +31,14 @@ EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Falanx.Proto.Core", "Falanx.Proto.Core\Falanx.Proto.Core.fsproj", "{79853D4E-FEBA-4D53-BBF7-3B134AFCD6DD}"
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Falanx.Tests", "test\Falanx.Tests\Falanx.Tests.fsproj", "{57BBD7F6-BCC3-4A0B-B75A-9E287C826294}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "example_schemas", "example_schemas", "{7F2723A9-E1E6-4730-9B6F-076D5D90EE86}"
+	ProjectSection(SolutionItems) = preProject
+		test\examples\schemas\bundle.proto = test\examples\schemas\bundle.proto
+		test\examples\schemas\maptest.proto = test\examples\schemas\maptest.proto
+		test\examples\schemas\oneOf.proto = test\examples\schemas\oneOf.proto
+		test\examples\schemas\searchResponse.proto = test\examples\schemas\searchResponse.proto
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
