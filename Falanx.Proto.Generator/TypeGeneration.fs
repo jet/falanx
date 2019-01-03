@@ -4,6 +4,7 @@ module TypeGeneration =
     open System
     open System.Reflection
     open Falanx.Proto.Codec.Binary
+    open Falanx.Proto.Core
     open Falanx.Proto.Core.Model
     open Froto.Parser.Ast
     open Froto.Parser.ClassModel
@@ -243,7 +244,7 @@ module TypeGeneration =
                                                oneOfDescriptor.CaseProperty :> _ ] 
                      //also add json static property for json codec if present
                      if codecs.Contains Json then
-                         let jsonObjCodec = Falanx.Proto.Codec.Json.Codec.createJsonObjCodecFromoneOf oneOfDescriptor
+                         let jsonObjCodec = JsonCodec.createJsonObjCodecFromoneOf oneOfDescriptor
                          //TODO
                          //oneOfDescriptor.OneOfType.AddMember jsonObjCodec
                          ()
@@ -294,7 +295,7 @@ module TypeGeneration =
                         providedType.AddMember serializedLengthMethod
                         providedType.DefineMethodOverride(serializedLengthMethod, typeof<IMessage>.GetMethod("SerializedLength"))
                     | Json ->
-                        let jsonObjCodec = Falanx.Proto.Codec.Json.Codec.createJsonObjCodec typeInfo
+                        let jsonObjCodec = JsonCodec.createJsonObjCodec typeInfo
                         providedType.AddMember jsonObjCodec
                         )
                           

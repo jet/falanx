@@ -1,27 +1,25 @@
-namespace Falanx.Proto.Codec.Json
+namespace Falanx.Proto.Core
 open System
 open System.Reflection
 open System.Collections.Generic
 open Fleece
 open Fleece.Newtonsoft
 open Microsoft.FSharp.Quotations
-open Microsoft.FSharp.Quotations.Patterns
+open ProviderImplementation.ProvidedTypes
+open ProviderImplementation.ProvidedTypes.UncheckedQuotations
 open Falanx.Machinery
 open Falanx.Machinery.Expr
-open ProviderImplementation.ProvidedTypes.UncheckedQuotations
 open Falanx.Proto.Core.Model
-open ProviderImplementation.ProvidedTypes
 open Newtonsoft.Json.Linq
 open Reflection
 open Froto.Parser.ClassModel
+open Falanx.Proto.Codec.Json.ResizeArray
+
 #nowarn "686"   
-module Codec =
+module JsonCodec =
     let knownNamespaces = ["System"; "System.Collections.Generic"; "Fleece.Newtonsoft"; "Microsoft.FSharp.Core"; "Newtonsoft.Json.Linq"] |> Set.ofList
     let qs = QuotationSimplifier(true)                          
-         
-    let flatten = function None -> ResizeArray() | Some x -> x
-    let expand (x: ResizeArray<_>) = if isNull x || Seq.isEmpty x then None else Some x
-    
+             
     let createLambdaRecord (typeDescriptor: TypeDescriptor) =
         //Lambda (u, Lambda (t, NewRecord (Result2, u, t))
         let recordType = typeDescriptor.Type :?> ProvidedRecord
@@ -32,9 +30,8 @@ module Codec =
             recordFields2
             |> List.map(function
                         | Property{PropertyDescriptor.Rule = ProtoFieldRule.Repeated; ProvidedProperty = pp} ->
-                            //For fleece processing we need to wrap repeat field types in option
-                            //We also add the flatten and expand methods in the to lambda construction and
-                            //field map respectively.
+                            //For fleece we need to wrap repeat field types in option.  We also add the flatten
+                            //and expand methods in the to lambda construction and field map respectively.
                             Var(pp.Name, typedefof<Option<_>>.MakeGenericType(pp.PropertyType)), true
                         | Property{ProvidedProperty = pp} ->
                             Var(pp.Name, pp.PropertyType), false
@@ -325,11 +322,11 @@ type Result =
     
     [<ReflectedDefinition>]
     static member JsonObjCodec =
-        fun url title snippets -> { url = url; title = title; snippets = Codec.flatten snippets }
+        fun url title snippets -> { url = url; title = title; snippets = flatten snippets }
         |> withFields<Option<String> -> Option<String> -> Option<List<String>> -> Result, IReadOnlyDictionary<String, JToken>, DecodeError, Result, String, JToken>
         |> jfieldOpt "url" (fun x -> x.url)
         |> jfieldOpt "title"  (fun x -> x.title)
-        |> jfieldOpt "snippets"  (fun x -> Codec.expand x.snippets)
+        |> jfieldOpt "snippets"  (fun x -> expand x.snippets)
         
     type test_oneof =
         | First_name of First_name : string
