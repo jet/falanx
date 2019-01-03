@@ -35,7 +35,7 @@
       "description": "Overrides the falanx version",
       "replaces": "$(FalanxVersion)",
       "datatype": "string",
-      "defaultValue": "0.4.0-alpha3"
+      "defaultValue": "FALANX_NUPKG_VERSION"
     },
     "FalanxCodecFormat":{
       "type":"parameter",

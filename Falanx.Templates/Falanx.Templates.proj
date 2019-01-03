@@ -11,15 +11,38 @@
     <PackageId>Falanx.Templates</PackageId>
 
     <PackageType>Template</PackageType>
+
+    <TemplateJson>template.json</TemplateJson>
+    <TemplateJsonToPack>ClassLibrary-FSharp\.template.config\template.json</TemplateJsonToPack>
   </PropertyGroup>
 
-
   <ItemGroup>
-    <Content Include="ClassLibrary-FSharp\**\*" Exclude="ClassLibrary-FSharp\bin\**;ClassLibrary-FSharp\obj\**">
+    <Content Include="ClassLibrary-FSharp\**\*" Exclude="ClassLibrary-FSharp\bin\**;ClassLibrary-FSharp\obj\**;$(TemplateJsonToPack)">
+      <Pack>true</Pack>
+      <PackagePath>%(Identity)</PackagePath>
+      <Visible>true</Visible>
+    </Content>
+
+    <Content Include="$(TemplateJsonToPack)">
       <Pack>true</Pack>
       <PackagePath>%(Identity)</PackagePath>
       <Visible>true</Visible>
     </Content>
   </ItemGroup>
+
+  <Target Name="UpdateTemplateJson"
+          BeforeTargets="_GetPackageFiles">
+
+    <ItemGroup>
+      <_TemplateJsonContents Include='$([System.IO.File]::ReadAllText("$(TemplateJson)"))' />
+    </ItemGroup>
+
+    <WriteLinesToFile
+      Overwrite="true"
+      File="$(TemplateJsonToPack)"
+      Lines="@(_TemplateJsonContents -> Replace('FALANX_NUPKG_VERSION', '$(Version)'))"
+      WriteOnlyWhenDifferent="True" />
+
+  </Target>
 
 </Project>

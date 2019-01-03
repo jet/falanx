@@ -250,3 +250,4 @@ target/
 /example/bundle.fs
 .store
 *.proto.fs
+/Falanx.Templates/*/.template.config/template.json
