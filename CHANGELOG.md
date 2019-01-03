@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 The `Unreleased` section name is replaced by the expected version of next release. A stable versions log contains all changes between that version and the previous stable version (can duplicate the prereleases logs)
 
 ## [0.4.0]
+<a name="v0.4.0"></a>
+
 ### Added
 - support the `repeated` field rule
 - new `Falanx.Templates` template package, with a library example
@@ -24,6 +26,8 @@ The `Unreleased` section name is replaced by the expected version of next releas
 - the .fs file is regenerated on build if the proto file is changed
 
 ## [0.4.0-alpha3] - 2018-12-28
+<a name="v0.4.0-alpha3"></a>
+
 ### Added
 - allow multiple proto files in the same project
 - use `OutputPath` metadata of `ProtoFile` item to specify generated .fs file path
@@ -36,6 +40,8 @@ The `Unreleased` section name is replaced by the expected version of next releas
 - the .fs file is regenerated on build if the proto file is changed
 
 ## [0.4.0-alpha2] - 2018-12-21
+<a name="v0.4.0-alpha2"></a>
+
 ### Added
 - support the `repeated` field rule
 
@@ -43,10 +49,14 @@ The `Unreleased` section name is replaced by the expected version of next releas
 - dependencies not needed at runtime from `Falanx.Proto.Codec.*` packages
 
 ## [0.4.0-alpha1] - 2018-12-12
+<a name="v0.4.0-alpha1"></a>
+
 ### Fixed
 - binary serialization of repeated enum ( [#65](https://github.com/jet/falanx/pull/65) by [@wuzzeb](https://github.com/wuzzeb) )
 
 ## [0.3.0] - 2018-12-21
+<a name="v0.3.0"></a>
+
 ### Added
 - support for `json` format, use the `Falanx.Proto.Codec.Json` package
 
@@ -54,6 +64,8 @@ The `Unreleased` section name is replaced by the expected version of next releas
 - renamed `Falanx.BinaryCodec` package to `Falanx.Proto.Codec.Binary`
 
 ## [0.2.0] - 2018-10-3
+<a name="v0.2.0"></a>
+
 ### Added
 - the `Deserialization` helper method
 - the `Falanx.Sdk` package to integrate with .NET Sdk projects (fsproj)
