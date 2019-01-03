@@ -5,8 +5,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 The `Unreleased` section name is replaced by the expected version of next release. A stable versions log contains all changes between that version and the previous stable version (can duplicate the prereleases logs)
 
-## [0.4.0]
 <a name="v0.4.0"></a>
+## [0.4.0]
 
 ### Added
 - support the `repeated` field rule
@@ -25,8 +25,8 @@ The `Unreleased` section name is replaced by the expected version of next releas
 ### Fixed
 - the .fs file is regenerated on build if the proto file is changed
 
-## [0.4.0-alpha3] - 2018-12-28
 <a name="v0.4.0-alpha3"></a>
+## [0.4.0-alpha3] - 2018-12-28
 
 ### Added
 - allow multiple proto files in the same project
@@ -39,8 +39,8 @@ The `Unreleased` section name is replaced by the expected version of next releas
 ### Fixed
 - the .fs file is regenerated on build if the proto file is changed
 
-## [0.4.0-alpha2] - 2018-12-21
 <a name="v0.4.0-alpha2"></a>
+## [0.4.0-alpha2] - 2018-12-21
 
 ### Added
 - support the `repeated` field rule
@@ -48,14 +48,14 @@ The `Unreleased` section name is replaced by the expected version of next releas
 ### Removed
 - dependencies not needed at runtime from `Falanx.Proto.Codec.*` packages
 
-## [0.4.0-alpha1] - 2018-12-12
 <a name="v0.4.0-alpha1"></a>
+## [0.4.0-alpha1] - 2018-12-12
 
 ### Fixed
 - binary serialization of repeated enum ( [#65](https://github.com/jet/falanx/pull/65) by [@wuzzeb](https://github.com/wuzzeb) )
 
-## [0.3.0] - 2018-12-21
 <a name="v0.3.0"></a>
+## [0.3.0] - 2018-12-21
 
 ### Added
 - support for `json` format, use the `Falanx.Proto.Codec.Json` package
@@ -63,8 +63,8 @@ The `Unreleased` section name is replaced by the expected version of next releas
 ### Changed
 - renamed `Falanx.BinaryCodec` package to `Falanx.Proto.Codec.Binary`
 
-## [0.2.0] - 2018-10-3
 <a name="v0.2.0"></a>
+## [0.2.0] - 2018-10-3
 
 ### Added
 - the `Deserialization` helper method
