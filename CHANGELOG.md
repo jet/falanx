@@ -43,7 +43,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - the `Deserialization` helper method
 - the `Falanx.Sdk` package to integrate with .NET Sdk projects (fsproj)
 
-[0.4.0-alpha4]: https://github.com/jet/falanx/compare/v0.4.0-alpha3...HEAD
+[0.4.0-beta1]: https://github.com/jet/falanx/compare/v0.4.0-alpha3...HEAD
 [0.4.0-alpha3]: https://github.com/jet/falanx/compare/v0.4.0-alpha2...v0.4.0-alpha3
 [0.4.0-alpha2]: https://github.com/jet/falanx/compare/v0.4.0-alpha1...v0.4.0-alpha2
 [0.4.0-alpha1]: https://github.com/jet/falanx/compare/v0.3.0...v0.4.0-alpha1
