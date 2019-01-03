@@ -2,9 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). The `Unreleased` section is replaced by the expected version of next release.
 
-## [0.4.0-alpha4]
+## [0.4.0-beta1]
 ### Added
 - new `Falanx.Templates` template package, with a library example
 
