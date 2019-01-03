@@ -208,7 +208,6 @@ tests/fsharpqa/Source/*FSharpQA_Failures.lst
 *.bak
 FSharp.Compiler.Tools.Nuget/*.nupkg
 FSharp.Core.Nuget/*.nupkg
-artifacts/*.nupkg
 *.orig
 *.mdf
 *.ldf
@@ -241,7 +240,6 @@ paket-files/
 .idea/
 .vscode/*
 !.vscode/settings.json
-/artifact/
 /example-projects/paket-dotnetsdk/hellow/Prova.fs
 /example-projects/paket-oldsdk/hellow/Prova.fs
 /example-projects/dotnetsdk/hellow/Prova.fs

@@ -7,7 +7,7 @@ open System.IO
 [<EntryPoint>]
 let main argv =
     let artifactsDir =
-        IO.Path.Combine(__SOURCE_DIRECTORY__,"..","..","artifact")
+        IO.Path.Combine(__SOURCE_DIRECTORY__,"..","..","bin")
         |> Path.GetFullPath
     let nupkgsDir = IO.Path.Combine(artifactsDir,"nupkg")
 

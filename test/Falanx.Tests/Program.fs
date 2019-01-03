@@ -13,7 +13,7 @@ let tests () =
 [<EntryPoint>]
 let main argv =
     let artifactsDir =
-        IO.Path.Combine(__SOURCE_DIRECTORY__,"..","..","artifact")
+        IO.Path.Combine(__SOURCE_DIRECTORY__,"..","..","bin")
         |> Path.GetFullPath
 
     let resultsPath = IO.Path.Combine(artifactsDir,"test_results","TestResults.Unit.xml")

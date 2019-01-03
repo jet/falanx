@@ -16,7 +16,7 @@ let ExamplesDir = RepoDir/"test"/"examples"
 let TestRunDir = RepoDir/"test"/"testrun"
 let TestRunPackagesDir = TestRunDir/"packages"
 let TestRunDirToolDir = TestRunDir/"tool"
-let NupkgsDir = RepoDir/"artifact"/"nupkg"
+let NupkgsDir = RepoDir/"bin"/"nupkg"
 let NugetOrgV3Url = "https://api.nuget.org/v3/index.json"
 
 let stdOutLines (cmd: Command) =
