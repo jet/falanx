@@ -1,8 +1,8 @@
 namespace Falanx.Proto.Codec.Json
  
 module ResizeArray =                         
-    let flatten =
-        function
+    let flatten xs =
+        match xs with
         | None -> ResizeArray()
         | Some x -> x
         
