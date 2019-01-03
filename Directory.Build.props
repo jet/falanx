@@ -7,6 +7,9 @@
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/jet/falanx.git</RepositoryUrl>
     <PackageLicenseUrl>https://github.com/jet/falanx/blob/master/LICENSE</PackageLicenseUrl>
+
+    <VersionPrefix Condition=" '$(VersionPrefix)' == '' ">0.4.0-alpha3</VersionPrefix>
+    <PackageReleaseNotes>see $(PackageProjectUrl)/blob/master/CHANGELOG.md#v$(VersionPrefix)</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -14,7 +17,7 @@
     <NupkgsDir>$([System.IO.Path]::GetFullPath("$(MSBuildThisFileDirectory)/bin/nupkg"))</NupkgsDir>
     <MonoOrEmpty Condition=" '$(OS)' != 'Windows_NT' ">mono </MonoOrEmpty>
 
-    <Version Condition=" '$(Version)' == '' ">0.4.0-alpha3$(VersionSuffix)</Version>
+    <Version Condition=" '$(Version)' == '' ">$(VersionPrefix)$(VersionSuffix)</Version>
 
     <NoWarn>$(NoWarn);FS2003</NoWarn>
   </PropertyGroup>
