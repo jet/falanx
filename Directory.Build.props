@@ -8,7 +8,7 @@
     <RepositoryUrl>https://github.com/jet/falanx.git</RepositoryUrl>
     <PackageLicenseUrl>https://github.com/jet/falanx/blob/master/LICENSE</PackageLicenseUrl>
 
-    <VersionPrefix Condition=" '$(VersionPrefix)' == '' ">0.4.0-alpha3</VersionPrefix>
+    <VersionPrefix Condition=" '$(VersionPrefix)' == '' ">0.4.0</VersionPrefix>
     <PackageReleaseNotes>see $(PackageProjectUrl)blob/master/CHANGELOG.md#v$(VersionPrefix)</PackageReleaseNotes>
   </PropertyGroup>
 
