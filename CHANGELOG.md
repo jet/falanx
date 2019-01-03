@@ -2,15 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). The `Unreleased` section is replaced by the expected version of next release.
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+The `Unreleased` section name is replaced by the expected version of next release. A stable versions log contains all changes between that version and the previous stable version (can duplicate the prereleases logs)
 
 ## [0.4.0]
 ### Added
+- support the `repeated` field rule
 - new `Falanx.Templates` template package, with a library example
+- allow multiple proto files in the same project
+- use `OutputPath` metadata of `ProtoFile` item to specify generated .fs file path
+- can be used in standalone console projects, a library is not required
+
+### Changed
+- the generated .fs files, by default, are alongside the .proto files, not in `obj` directory. These can be ignored with `*.proto.fs` wildcard, if needed
+- the compile files are included at beginning of the compile list as `CompileBefore` instead of `Compile` msbuild item
+
+### Removed
+- dependencies not needed at runtime from `Falanx.Proto.Codec.*` packages
+
+### Fixed
+- the .fs file is regenerated on build if the proto file is changed
 
 ## [0.4.0-alpha3] - 2018-12-28
 ### Added
-- allow multiple proto in the same project
+- allow multiple proto files in the same project
 - use `OutputPath` metadata of `ProtoFile` item to specify generated .fs file path
 
 ### Changed
@@ -33,7 +48,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.3.0] - 2018-12-21
 ### Added
-- support for `json` format
+- support for `json` format, use the `Falanx.Proto.Codec.Json` package
 
 ### Changed
 - renamed `Falanx.BinaryCodec` package to `Falanx.Proto.Codec.Binary`
@@ -43,7 +58,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - the `Deserialization` helper method
 - the `Falanx.Sdk` package to integrate with .NET Sdk projects (fsproj)
 
-[0.4.0]: https://github.com/jet/falanx/compare/v0.4.0-alpha3...HEAD
+[0.4.0]: https://github.com/jet/falanx/compare/v0.3.0...HEAD
 [0.4.0-alpha3]: https://github.com/jet/falanx/compare/v0.4.0-alpha2...v0.4.0-alpha3
 [0.4.0-alpha2]: https://github.com/jet/falanx/compare/v0.4.0-alpha1...v0.4.0-alpha2
 [0.4.0-alpha1]: https://github.com/jet/falanx/compare/v0.3.0...v0.4.0-alpha1
