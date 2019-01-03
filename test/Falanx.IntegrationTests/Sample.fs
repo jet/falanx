@@ -818,10 +818,16 @@ let tests pkgUnderTestVersion =
             uninstallTemplate fs |> ignore
       }
 
+    let skipIfNotWindowsBecauseKnownFailure_issue105 () =
+      if not (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows)) then
+        Tests.skiptest "known failure on unix/mac, ref https://github.com/jet/falanx/issues/105"
+
     testList "template" [
 
       testCase |> withLog "codec all" (fun _ fs ->
         let testDir = inDir fs "template_codec_all"
+
+        skipIfNotWindowsBecauseKnownFailure_issue105 ()
 
         use _template = withTemplate fs
 
@@ -835,6 +841,8 @@ let tests pkgUnderTestVersion =
       testCase |> withLog "codec binary" (fun _ fs ->
         let testDir = inDir fs "template_codec_binary"
 
+        skipIfNotWindowsBecauseKnownFailure_issue105 ()
+
         use _template = withTemplate fs
 
         dotnetCmd fs ["new"; "falanx"; "--codec"; "binary" ]
@@ -847,6 +855,8 @@ let tests pkgUnderTestVersion =
       testCase |> withLog "codec json" (fun _ fs ->
         let testDir = inDir fs "template_codec_json"
 
+        skipIfNotWindowsBecauseKnownFailure_issue105 ()
+
         use _template = withTemplate fs
 
         dotnetCmd fs ["new"; "falanx"; "--codec"; "json" ]
@@ -858,6 +868,8 @@ let tests pkgUnderTestVersion =
 
       testCase |> withLog "default codec" (fun _ fs ->
         let testDir = inDir fs "template_codec_default"
+
+        skipIfNotWindowsBecauseKnownFailure_issue105 ()
 
         use _template = withTemplate fs
 
