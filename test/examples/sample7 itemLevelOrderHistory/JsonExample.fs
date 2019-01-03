@@ -16,7 +16,7 @@ let serialize () : string =
 
 let deserialize (jsonText: string) : ItemLevelOrderHistory =
 
-    let s = parseJson<ItemLevelOrderHistory> jsonText
+    let s = parseJson jsonText
 
     match s with
     | Result.Ok x -> x

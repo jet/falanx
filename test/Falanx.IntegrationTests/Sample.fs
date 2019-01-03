@@ -145,6 +145,7 @@ let tests pkgUnderTestVersion =
           "  <PropertyGroup>"
           sprintf "    <FalanxVersion>%s</FalanxVersion>" pkgUnderTestVersion
           sprintf "    <RestorePackagesPath>%s</RestorePackagesPath>" TestRunPackagesDir
+          "    <OtherFlags>$(OtherFlags) --warnaserror</OtherFlags> <!-- built projects should not have warning -->"
           "  </PropertyGroup>"
           "</Project>" ])
     )
