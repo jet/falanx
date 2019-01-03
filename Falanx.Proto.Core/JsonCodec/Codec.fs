@@ -32,7 +32,7 @@ module JsonCodec =
                         | Property{PropertyDescriptor.Rule = ProtoFieldRule.Repeated; ProvidedProperty = pp} ->
                             //For fleece we need to wrap repeat field types in option.  We also add the flatten
                             //and expand methods in the to lambda construction and field map respectively.
-                            Var(pp.Name, typedefof<Option<_>>.MakeGenericType(pp.PropertyType)), true
+                            Var(pp.Name, pp.PropertyType.GenericTypeArguments.[0] ) , true
                         | Property{ProvidedProperty = pp} ->
                             Var(pp.Name, pp.PropertyType), false
                         | OneOf oneOf ->
@@ -160,7 +160,7 @@ module JsonCodec =
             | ProtoFieldRule.Optional ->
                 Expr.Lambda(xvar, property)
             | ProtoFieldRule.Repeated ->
-                let exp = Expr.callStaticGeneric [property.Type] [property] <@ expand x @>
+                let exp = Expr.callStaticGeneric [yield! property.Type.GenericTypeArguments] [property] <@ expand x @>
                 Expr.Lambda(xvar, exp)
             | ProtoFieldRule.Required ->
                 failwith "ProtoFieldRule Required is not supported"
@@ -322,11 +322,11 @@ type Result =
     
     [<ReflectedDefinition>]
     static member JsonObjCodec =
-        fun url title snippets -> { url = url; title = title; snippets = flatten snippets }
+        fun url title snippets -> { url = url; title = title; snippets = flatten<string> snippets }
         |> withFields<Option<String> -> Option<String> -> Option<List<String>> -> Result, IReadOnlyDictionary<String, JToken>, DecodeError, Result, String, JToken>
         |> jfieldOpt "url" (fun x -> x.url)
         |> jfieldOpt "title"  (fun x -> x.title)
-        |> jfieldOpt "snippets"  (fun x -> expand x.snippets)
+        |> jfieldOpt "snippets"  (fun x -> expand<string> x.snippets)
         
     type test_oneof =
         | First_name of First_name : string
