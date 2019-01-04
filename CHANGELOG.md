@@ -21,6 +21,7 @@ The `Unreleased` section name is replaced by the expected version of next releas
 
 ### Removed
 - dependencies not needed at runtime from `Falanx.Proto.Codec.*` packages
+- removed the `Falanx.Proto.Core` package, the codecs packages doesnt depend on it anymore
 
 ### Fixed
 - the .fs file is regenerated on build if the proto file is changed
