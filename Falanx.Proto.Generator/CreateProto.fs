@@ -51,6 +51,7 @@ module Proto =
         let openBinaryCodecPrimitive = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "Falanx.Proto.Codec.Binary.Primitives")
         let openJsonLinq = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "Newtonsoft.Json.Linq")
         let openFleeceNewtonsoft = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "Fleece.Newtonsoft")
+        let openJsonCodec = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "Falanx.Proto.Codec.Json" )
         
         let knownNamespaces =
             [ yield providedTypeRoot.Namespace
@@ -64,6 +65,7 @@ module Proto =
               if codecs.Contains Json then
                   yield "Newtonsoft.Json.Linq"
                   yield "Fleece.Newtonsoft"
+                  yield "Falanx.Proto.Codec.Json"
               
               yield "Microsoft.FSharp.Core"
               yield "Microsoft.FSharp.Core.Operators"
@@ -114,6 +116,7 @@ module Proto =
                                                  if codecs.Contains Json then
                                                      yield openJsonLinq
                                                      yield openFleeceNewtonsoft
+                                                     yield openJsonCodec
                                                  yield nowarn
                                                  yield! cleanTypes] )
                     )

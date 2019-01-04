@@ -108,9 +108,9 @@ message TestAllTypes {
   repeated    float repeated_float    = 41;
   repeated   double repeated_double   = 42;
   repeated     bool repeated_bool     = 43;
-  repeated   string repeated_string   = 44;
   */
-  //repeated    bytes repeated_bytes    = 45;
+  repeated   string repeated_string   = 44;
+//  repeated    bytes repeated_bytes    = 45;
 
   //repeated NestedMessage                        repeated_nested_message  = 48;
   //repeated ForeignMessage                       repeated_foreign_message = 49;

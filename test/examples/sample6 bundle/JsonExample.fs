@@ -1,19 +1,21 @@
 module JsonExample
 
 open l1.Contracts
+open Fleece.Newtonsoft
 
-let serialize () =
+let serialize () : string =
     let r =
         { BundleRequest.martId = Some 1
           memberId =  Some "myId"
           channelType = None
           retailSkus = new ResizeArray<string>() }
 
-    let buffer = new Froto.Serialization.ZeroCopyBuffer(1000)
-    BundleRequest.Serialize(r, buffer)
-    buffer.ToArray()
+    toJson r |> string
 
-let deserialize (bytes: byte array) =
-    let buffer2 = new Froto.Serialization.ZeroCopyBuffer(bytes)
-    let s = BundleRequest.Deserialize(buffer2)
-    s
+let deserialize (jsonText: string) : BundleRequest =
+
+    let s = parseJson jsonText
+
+    match s with
+    | Result.Ok x -> x
+    | Result.Error err -> failwithf "error parsing json: '%A'" err

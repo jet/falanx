@@ -1,27 +1,25 @@
-namespace Falanx.Proto.Codec.Json
+namespace Falanx.Proto.Core
 open System
 open System.Reflection
 open System.Collections.Generic
 open Fleece
 open Fleece.Newtonsoft
 open Microsoft.FSharp.Quotations
-open Microsoft.FSharp.Quotations.Patterns
+open ProviderImplementation.ProvidedTypes
+open ProviderImplementation.ProvidedTypes.UncheckedQuotations
 open Falanx.Machinery
 open Falanx.Machinery.Expr
-open ProviderImplementation.ProvidedTypes.UncheckedQuotations
 open Falanx.Proto.Core.Model
-open ProviderImplementation.ProvidedTypes
 open Newtonsoft.Json.Linq
 open Reflection
 open Froto.Parser.ClassModel
+open Falanx.Proto.Codec.Json.ResizeArray
+
 #nowarn "686"   
-module Codec =
+module JsonCodec =
     let knownNamespaces = ["System"; "System.Collections.Generic"; "Fleece.Newtonsoft"; "Microsoft.FSharp.Core"; "Newtonsoft.Json.Linq"] |> Set.ofList
     let qs = QuotationSimplifier(true)                          
-         
-    let flatten = function None -> ResizeArray() | Some x -> x
-    let expand (x: ResizeArray<_>) = if isNull x || Seq.isEmpty x then None else Some x
-    
+             
     let createLambdaRecord (typeDescriptor: TypeDescriptor) =
         //Lambda (u, Lambda (t, NewRecord (Result2, u, t))
         let recordType = typeDescriptor.Type :?> ProvidedRecord
@@ -32,25 +30,24 @@ module Codec =
             recordFields2
             |> List.map(function
                         | Property{PropertyDescriptor.Rule = ProtoFieldRule.Repeated; ProvidedProperty = pp} ->
-                            //For fleece processing we need to wrap repeat field types in option
-                            //We also add the flatten and expand methods in the to lambda construction and
-                            //field map respectively.
-                            Var(pp.Name, typedefof<Option<_>>.MakeGenericType(pp.PropertyType)), true
+                            //For fleece we need to wrap repeat field types in option.  We also add the flatten
+                            //and expand methods in the to lambda construction and field map respectively.
+                            Var(pp.Name, typedefof<Option<_>>.MakeGenericType(pp.PropertyType)) , Some(pp.PropertyType.GenericTypeArguments.[0])
                         | Property{ProvidedProperty = pp} ->
-                            Var(pp.Name, pp.PropertyType), false
+                            Var(pp.Name, pp.PropertyType), None
                         | OneOf oneOf ->
-                            Var(oneOf.CaseProperty.Name, oneOf.CaseProperty.PropertyType), false
+                            Var(oneOf.CaseProperty.Name, oneOf.CaseProperty.PropertyType), None
                         | Map m ->
-                            Var(m.ProvidedProperty.Name, m.ProvidedProperty.PropertyType), false )
+                            Var(m.ProvidedProperty.Name, m.ProvidedProperty.PropertyType), None )
 
         let mapRepeatOrStandard =
-            fun (v, isRepeated) ->
-                if isRepeated then
+            fun (v, maybeFlattened) ->
+                match v, maybeFlattened with
+                | v, Some flattened ->
                     let v = Expr.Var v
-                    let exp = Expr.callStaticGeneric [v.Type] [v] <@ flatten x @>
+                    let exp = Expr.callStaticGeneric [flattened] [v] <@ flatten x @>
                     exp
-                else
-                    Expr.Var v
+                | v, None -> Expr.Var v
  
         let result =
             List.foldBack (fun (v, isRepeated) acc -> Expr.Lambda(v,acc))
@@ -97,7 +94,7 @@ module Codec =
         //for a Record3 we would have a type signature like this:
         //mapping<Option<String> -> Option<String> -> Result3, IReadOnlyDictionary<String, JToken>, String, Result3, String, JToken>
         
-        let mappingMethodInfo = Expr.methoddefof <@ withFields<_,IReadOnlyDictionary<string,JsonValue>,DecodeError,_,string,JToken> @>
+        let mappingMethodInfo = Expr.methoddefof <@ withFields<_,IReadOnlyDictionary<string, JsonValue>, DecodeError, _, string, JToken> @>
         
         let lambdaType = lambda.Type
         
@@ -106,7 +103,7 @@ module Codec =
         
         //usage would normally be a lambda piped into mapping:
         //fun f : Option<String> -> Option<String> -> Result2 
-        //|> mapping<Option<String> -> Option<String> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken> 
+        //|> withFields<Option<String> -> Option<String> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken> 
         
         //FSharpFunc`2[FSharpFunc`2[Option`1[String],FSharpFunc`2[Option`1[String],Result2]],Tuple`2[FSharpFunc`2[IReadOnlyDictionary`2[String,JToken],FSharpResult`2[FSharpFunc`2[FSharpOption`1[String],FSharpFunc`2[FSharpOption`1[String],Result2]],String]],FSharpFunc`2[IReadOnlyDictionary`2[String,NJToken]]]]
 
@@ -163,7 +160,7 @@ module Codec =
             | ProtoFieldRule.Optional ->
                 Expr.Lambda(xvar, property)
             | ProtoFieldRule.Repeated ->
-                let exp = Expr.callStaticGeneric [property.Type] [property] <@ expand x @>
+                let exp = Expr.callStaticGeneric [yield! property.Type.GenericTypeArguments] [property] <@ expand x @>
                 Expr.Lambda(xvar, exp)
             | ProtoFieldRule.Required ->
                 failwith "ProtoFieldRule Required is not supported"
@@ -176,7 +173,7 @@ module Codec =
             
             //IReadOnlyDictionary<String,JToken> -> Result<Option<String> -> Option<Int32>   -> Result2, String>
             //IReadOnlyDictionary<String,JToken> -> Result<Option<Int32>                     -> Result2, String>
-            typedefof<Result<_,_>>.MakeGenericType( [| functionType; typeof<string> |] )
+            typedefof<Result<_,_>>.MakeGenericType( [| functionType; typeof<DecodeError> |] )
             
         let decoderType = FSharpType.MakeFunctionType(domain, range)
 
@@ -250,47 +247,54 @@ module Codec =
         
     let createJsonObjCodecFromoneOf (descriptor: OneOfDescriptor) =
     //        static member JsonObjCodec =
-                       //            jchoice
-                       //                [
-                       //                    Rectangle <!> jreq "rectangle" (function Rectangle (x, y) -> Some (x, y) | _ -> None)
-                       //                    Circle    <!> jreq "radius"    (function Circle x -> Some x | _ -> None)
-                       //                    Prism     <!> jreq "prism"     (function Prism (x, y, z) -> Some (x, y, z) | _ -> None)
-                       //                ]
+    //            jchoice
+    //                [
+    //                    Rectangle <!> jreq "rectangle" (function Rectangle (x, y) -> Some (x, y) | _ -> None)
+    //                    Circle    <!> jreq "radius"    (function Circle x -> Some x | _ -> None)
+    //                    Prism     <!> jreq "prism"     (function Prism (x, y, z) -> Some (x, y, z) | _ -> None)
+    //                ]
                ()
                         
     let createRecordJFieldOpts (typeDescriptor: TypeDescriptor) =
         let recordType = typeDescriptor.Type :> Type
         let recordFields = typeDescriptor.Properties
+        
+        let optionType (o: Type) = o.GetGenericArguments().[0]
+        
+        let createJfieldopt (propertyDescriptor: PropertyDescriptor) rest =
+            match propertyDescriptor.Rule with
+            | ProtoFieldRule.Optional ->
+                let fieldType = optionType propertyDescriptor.ProvidedProperty.PropertyType
+                callJfieldopt typeDescriptor.Type propertyDescriptor fieldType rest
+            | ProtoFieldRule.Repeated -> //will call expand, so type signature affected
+                
+                let fieldType = propertyDescriptor.ProvidedProperty.PropertyType
+                callJfieldopt typeDescriptor.Type propertyDescriptor fieldType rest
+            | ProtoFieldRule.Required ->
+                failwith "not supported"
+
         let fieldTypeWithRest =
             let rec loop (recordFields: PropertyDescriptor list) =
                 [
                     match recordFields with
                     | [] -> ()
-                    | h :: [] ->
-                        yield h, recordType
-                    | h :: t ->
-                        let rest = (t |> List.map (fun pt -> pt.ProvidedProperty.PropertyType)) @ [recordType]
-                        let all = makeFunctionTypeFromElements rest
-                        yield h, all
-                        yield! loop t
+                    | head :: [] ->
+                        yield createJfieldopt head recordType
+                    | head :: tail ->
+                        let rest =
+                            tail
+                            |> List.map (fun pd -> match pd.Rule with
+                                                   | ProtoFieldRule.Repeated ->
+                                                       typedefof<Option<_>>.MakeGenericType(pd.ProvidedProperty.PropertyType)
+                                                   | _ ->
+                                                       pd.ProvidedProperty.PropertyType)
+                            
+                        let restAsType = makeFunctionTypeFromElements (rest @ [recordType])
+                        yield createJfieldopt head restAsType
+                        yield! loop tail
                 ]
             loop recordFields
-  
-        let optionType (o: Type) = o.GetGenericArguments().[0]
-        
-        let jFieldOptions =
-            fieldTypeWithRest
-            |> List.map (fun (propertyDescriptor, rest) ->
-                match propertyDescriptor.Rule with
-                | ProtoFieldRule.Optional ->
-                    let fieldType = optionType propertyDescriptor.ProvidedProperty.PropertyType
-                    callJfieldopt typeDescriptor.Type propertyDescriptor fieldType rest
-                | ProtoFieldRule.Repeated ->
-                    let fieldType = propertyDescriptor.ProvidedProperty.PropertyType
-                    callJfieldopt typeDescriptor.Type propertyDescriptor fieldType rest
-                | ProtoFieldRule.Required ->
-                    failwith "not supported")        
-        jFieldOptions
+        fieldTypeWithRest
         
     let createJsonObjCodec (typeDescriptor: TypeDescriptor) =     
         let recordType = typeDescriptor.Type :?> ProvidedRecord
@@ -318,30 +322,29 @@ module Codec =
 #if DEBUG
 #nowarn "686"
 [<CLIMutable>]
-type Result =
-    { mutable url : string option
-      mutable title : string option
-      mutable snippets : string ResizeArray }
+type TestAllTypes =
+    { mutable singleInt32 : int option
+      mutable repeatedString : string ResizeArray }
     
     [<ReflectedDefinition>]
     static member JsonObjCodec =
-        fun url title snippets -> { url = url; title = title; snippets = Codec.flatten snippets }
-        |> withFields<Option<String> -> Option<String> -> Option<List<String>> -> Result, IReadOnlyDictionary<String, JToken>, DecodeError, Result, String, JToken>
-        |> jfieldOpt "url" (fun x -> x.url)
-        |> jfieldOpt "title"  (fun x -> x.title)
-        |> jfieldOpt "snippets"  (fun x -> Codec.expand x.snippets)
+        fun singleInt32 repeatedString -> {singleInt32 = singleInt32; repeatedString = flatten<string> repeatedString}
+        |> withFields<int option -> Option<ResizeArray<String>> -> TestAllTypes, IReadOnlyDictionary<String, JToken>, DecodeError, TestAllTypes, String, JToken>
+        |> jfieldOpt<TestAllTypes, Int32, Option<ResizeArray<String>> -> TestAllTypes> "singleInt32"  (fun x -> x.singleInt32)
+        |> jfieldOpt<TestAllTypes, ResizeArray<String> , TestAllTypes> "repeatedString"  (fun x -> expand<string> x.repeatedString)
+
         
-    type test_oneof =
-        | First_name of First_name : string
-        | Age of Age : int
-        | Last_name of Last_name : string
-        with
-            [<ReflectedDefinition>]
-            static member JsonObjCodec = // : ConcreteCodec<list<KeyValuePair<string, JToken>>, list<KeyValuePair<string, JToken>>, test_oneof, test_oneof> =
-                Operators.jchoice//<list<KeyValuePair<string,JToken>>,test_oneof, test_oneof>
-                    (seq {
-                        yield FSharpPlus.Operators.map First_name (Operators.jreq "First_name" (function First_name x -> Some x | _ -> None))
-                        yield FSharpPlus.Operators.map Age        (Operators.jreq "age" (function Age x -> Some x | _ -> None))
-                        yield FSharpPlus.Operators.map Last_name  (Operators.jreq "last_name" (function Last_name x -> Some (x) | _ -> None))
-                    })
+type test_oneof =
+    | First_name of First_name : string
+    | Age of Age : int
+    | Last_name of Last_name : string
+    with
+        [<ReflectedDefinition>]
+        static member JsonObjCodec = // : ConcreteCodec<list<KeyValuePair<string, JToken>>, list<KeyValuePair<string, JToken>>, test_oneof, test_oneof> =
+            Operators.jchoice//<list<KeyValuePair<string,JToken>>,test_oneof, test_oneof>
+                (seq {
+                    yield FSharpPlus.Operators.map First_name (Operators.jreq "First_name" (function First_name x -> Some x | _ -> None))
+                    yield FSharpPlus.Operators.map Age        (Operators.jreq "age" (function Age x -> Some x | _ -> None))
+                    yield FSharpPlus.Operators.map Last_name  (Operators.jreq "last_name" (function Last_name x -> Some (x) | _ -> None))
+                })
 #endif

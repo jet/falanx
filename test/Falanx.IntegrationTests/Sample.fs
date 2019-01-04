@@ -268,8 +268,6 @@ let tests pkgUnderTestVersion =
       testCase |> withLog "can build sample3 json" (fun _ fs ->
         let testDir = inDir fs "sanity_check_sample3_json"
 
-        Tests.skiptest "schema with collection and json format doesnt work yet"
-
         testDir
         |> buildExampleWithTemplate fs ``template2 json`` ``sample6 bundle``
       )
@@ -277,10 +275,44 @@ let tests pkgUnderTestVersion =
       testCase |> withLog "can build sample4 binary+json" (fun _ fs ->
         let testDir = inDir fs "sanity_check_sample4_binaryjson"
 
-        Tests.skiptest "schema with collection and json format doesnt work yet"
+        let template = ``template3 binary+json``
+        let sample = ``sample6 bundle``
 
+        // copy the template and add the sample
         testDir
-        |> buildExampleWithTemplate fs ``template3 binary+json`` ``sample6 bundle``
+        |> copyExampleWithTemplate fs template sample
+
+        let projPath = testDir/ (template.ProjectFile)
+        let projDir = Path.GetDirectoryName projPath
+
+        fs.cd testDir
+        dotnet fs ["build"; projPath]
+        |> checkExitCodeZero
+
+        let outputPath = projDir/"bin"/"Debug"/"netcoreapp2.1"/template.AssemblyName + ".dll"
+        Expect.isTrue (File.Exists outputPath) (sprintf "output assembly '%s' not found" outputPath)
+
+        let writeAndRead format serializedPath deserializedPath =
+          dotnetCmd fs [outputPath; "--format"; format; "--serialize"; serializedPath]
+          |> checkExitCodeZero
+
+          "check serialized binary file exists"
+          |> Expect.isTrue (File.Exists serializedPath)
+
+          dotnetCmd fs [outputPath; "--format"; format; "--deserialize"; serializedPath; "--out"; deserializedPath]
+          |> checkExitCodeZero
+
+          "check deserialized output text file exists"
+          |> Expect.isTrue (File.Exists deserializedPath)
+
+          let text = File.ReadAllText(deserializedPath)
+
+          "check deserialized text exists"
+          |> Expect.isNotWhitespace text
+
+        writeAndRead "binary" (testDir/"my.bin") (testDir/"output.bin.txt")
+        writeAndRead "json" (testDir/"my.json") (testDir/"output.json.txt")
+
       )
 
       testCase |> withLog "can build sample7 json" (fun _ fs ->
