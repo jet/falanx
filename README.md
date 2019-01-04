@@ -1,8 +1,11 @@
 [![Build Status](https://dev.azure.com/jet-opensource/opensource/_apis/build/status/jet.falanx?branchName=master)](https://dev.azure.com/jet-opensource/opensource/_build/latest?definitionId=8?branchName=master)
+[![NuGet](https://img.shields.io/nuget/v/Falanx.Tool.svg)](https://www.nuget.org/packages/Falanx.Tool/)
 
 # Falanx code generation
 
-This repository contains the code generator to generate F# source (.fs files) from `proto3` source.  The general concepts are as follows:
+This repository contains the code generator to generate F# source (.fs files) from `proto3` source.
+
+The general concepts are as follows:
 
 * Reuse as much off the shelf code as possible for the mvp as to get a feel for how things will work and refine from there.
 * Code generation, to generate F# source code, rather than types being injected as a type provider.
@@ -17,7 +20,7 @@ In a .NET Sdk library project, add the following packages
     <PackageReference Include="Falanx.Sdk" Version="0.3.0" PrivateAssets="All" />
 ```
 
-If you want to use the json format instead of binary, use the package
+If you want to use the json format instead of binary, use the package `Falanx.Proto.Codec.Json` instead of `Falanx.Proto.Codec.Binary`
 
 ```xml
     <PackageReference Include="Falanx.Proto.Codec.Json" Version="0.3.0" />
@@ -46,21 +49,16 @@ falanx --help
 
 # Project structure
 
-The solution has four projects.
-
 ## Projects in this repository
 
-### Falanx.Ast
-This maps ProvidedTypes, Methods, and Properties that are defined in the Type Provider SDK to AST entities.
-
-### Falanx.BinaryCodec
-This is a helper project for the client to serialize and deserialize code.
-
-### Falanx.BinaryGenerator
-<TODO: Write a desciption>
-
 ### Falanx.Tool
-A simple command line program which uses the other projects to produce F# code from the `.proto` files.
+A simple console application to produce an F# source file from the `.proto` files.
+
+### Falanx.Sdk
+Integration with .NET Sdk projects
+
+### Falanx.Templates
+The templates who contains an example library
 
 ## Dependencies
 
@@ -82,7 +80,19 @@ This is an F# code formatter assembly that format F# code and can turn an F# AST
 
 # How to build Falanx
 
-This is a simple project, so there is no fake script as no elaborate build is yet required. All you have to do is `dotnet build Falanx.sln` from the root folder. The default solution will have its references restored via `paket` and then built.
+Use the `sln/Falanx.sln` solution for development, or directly the projects with .NET Core Sdk (`dotnet`).
+
+Projects:
+
+- `src/Falanx.Tool` the falanx console app, run with `dotnet run`
+- `test/Falanx.Tests` the unit test, run with `dotnet run`
+- `test/Falanx.IntegrationTests` the integration tests, run with `dotnet run`
+
+As shortcuts, from root:
+
+- `dotnet build` to build the falanx executable `Falanx.Tool`.
+- `dotnet pack` to generate packages in `bin/nupks`
+- `dotnet test -v n` to run tests
 
 # Using Falanx
 
@@ -91,7 +101,7 @@ This is a simple project, so there is no fake script as no elaborate build is ye
 From the root folder, to generate a `.fs` file for a specified `.proto` file:
 
 ```
-dotnet run --project Falanx.Tool/Falanx.Tool.fsproj --inputfile bundle.proto --defaultnamespace test --outputfile bundle.fs
+dotnet run -p src/Falanx.Tool/Falanx.Tool.fsproj -- --inputfile test\examples\schemas\bundle.proto --defaultnamespace test --outputfile bundle.fs
 ```
 
 Command line arguments can be shown by calling with  `--help`:
@@ -106,16 +116,17 @@ OPTIONS:
     --help                display this list of options.
 ```
 
-
 ## To build packages
 
 From root
 
 ```
-dotnet msbuild build.proj /t:Pack /p:Version=0.1.0-alpha7
+dotnet pack
 ```
 
-The nupkg will be in `bin/nupkg`  
+The nupkgs will be in `bin/nupkg`
+
+To specify a version pass the `Version` property like `/p:Version=0.1.0-alpha7`
 
 ## Security
 This repository is actively monitored by Jet Engineers and the Jet Security team. Please monitor this repo for security updates and advisories. For more information and contacts, please see [SECURITY](security.md)
