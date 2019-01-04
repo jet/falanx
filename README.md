@@ -16,17 +16,12 @@ The general concepts are as follows:
 In a .NET Sdk library project, add the following packages
 
 ```xml
-    <PackageReference Include="Falanx.Proto.Codec.Binary" Version="0.3.0" />
-    <PackageReference Include="Falanx.Sdk" Version="0.3.0" PrivateAssets="All" />
+<PackageReference Include="Falanx.Proto.Codec.Binary" Version="0.4.0" />
+<PackageReference Include="Falanx.Proto.Codec.Json" Version="0.4.0" />
+<PackageReference Include="Falanx.Sdk" Version="0.4.0" PrivateAssets="All" />
 ```
 
-If you want to use the json format instead of binary, use the package `Falanx.Proto.Codec.Json` instead of `Falanx.Proto.Codec.Binary`
-
-```xml
-    <PackageReference Include="Falanx.Proto.Codec.Json" Version="0.3.0" />
-```
-
-NOTE It's possibile to use both in json and binary in the same project.
+It's possibile to use only one of `Falanx.Proto.Codec.Binary` and `Falanx.Proto.Codec.Json` or both, the generated code will depends on the packages referenced
 
 Now specify the `.proto` file path like
 
@@ -36,14 +31,27 @@ Now specify the `.proto` file path like
   </ItemGroup>
 ```
 
-and an auto generated file will be created on `dotnet build`
+and an auto generated file will be created on build
 
-See an example of project in [example-sdk/example2/README.md](example-sdk/example2/README.md)
+More info in [example-sdk/README.md](example-sdk/README.md)
+
+## Template
+
+A .NET template exists
+
+```
+dotnet new -i Falanx.Templates
+dotnet new falanx
+```
+
+use `--codec` argument to specify the codecs (values `json`,`binary`,`all`)
+
+## Tool
 
 It's also possibile to use falanx as command line .net global tool, see [example\README.md](example/README.md)
 
 ```
-dotnet tool install -g Falanx.Tool --version 0.3.0
+dotnet tool install -g Falanx.Tool
 falanx --help
 ```
 
