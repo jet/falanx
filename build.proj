@@ -16,7 +16,6 @@
     <Exec Command='dotnet pack src/Falanx.Proto.Codec.Json -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
     <Exec Command='dotnet pack src/Falanx.Proto.Codec.Binary -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
     <Exec Command='dotnet pack src/Falanx.Machinery -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
-    <Exec Command='dotnet pack src/Falanx.Proto.Core -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
     <Exec Command='dotnet pack src/Falanx.Sdk -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
     <Exec Command='dotnet pack src/Falanx.Tool -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
     <Exec Command='dotnet pack src/Falanx.Templates -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
