@@ -9,6 +9,7 @@
     <NoBuild>true</NoBuild>
 
     <PackageId>Falanx.Sdk</PackageId>
+    <Description>The integration between Falanx and .NET Sdk projects</Description>
   </PropertyGroup>
   
   <ItemGroup>

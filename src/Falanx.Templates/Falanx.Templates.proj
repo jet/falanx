@@ -9,8 +9,8 @@
     <NoBuild>true</NoBuild>
 
     <PackageId>Falanx.Templates</PackageId>
-
     <PackageType>Template</PackageType>
+    <Description>Example projects with Falanx</Description>
 
     <TemplateJson>template.json</TemplateJson>
     <TemplateJsonToPack>ClassLibrary-FSharp\.template.config\template.json</TemplateJsonToPack>

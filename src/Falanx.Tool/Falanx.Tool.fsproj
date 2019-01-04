@@ -6,6 +6,7 @@
     <PackAsTool>true</PackAsTool>
     <PackageId>Falanx.Tool</PackageId>
     <AssemblyName>falanx</AssemblyName>
+    <Description>The falanx .NET tool</Description>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(EnableSourceLink)' == 'true' ">
     <PublishRepositoryUrl>true</PublishRepositoryUrl>

@@ -1,10 +1,3 @@
 FSharp.Core
 Argu
-
-# transitive
-FSharp.Compiler.Service
-Fantomas
-Froto.Parser
-Froto.Serialization
-
 Microsoft.SourceLink.GitHub
