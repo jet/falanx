@@ -13,5 +13,5 @@ module JsonSerializerExample =
 
         toJson r |> string
 
-    let deserialize (jsonText: string) =
-        parseJson<BundleRequest> jsonText
+    let deserialize (jsonText: string) : ParseResult<BundleRequest> =
+        parseJson jsonText

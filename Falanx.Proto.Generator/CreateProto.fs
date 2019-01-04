@@ -71,7 +71,13 @@ module Proto =
               yield "Microsoft.FSharp.Control"
               yield "Microsoft.FSharp.Text" ]
             |> Set.ofSeq
-            
+
+        let nowarn =
+            let createHashDirective directive values  =
+                SynModuleDecl.HashDirective (ParsedHashDirective (directive, values, Microsoft.FSharp.Compiler.Range.range.Zero), Microsoft.FSharp.Compiler.Range.range.Zero)
+
+            createHashDirective "nowarn" ["686"]
+
         let synTypes =   
             let rec loop (pt: Type) =
                 [
@@ -108,6 +114,7 @@ module Proto =
                                                  if codecs.Contains Json then
                                                      yield openJsonLinq
                                                      yield openFleeceNewtonsoft
+                                                 yield nowarn
                                                  yield! cleanTypes] )
                     )
             )

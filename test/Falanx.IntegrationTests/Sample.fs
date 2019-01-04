@@ -145,6 +145,8 @@ let tests pkgUnderTestVersion =
           "  <PropertyGroup>"
           sprintf "    <FalanxVersion>%s</FalanxVersion>" pkgUnderTestVersion
           sprintf "    <RestorePackagesPath>%s</RestorePackagesPath>" TestRunPackagesDir
+          "    <OtherFlags>$(OtherFlags) --warnaserror</OtherFlags> <!-- built projects should not have warning -->"
+          "    <NoWarn>$(NoWarn);FS2003</NoWarn> <!-- disable warning for assembly version -->"
           "  </PropertyGroup>"
           "</Project>" ])
     )
