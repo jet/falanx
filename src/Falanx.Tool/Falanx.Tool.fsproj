@@ -22,5 +22,5 @@
     <ProjectReference Include="..\Falanx.Proto.Codec.Json\Falanx.Proto.Codec.Json.fsproj" />
     <ProjectReference Include="..\Falanx.Proto.Generator\Falanx.Proto.Generator.fsproj" />
   </ItemGroup>
-  <Import Project="..\.paket\Paket.Restore.targets" />
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

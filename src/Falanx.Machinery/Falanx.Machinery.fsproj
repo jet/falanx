@@ -9,11 +9,11 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\paket-files\7sharp9\FSharp.TypeProviders.SDK\src\ProvidedTypes.fs">
+    <Compile Include="..\..\paket-files\7sharp9\FSharp.TypeProviders.SDK\src\ProvidedTypes.fs">
       <Paket>True</Paket>
       <Link>paket-files/ProvidedTypes.fs</Link>
     </Compile>
-    <Compile Include="..\paket-files\7sharp9\FSharp.TypeProviders.SDK\src\ProvidedTypesTesting.fs">
+    <Compile Include="..\..\paket-files\7sharp9\FSharp.TypeProviders.SDK\src\ProvidedTypesTesting.fs">
       <Paket>True</Paket>
       <Link>paket-files/ProvidedTypesTesting.fs</Link>
     </Compile>
@@ -32,5 +32,5 @@
   <ItemGroup>
     <None Include="paket.references" />
   </ItemGroup>
-  <Import Project="..\.paket\Paket.Restore.targets" />
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>
