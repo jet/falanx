@@ -12,6 +12,8 @@
     <Version Condition=" '$(Version)' == '' ">$(VersionPrefix)$(VersionSuffix)</Version>
 
     <NoWarn>$(NoWarn);FS2003</NoWarn>
+
+    <EnableSourceLink Condition=" 'Configuration' == 'Release' ">true</EnableSourceLink>
   </PropertyGroup>
 
   <PropertyGroup>
