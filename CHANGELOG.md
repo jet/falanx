@@ -5,8 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 The `Unreleased` section name is replaced by the expected version of next release. A stable versions log contains all changes between that version and the previous stable version (can duplicate the prereleases logs)
 
+<a name="v0.5.0"></a>
+## [0.5.0]
+
 <a name="v0.4.0"></a>
-## [0.4.0]
+## [0.4.0] - 2019-01-04
 
 ### Added
 - support the `repeated` field rule
@@ -71,7 +74,8 @@ The `Unreleased` section name is replaced by the expected version of next releas
 - the `Deserialization` helper method
 - the `Falanx.Sdk` package to integrate with .NET Sdk projects (fsproj)
 
-[0.4.0]: https://github.com/jet/falanx/compare/v0.3.0...HEAD
+[0.5.0]: https://github.com/jet/falanx/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/jet/falanx/compare/v0.3.0...v0.4.0
 [0.4.0-alpha3]: https://github.com/jet/falanx/compare/v0.4.0-alpha2...v0.4.0-alpha3
 [0.4.0-alpha2]: https://github.com/jet/falanx/compare/v0.4.0-alpha1...v0.4.0-alpha2
 [0.4.0-alpha1]: https://github.com/jet/falanx/compare/v0.3.0...v0.4.0-alpha1
