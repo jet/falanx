@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Falanx.Proto.Codec.Binary\Falanx.Proto.Codec.Binary.fsproj" />
     <ProjectReference Include="..\..\src\Falanx.Proto.Codec.Json\Falanx.Proto.Codec.Json.fsproj" />
+    <ProjectReference Include="..\..\src\Falanx.Tool\Falanx.Tool.fsproj" PrivateAssets="All" />
   </ItemGroup>
   <!-- use the falanx generator binary directly -->
   <PropertyGroup>
