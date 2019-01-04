@@ -36,7 +36,7 @@ More info in [example-sdk/README.md](example-sdk/README.md)
 
 ### Template
 
-A .NET template exists
+Install the .NET template for an example library sample
 
 ```
 dotnet new -i Falanx.Templates
