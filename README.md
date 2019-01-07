@@ -64,7 +64,7 @@ More info in [example\README.md](example/README.md)
 
 ## How to build Falanx
 
-More info in [docs/developer_guide.md]([docs/developer_guide.md])
+More info in [docs/developer_guide.md](docs/developer_guide.md)
 
 Use the `sln/Falanx.sln` solution for development, or directly the projects with .NET Core Sdk (`dotnet`).
 
