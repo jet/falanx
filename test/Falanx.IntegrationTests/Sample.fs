@@ -338,7 +338,7 @@ let tests pkgUnderTestVersion =
         mockFilename
         |> replaceText (fun text -> text.Replace("$REAL_FALANX", realPath))
 
-    let dotnetBuildWithFalanxArgsMockAndArgs (fs: FileUtils) testDir args projPath =
+    let createFalanxMock (fs: FileUtils) testDir =
 
         fs.mkdir_p (testDir/"mocktool")
         copyDirFromAssets fs ``mock write args``.ProjDir (testDir/"mocktool")
@@ -347,23 +347,39 @@ let tests pkgUnderTestVersion =
 
         falanxMock |> replaceRealFalanxEnvVar (TestRunDirToolDir/"bin"/"falanx")
 
-        fs.rm_rf falanxMockArgsPath
+        let readFalanxMockOutput falanxMockArgsPath =
+
+            if File.Exists falanxMockArgsPath then
+              File.ReadLines falanxMockArgsPath
+              |> List.ofSeq
+            else
+              []
+
+        let executeWithMock (fs: FileUtils) f =
+
+            fs.rm_rf falanxMockArgsPath
+
+            let result = f falanxMock
+
+            let lines = readFalanxMockOutput falanxMockArgsPath
+
+            result, lines
+
+        executeWithMock
+
+    let dotnetBuildWithMock fs projPath falanxMock args =
+        let cmd = dotnet fs (["build"; projPath; sprintf "/p:FalanxSdk_GeneratorExe=%s" falanxMock; "/p:FalanxSdk_GeneratorExeHost=" ] @ args)
+        cmd
+
+    let dotnetBuildWithFalanxArgsMock (fs: FileUtils) testDir args projPath =
+
+        let executeWithFalanxMock = createFalanxMock fs testDir
 
         fs.cd testDir
 
-        let cmd = dotnet fs (["build"; projPath; sprintf "/p:FalanxSdk_GeneratorExe=%s" falanxMock; "/p:FalanxSdk_GeneratorExeHost=" ] @ args)
-
-        let lines =
-          if File.Exists falanxMockArgsPath then
-            File.ReadLines falanxMockArgsPath
-            |> List.ofSeq
-          else
-            []
+        let cmd, lines = executeWithFalanxMock fs (fun falanxMock -> dotnetBuildWithMock fs projPath falanxMock args)
 
         cmd, lines
-
-    let dotnetBuildWithFalanxArgsMock fs testDir projPath =
-      dotnetBuildWithFalanxArgsMockAndArgs fs testDir [] projPath
 
     testList "sdk integration" [
 
@@ -375,7 +391,7 @@ let tests pkgUnderTestVersion =
 
         let projPath = testDir/ (``template1 binary``.ProjectFile)
 
-        let cmd, lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
+        let cmd, lines = dotnetBuildWithFalanxArgsMock fs testDir [] projPath
 
         let expected =
           [ "--inputfile"
@@ -400,7 +416,7 @@ let tests pkgUnderTestVersion =
 
         let projPath = testDir/ (``template2 json``.ProjectFile)
 
-        let _, lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
+        let _, lines = dotnetBuildWithFalanxArgsMock fs testDir [] projPath
 
         let expected =
           [ "--inputfile"
@@ -423,7 +439,7 @@ let tests pkgUnderTestVersion =
 
         let projPath = testDir/ (``template3 binary+json``.ProjectFile)
 
-        let _, lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
+        let _, lines = dotnetBuildWithFalanxArgsMock fs testDir [] projPath
 
         let expected =
           [ "--inputfile"
@@ -450,7 +466,7 @@ let tests pkgUnderTestVersion =
 
         let ns = "abcd"
 
-        let _, lines = dotnetBuildWithFalanxArgsMockAndArgs fs testDir [sprintf "/p:RootNamespace=%s" ns] projPath
+        let _, lines = dotnetBuildWithFalanxArgsMock fs testDir [sprintf "/p:RootNamespace=%s" ns] projPath
 
         let expected =
           [ "--inputfile"
@@ -473,7 +489,11 @@ let tests pkgUnderTestVersion =
 
         let projPath = testDir/ (``template1 binary``.ProjectFile)
 
-        let cmd, lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
+        let executeWithFalanxMock = createFalanxMock fs testDir
+
+        fs.cd testDir
+
+        let cmd, lines = executeWithFalanxMock fs (fun falanxMock -> dotnetBuildWithMock fs projPath falanxMock [])
 
         let expected =
           [ "--inputfile"
@@ -489,7 +509,7 @@ let tests pkgUnderTestVersion =
 
         cmd |> checkExitCodeZero
 
-        let cmd, lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
+        let cmd, lines = executeWithFalanxMock fs (fun falanxMock -> dotnetBuildWithMock fs projPath falanxMock [])
 
         Expect.equal lines [] "check is not invoked the second time"
 
@@ -504,7 +524,11 @@ let tests pkgUnderTestVersion =
 
         let projPath = testDir/ (``template1 binary``.ProjectFile)
 
-        let cmd, lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
+        let executeWithFalanxMock = createFalanxMock fs testDir
+
+        fs.cd testDir
+
+        let cmd, lines = executeWithFalanxMock fs (fun falanxMock -> dotnetBuildWithMock fs projPath falanxMock [])
 
         let expected =
           [ "--inputfile"
@@ -522,7 +546,7 @@ let tests pkgUnderTestVersion =
 
         fs.touch (testDir/``template1 binary``.ProtoFile)
 
-        let cmd, lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
+        let cmd, lines = executeWithFalanxMock fs (fun falanxMock -> dotnetBuildWithMock fs projPath falanxMock [])
 
         Expect.equal lines expected "check is invoked the second time"
 
@@ -537,7 +561,11 @@ let tests pkgUnderTestVersion =
 
         let projPath = testDir/ (``template1 binary``.ProjectFile)
 
-        let cmd, lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
+        let executeWithFalanxMock = createFalanxMock fs testDir
+
+        fs.cd testDir
+
+        let cmd, lines = executeWithFalanxMock fs (fun falanxMock -> dotnetBuildWithMock fs projPath falanxMock [])
 
         let protoFile = testDir/``template1 binary``.ProtoFile
 
@@ -560,7 +588,7 @@ let tests pkgUnderTestVersion =
         |> fun content -> content.Replace("message", "MESSAGGIO")
         |> fun content -> File.WriteAllText(protoFile, content)
 
-        let cmd, lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
+        let cmd, lines = executeWithFalanxMock fs (fun falanxMock -> dotnetBuildWithMock fs projPath falanxMock [])
 
         Expect.equal lines expected "check is invoked the second time"
 
