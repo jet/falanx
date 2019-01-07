@@ -7,14 +7,14 @@ Falanx generator works as console program
 globally
 
 ```
-dotnet tool install -g Falanx.Tool --version 0.4.0
+dotnet tool install -g Falanx.Tool --version 0.4.*
 falanx --help
 ```
 
 or locally
 
 ```
-dotnet tool install Falanx.Tool --version 0.4.0 --tool-path "tools"
+dotnet tool install Falanx.Tool --version 0.4.* --tool-path "tools"
 tools/falanx --help
 ```
 
