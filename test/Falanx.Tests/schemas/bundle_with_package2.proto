@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package Sample.Tests.WithPackage2;
+
+message BundleRequest {
+  int32 martId = 1;
+  string member_id = 2;
+}
