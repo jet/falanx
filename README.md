@@ -1,4 +1,4 @@
-[![Build Status](https://dev.azure.com/jet-opensource/opensource/_apis/build/status/jet.falanx?branchName=master)](https://dev.azure.com/jet-opensource/opensource/_build/latest?definitionId=8?branchName=master)
+[![Build Status](https://dev.azure.com/jet-opensource/opensource/_apis/build/status/jet.falanx?branchName=rel/0.4)](https://dev.azure.com/jet-opensource/opensource/_build/latest?definitionId=8?branchName=rel/0.4)
 [![NuGet](https://img.shields.io/nuget/v/Falanx.Tool.svg)](https://www.nuget.org/packages/Falanx.Tool/)
 
 # Falanx code generation
