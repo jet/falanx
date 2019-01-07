@@ -28,7 +28,7 @@
           BeforeTargets="FalanxSdkGenerateCode">
 
     <ItemGroup>
-      <FalanxSdk_CodeGenInputs Include="@(ProtoFileCodegen);@(ReferencePath)" />
+      <FalanxSdk_CodeGenInputs Include="@(ProtoFileCodegen);@(ReferencePath);$(FalanxSdk_GeneratorExe)" />
     </ItemGroup>
 
     <Hash ItemsToHash="@(FalanxSdk_CodeGenInputs)">
@@ -51,7 +51,7 @@
           DependsOnTargets="$(FalanxSdkGenerateCodeDependsOn)"
           BeforeTargets="CoreCompile"
           Condition=" '$(DesignTimeBuild)' != 'true' "
-          Inputs="@(ProtoFileCodegen);$(_FalanxSdkCodeGenInputCache)"
+          Inputs="@(ProtoFileCodegen);$(_FalanxSdkCodeGenInputCache);$(FalanxSdk_GeneratorExe)"
           Outputs="%(ProtoFileCodegen.OutputPath)">
 
     <PropertyGroup>
