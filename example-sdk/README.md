@@ -7,9 +7,9 @@ Falax can be integrated in .NET Sdk projects using `Falanx.Sdk` package.
 Add the following packages into an `ItemGroup` of your project file.
 
 ```xml
-<PackageReference Include="Falanx.Proto.Codec.Binary" Version="0.4.0" />
-<PackageReference Include="Falanx.Proto.Codec.Json" Version="0.4.0" />
-<PackageReference Include="Falanx.Sdk" Version="0.4.0" PrivateAssets="All" />
+<PackageReference Include="Falanx.Proto.Codec.Binary" Version="0.4.*" />
+<PackageReference Include="Falanx.Proto.Codec.Json" Version="0.4.*" />
+<PackageReference Include="Falanx.Sdk" Version="0.4.*" PrivateAssets="All" />
 ```
 
 and configure the source path of the proto file in a
