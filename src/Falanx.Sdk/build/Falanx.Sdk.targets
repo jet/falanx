@@ -7,7 +7,7 @@
           BeforeTargets="FalanxSdkGenerateInputCache">
     <ItemGroup>
       <ProtoFileCodegen Include="%(ProtoFile.FullPath)">
-        <OutputPath Condition=" '%(ProtoFile.OutputPath)' != '' ">$([System.IO.Path]::GetFullPath('%(ProtoFile.OutputPath)')</OutputPath>
+        <OutputPath Condition=" '%(ProtoFile.OutputPath)' != '' ">$([System.IO.Path]::GetFullPath('%(ProtoFile.OutputPath)'))</OutputPath>
         <OutputPath Condition=" '%(ProtoFile.OutputPath)' == '' ">%(ProtoFile.FullPath).fs</OutputPath>
       </ProtoFileCodegen>
     </ItemGroup>

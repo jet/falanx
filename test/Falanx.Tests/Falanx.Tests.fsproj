@@ -7,6 +7,9 @@
   <ItemGroup>
     <ProtoFile Include="schemas\falanx_test.proto" />
     <ProtoFile Include="schemas\bundle_with_package.proto" />
+    <ProtoFile Include="schemas\bundle_with_package2.proto">
+      <OutputPath>my.bundle.fs</OutputPath>
+    </ProtoFile>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Compatibility.fs" />
