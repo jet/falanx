@@ -9,7 +9,7 @@ The `Unreleased` section name is replaced by the expected version of next releas
 ## [0.5.0]
 
 <a name="v0.4.1"></a>
-## [0.4.1]
+## [0.4.1] - 2019-01-07
 
 ### Fixed
 - fix `ProtoFile.OutputPath`
@@ -81,7 +81,7 @@ The `Unreleased` section name is replaced by the expected version of next releas
 - the `Falanx.Sdk` package to integrate with .NET Sdk projects (fsproj)
 
 [0.5.0]: https://github.com/jet/falanx/compare/v0.4.0...HEAD
-[0.4.1]: https://github.com/jet/falanx/compare/v0.4.0...HEAD
+[0.4.1]: https://github.com/jet/falanx/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/jet/falanx/compare/v0.3.0...v0.4.0
 [0.4.0-alpha3]: https://github.com/jet/falanx/compare/v0.4.0-alpha2...v0.4.0-alpha3
 [0.4.0-alpha2]: https://github.com/jet/falanx/compare/v0.4.0-alpha1...v0.4.0-alpha2
