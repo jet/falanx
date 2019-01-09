@@ -240,20 +240,49 @@ module JsonCodec =
             Expr.Let(decoder, Expr.TupleGet(Expr.Var codec, 0),
                 Expr.Let(encoder, Expr.TupleGet(Expr.Var codec, 1),
                     Expr.CallUnchecked(jfieldMethodInfoTyped, [fieldName; getter; Expr.Var decoder; Expr.Var encoder]))))
+    
+    let callmap (descriptor: OneOfDescriptor) (property: PropertyDescriptor) =
+        let mapMi = Expr.methoddefof <@ FSharpPlus.Operators.map<int,string,int [], string []> x x @>
+        let f1 = typeof<int>
+        let f2 = typeof<int>
+        let mapMiArguments = [property.Type.RuntimeType; descriptor.OneOfType :> Type; f1; f2]
+        let mapMiTyped = ProvidedTypeBuilder.MakeGenericMethod(mapMi, mapMiArguments)
+        let unionCase = descriptor.OneOfType |> ProvidedUnion.tryGetUnionCaseByPosition (int property.Position)
+        let parameter1 = <@@ () @@>
+        let parameter2 = <@@ () @@>
+        let expr = Expr.CallUnchecked(mapMiTyped, [parameter1; parameter2])
+        expr
         
     let calljchoice =
         let jchoiceMethodInfo = Expr.methoddefof <@ Newtonsoft.Operators.jchoice<seq<_>,_,_> x @>
         <@@ () @@>
         
     let createJsonObjCodecFromoneOf (descriptor: OneOfDescriptor) =
-    //        static member JsonObjCodec =
-    //            jchoice
-    //                [
-    //                    Rectangle <!> jreq "rectangle" (function Rectangle (x, y) -> Some (x, y) | _ -> None)
-    //                    Circle    <!> jreq "radius"    (function Circle x -> Some x | _ -> None)
-    //                    Prism     <!> jreq "prism"     (function Prism (x, y, z) -> Some (x, y, z) | _ -> None)
-    //                ]
-               ()
+        let maps =
+            descriptor.Properties
+            |> Map.toList
+            |> List.map (fun (_i, propertyDescriptor) -> callmap descriptor propertyDescriptor)
+            
+//        static member JsonObjCodec : ConcreteCodec<list<KeyValuePair<string, JToken>>, list<KeyValuePair<string, JToken>>, test_oneof, test_oneof> =
+//            Operators.jchoice<list<KeyValuePair<string,JToken>>, test_oneof, test_oneof>
+//                [
+//                    FSharpPlus.Operators.map<string,
+//                                             test_oneof,
+//                                             ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list,string,test_oneof>,
+//                                             ConcreteCodec<KeyValuePair<string,JToken> list, KeyValuePair<string,JToken> list,test_oneof,test_oneof> >
+//                                                 First_name (Operators.jreq "First_name" (function First_name x -> Some x | _ -> None))
+//                    FSharpPlus.Operators.map<int,
+//                                             test_oneof,
+//                                             ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list,int,test_oneof>,
+//                                             ConcreteCodec<KeyValuePair<string,JToken> list,KeyValuePair<string,JToken> list,test_oneof,test_oneof>>
+//                                                 Age (Operators.jreq "age" (function Age x -> Some x | _ -> None))
+//                    FSharpPlus.Operators.map<string,
+//                                             test_oneof,
+//                                             ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list,string,test_oneof>,
+//                                             ConcreteCodec<KeyValuePair<string,JToken> list,KeyValuePair<string,JToken> list,test_oneof,test_oneof>>
+//                                                 Last_name (Operators.jreq "last_name" (function Last_name x -> Some (x) | _ -> None))
+//                ]
+        ()
                         
     let createRecordJFieldOpts (typeDescriptor: TypeDescriptor) =
         let recordType = typeDescriptor.Type :> Type
@@ -340,11 +369,23 @@ type test_oneof =
     | Last_name of Last_name : string
     with
         [<ReflectedDefinition>]
-        static member JsonObjCodec = // : ConcreteCodec<list<KeyValuePair<string, JToken>>, list<KeyValuePair<string, JToken>>, test_oneof, test_oneof> =
-            Operators.jchoice//<list<KeyValuePair<string,JToken>>,test_oneof, test_oneof>
-                (seq {
-                    yield FSharpPlus.Operators.map First_name (Operators.jreq "First_name" (function First_name x -> Some x | _ -> None))
-                    yield FSharpPlus.Operators.map Age        (Operators.jreq "age" (function Age x -> Some x | _ -> None))
-                    yield FSharpPlus.Operators.map Last_name  (Operators.jreq "last_name" (function Last_name x -> Some (x) | _ -> None))
-                })
+        static member JsonObjCodec : ConcreteCodec<list<KeyValuePair<string, JToken>>, list<KeyValuePair<string, JToken>>, test_oneof, test_oneof> =
+            Operators.jchoice<list<KeyValuePair<string,JToken>>, test_oneof, test_oneof>
+                [|
+                    FSharpPlus.Operators.map<string,
+                                             test_oneof,
+                                             ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list,string,test_oneof>,
+                                             ConcreteCodec<KeyValuePair<string,JToken> list, KeyValuePair<string,JToken> list,test_oneof,test_oneof> >
+                                                 First_name (Operators.jreq "First_name" (function First_name x -> Some x | _ -> None))
+                    FSharpPlus.Operators.map<int,
+                                             test_oneof,
+                                             ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list,int,test_oneof>,
+                                             ConcreteCodec<KeyValuePair<string,JToken> list,KeyValuePair<string,JToken> list,test_oneof,test_oneof>>
+                                                 Age (Operators.jreq "age" (function Age x -> Some x | _ -> None))
+                    FSharpPlus.Operators.map<string,
+                                             test_oneof,
+                                             ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list,string,test_oneof>,
+                                             ConcreteCodec<KeyValuePair<string,JToken> list,KeyValuePair<string,JToken> list,test_oneof,test_oneof>>
+                                                 Last_name (Operators.jreq "last_name" (function Last_name x -> Some (x) | _ -> None))
+                |]
 #endif
