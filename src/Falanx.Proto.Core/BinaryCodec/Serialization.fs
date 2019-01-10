@@ -123,18 +123,14 @@ module Serialization =
     let serializeUnion buffer this (prop : OneOfDescriptor) =
         match prop.Type.Kind with 
         | Union(_scope, _name, fields) ->
-            
-            let names (number:int) : string =
-                match prop.OneOfType |> ProvidedUnion.tryGetUnionCaseByTag number with
-                | Some unionCase -> unionCase.name
-                | _ -> ""
+
             let oneOfExpr = Expr.PropertyGet(this, prop.CaseProperty)
             
             let unioncasesTests =
                 (prop.OneOfType.UnionCases, prop.Properties)
                 ||> Seq.map2 
                     (fun puc (KeyValue(_k, v)) -> 
-                        let case = Utils.mkUnionCaseInfo puc.declaringType puc.tag names
+                        let case = Utils.mkUnionCaseInfo puc
                         let optionValue = Expr.callStaticGeneric [puc.declaringType] [oneOfExpr] <@@ Option.get x @@>
                         let testExpr = Quotations.Expr.UnionCaseTest(optionValue, case)
                         let item = ProvidedProperty(puc.name, v.Type.UnderlyingType)

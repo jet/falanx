@@ -88,13 +88,10 @@ module Deserialization =
     let private handleOptionalUnion (this: Expr) (unionProp : ProvidedProperty) (propertyDescriptor: PropertyDescriptor) (providedUnion: ProvidedUnion) (field: Expr) =
         let value = deserializeField propertyDescriptor field
         //create a union constructor and feed the deserialised field into it
-        let names (number:int) : string =
-            match providedUnion |> ProvidedUnion.tryGetUnionCaseByTag number with
-            | Some unionCase -> unionCase.name
-            | _ -> ""
+
         match providedUnion |> ProvidedUnion.tryGetUnionCaseByPosition (int propertyDescriptor.Position) with 
         | Some puc ->
-            let unionCaseInfo = mkUnionCaseInfo puc.declaringType puc.tag names
+            let unionCaseInfo = mkUnionCaseInfo puc
             let unionCtor = Expr.NewUnionCaseUnchecked(unionCaseInfo, [value] )
             let wrappedAsOption = 
                 let uinfo = 
