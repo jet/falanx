@@ -305,7 +305,14 @@ namespace Falanx.Machinery
                         | None -> None
             | _ -> None
                                 
-        let mkUnionCaseInfo (typ: Type) (tag: int) (nameMapping: int -> string) =
+        let mkUnionCaseInfo (puc: ProvidedUnionCase) =
+            let nameMapping (number:int) : string =
+                match puc.declaringType |> ProvidedUnion.tryGetUnionCaseByTag number with
+                | Some unionCase -> unionCase.name
+                | _ -> ""
+            
+            let typ = puc.declaringType
+            let tag = puc.tag
             let ucType = typeof<Reflection.UnionCaseInfo>
             let ctor = ucType.GetConstructor(BindingFlags.Instance ||| BindingFlags.NonPublic, null, [| typeof<Type>; typeof<int> |], null)
             let unionCase = ctor.Invoke [| box typ; box tag |] :?> Reflection.UnionCaseInfo
