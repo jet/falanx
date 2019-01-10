@@ -9,11 +9,11 @@ type ProvidedUnionCase =
     { tag : int 
       name : string
       position : int
-      declaringType : Type
+      declaringType : ProvidedUnion
       fields: PropertyInfo list
       unionCaseType: ProvidedTypeDefinition }  
 
-type ProvidedUnion(isTgt: bool, container:TypeContainer, className: string, getBaseType: (unit -> Type option), attrs: TypeAttributes, getEnumUnderlyingType, staticParams, staticParamsApply, backingDataSource, customAttributesData, nonNullable, hideObjectMethods) =
+and ProvidedUnion(isTgt: bool, container:TypeContainer, className: string, getBaseType: (unit -> Type option), attrs: TypeAttributes, getEnumUnderlyingType, staticParams, staticParamsApply, backingDataSource, customAttributesData, nonNullable, hideObjectMethods) =
     inherit ProvidedTypeDefinition(isTgt, container, className, getBaseType, attrs,  getEnumUnderlyingType, staticParams, staticParamsApply, backingDataSource, customAttributesData, nonNullable, hideObjectMethods)
     let tagsType =
         let tags = ProvidedTypeDefinition("Tags", Some typeof<obj>, isErased = false)
@@ -133,12 +133,22 @@ type ProvidedRecord(isTgt: bool, container:TypeContainer, className: string, get
         |> Array.toList
 
 module ProvidedUnion =
-    let inline private apply (uc: ProvidedUnion) f = uc.UnionCases |> Seq.tryFind f
+    let inline private tryApply (uc: ProvidedUnion) f = uc.UnionCases |> Seq.tryFind f
+    let inline private apply (uc: ProvidedUnion) f = uc.UnionCases |> Seq.find f
     let tryGetUnionCaseByTag tag (uc:ProvidedUnion) =
-        apply uc (fun uc -> uc.tag = tag)
+        tryApply uc (fun uc -> uc.tag = tag)
         
     let tryGetUnionCaseByName (name : string) (uc:ProvidedUnion) =
-        apply uc (fun uc -> uc.name = name)
+        tryApply uc (fun uc -> uc.name = name)
         
     let tryGetUnionCaseByPosition position (uc:ProvidedUnion) =
+        tryApply uc (fun uc -> uc.position = position)
+        
+    let getUnionCaseByTag tag (uc:ProvidedUnion) =
+        apply uc (fun uc -> uc.tag = tag)
+        
+    let getUnionCaseByName (name : string) (uc:ProvidedUnion) =
+        apply uc (fun uc -> uc.name = name)
+        
+    let getUnionCaseByPosition position (uc:ProvidedUnion) =
         apply uc (fun uc -> uc.position = position)
