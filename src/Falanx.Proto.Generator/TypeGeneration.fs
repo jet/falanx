@@ -295,6 +295,9 @@ module TypeGeneration =
                         providedType.AddMember serializedLengthMethod
                         providedType.DefineMethodOverride(serializedLengthMethod, typeof<IMessage>.GetMethod("SerializedLength"))
                     | Json ->
+                        #if DEBUG
+                        test_oneof.PrintDebug()
+                        #endif
                         let jsonObjCodec = JsonCodec.createJsonObjCodec typeInfo
                         providedType.AddMember jsonObjCodec
                         )

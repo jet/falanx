@@ -242,14 +242,46 @@ module JsonCodec =
                     Expr.CallUnchecked(jfieldMethodInfoTyped, [fieldName; getter; Expr.Var decoder; Expr.Var encoder]))))
     
     let callmap (descriptor: OneOfDescriptor) (property: PropertyDescriptor) =
-        let mapMi = Expr.methoddefof <@ FSharpPlus.Operators.map<int,string,int [], string []> x x @>
-        let f1 = typeof<int>
-        let f2 = typeof<int>
-        let mapMiArguments = [property.Type.RuntimeType; descriptor.OneOfType :> Type; f1; f2]
+        let mapMi = Expr.methoddefof <@ FSharpPlus.Operators.map<int, string, int [], string []> x x @>
+        
+        let unionCase =
+            descriptor.OneOfType
+            |> ProvidedUnion.tryGetUnionCaseByPosition (int property.Position)
+            
+            
+        let propertyType = property.Type.RuntimeType
+        let unionType = descriptor.OneOfType :> Type
+            
+        let f1 =
+        //ConcreteCodec<KeyValuePair<string, JsonValue> list, KeyValuePair<string, JsonValue> list, propertyType, unionType>
+            let cc = typedefof<ConcreteCodec<_,_,_,_>>
+            let keyPairs = typeof<KeyValuePair<string, JsonValue> list>
+            ProvidedTypeBuilder.MakeGenericType(cc, [keyPairs; keyPairs; propertyType; unionType])
+
+        let f2 =
+        //ConcreteCodec<KeyValuePair<string, JToken> list, KeyValuePair<string, JToken> list, unionType, unionType>
+            let cc = typedefof<ConcreteCodec<_,_,_,_>>
+            let keyPairs = typeof<KeyValuePair<string, JToken> list>
+            ProvidedTypeBuilder.MakeGenericType(cc, [keyPairs; keyPairs; unionType; unionType])
+        
+        let mapMiArguments = [propertyType; unionType; f1; f2]
         let mapMiTyped = ProvidedTypeBuilder.MakeGenericMethod(mapMi, mapMiArguments)
-        let unionCase = descriptor.OneOfType |> ProvidedUnion.tryGetUnionCaseByPosition (int property.Position)
-        let parameter1 = <@@ () @@>
-        let parameter2 = <@@ () @@>
+
+        let parameter1 =
+        //First_name
+        //Lambda (arg0, NewUnionCase (First_name, arg0))
+            match unionCase with 
+            | Some puc ->
+                let v = Var("arg0", propertyType)
+                let unionCaseInfo = Utils.mkUnionCaseInfo puc
+                let lamb = Expr.Lambda(v, Expr.NewUnionCaseUnchecked(unionCaseInfo, [Expr.Var(v)] ))
+                lamb
+            | None ->
+                failwithf "A union case was not found for: %s" property.ProvidedProperty.Name
+        let parameter2 =
+        //(Operators.jreq "First_name" (function First_name x -> Some x | _ -> None) )
+            callJfield  
+            <@@ () @@>
         let expr = Expr.CallUnchecked(mapMiTyped, [parameter1; parameter2])
         expr
         
@@ -388,4 +420,10 @@ type test_oneof =
                                              ConcreteCodec<KeyValuePair<string,JToken> list,KeyValuePair<string,JToken> list,test_oneof,test_oneof>>
                                                  Last_name (Operators.jreq "last_name" (function Last_name x -> Some (x) | _ -> None))
                 |]
+                
+        static member PrintDebug() =
+            Expr.propertyof <@ test_oneof.JsonObjCodec @>
+            |> function x -> x.GetMethod
+            |> Expr.TryGetReflectedDefinition
+            |> Option.iter (Expr.quotationsTypePrinter >> ignore)
 #endif
