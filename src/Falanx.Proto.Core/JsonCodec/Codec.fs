@@ -242,13 +242,18 @@ module JsonCodec =
                     Expr.CallUnchecked(jfieldMethodInfoTyped, [fieldName; getter; Expr.Var decoder; Expr.Var encoder]))))
     
     let callmap (descriptor: OneOfDescriptor) (property: PropertyDescriptor) =
-        let mapMi = Expr.methoddefof <@ FSharpPlus.Operators.map<int, string, int [], string []> x x @>
+        
         
         let unionCase =
-            descriptor.OneOfType
-            |> ProvidedUnion.tryGetUnionCaseByPosition (int property.Position)
+            let case =
+                descriptor.OneOfType
+                |> ProvidedUnion.tryGetUnionCaseByPosition (int property.Position)
+            match case with
+            | Some case -> case
+            | None -> failwithf "A union case was not found for: %s" property.ProvidedProperty.Name 
             
-            
+        let mapMi = Expr.methoddefof <@ FSharpPlus.Operators.map<int, string, int [], string []> x x @>
+        
         let propertyType = property.Type.RuntimeType
         let unionType = descriptor.OneOfType :> Type
             
@@ -270,19 +275,48 @@ module JsonCodec =
         let parameter1 =
         //First_name
         //Lambda (arg0, NewUnionCase (First_name, arg0))
-            match unionCase with 
-            | Some puc ->
-                let v = Var("arg0", propertyType)
-                let unionCaseInfo = Utils.mkUnionCaseInfo puc
-                let lamb = Expr.Lambda(v, Expr.NewUnionCaseUnchecked(unionCaseInfo, [Expr.Var(v)] ))
-                lamb
-            | None ->
-                failwithf "A union case was not found for: %s" property.ProvidedProperty.Name
+            let v = Var("arg0", propertyType)
+            let unionCaseInfo = Utils.mkUnionCaseInfo unionCase
+            let lambda = Expr.Lambda(v, Expr.NewUnionCaseUnchecked(unionCaseInfo, [Expr.Var(v)] ))
+            lambda
+
         let parameter2 =
         //(Operators.jreq "First_name" (function First_name x -> Some x | _ -> None) )
-            callJfield  
+        //Call (None, jreq,
+        //  [Value ("First_name"),
+        //   Lambda (_arg1,
+        //           IfThenElse (UnionCaseTest (_arg1, First_name),
+        //                       Let (x,
+        //                            PropertyGet (Some (_arg1), First_name, []),
+        //                            NewUnionCase (Some, x)),
+        //
+        //                       NewUnionCase (None)))])
+
+            let ifThenElse =
+                let none, some =
+                    let optionType = typedefof<_ option>
+                    let cases = Reflection.FSharpType.GetUnionCases(optionType)
+                    let a = cases.[0]
+                    let b = cases.[1]
+                    if a.Name = "None" then a,b
+                    else b,a
+                 
+                let arg1 = Expr.Var(Var("arg1", unionType))
+                
+                let caseTest =
+                    let unionCaseInfo = Utils.mkUnionCaseInfo unionCase
+                    Expr.UnionCaseTest(arg1, unionCaseInfo)
+                    
+                let thenExpr =
+                    let xVar = Var("x", unionType)
+                    let xx = Expr.Let(xVar, Expr.PropertyGet(arg1, property.ProvidedProperty), Expr.Var(xVar))
+                    Expr.NewUnionCase(some, [xx])
+                    
+                let elseExpr =
+                    Expr.NewUnionCase(none, [])
+                Expr.IfThenElse(caseTest, thenExpr, elseExpr)
             <@@ () @@>
-        let expr = Expr.CallUnchecked(mapMiTyped, [parameter1; parameter2])
+        let expr = Expr.CallUnchecked(mapMiTyped, [ <@@ () @@>; <@@ () @@>])
         expr
         
     let calljchoice =
@@ -408,17 +442,17 @@ type test_oneof =
                                              test_oneof,
                                              ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list,string,test_oneof>,
                                              ConcreteCodec<KeyValuePair<string,JToken> list, KeyValuePair<string,JToken> list,test_oneof,test_oneof> >
-                                                 First_name (Operators.jreq "First_name" (function First_name x -> Some x | _ -> None))
+                                                 First_name (Operators.jreq<test_oneof, string> "First_name" (function First_name x -> Some x | _ -> None))
                     FSharpPlus.Operators.map<int,
                                              test_oneof,
                                              ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list,int,test_oneof>,
                                              ConcreteCodec<KeyValuePair<string,JToken> list,KeyValuePair<string,JToken> list,test_oneof,test_oneof>>
-                                                 Age (Operators.jreq "age" (function Age x -> Some x | _ -> None))
+                                                 Age (Operators.jreq<test_oneof, int> "age" (function Age x -> Some x | _ -> None))
                     FSharpPlus.Operators.map<string,
                                              test_oneof,
                                              ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list,string,test_oneof>,
                                              ConcreteCodec<KeyValuePair<string,JToken> list,KeyValuePair<string,JToken> list,test_oneof,test_oneof>>
-                                                 Last_name (Operators.jreq "last_name" (function Last_name x -> Some (x) | _ -> None))
+                                                 Last_name (Operators.jreq<test_oneof, string> "last_name" (function Last_name x -> Some (x) | _ -> None))
                 |]
                 
         static member PrintDebug() =
