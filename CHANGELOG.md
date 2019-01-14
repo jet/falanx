@@ -8,6 +8,9 @@ The `Unreleased` section name is replaced by the expected version of next releas
 <a name="v0.5.0"></a>
 ## [0.5.0]
 
+### Fixed
+- fix failure if the generated file output directory doesnt exists
+
 <a name="v0.4.2"></a>
 ## [0.4.2] - 2019-01-14
 

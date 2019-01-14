@@ -235,6 +235,20 @@ let tests pkgUnderTestVersion =
 
         Expect.isTrue (text |> Array.exists isHeaderLine) (sprintf "exists autogen header, but was %A" text)
       )
+
+      testCase |> withLog "create output dir" (fun _ fs ->
+
+        let testDir = inDir fs "create_out_dir"
+
+        let protoFile = testDir/"bundle.proto"
+
+        fs.cp (ExamplesDir/``sample6 bundle``.ExampleDir/``sample6 bundle``.ProtoFile) protoFile
+
+        let outFile = testDir/"non"/"existing dir"/"the.bundle.fs"
+
+        falanx fs ["--inputfile"; protoFile; "--outputfile"; outFile]
+        |> checkExitCodeZero
+      )
     ]
 
   let buildExampleWithTemplate fs template sample testDir =

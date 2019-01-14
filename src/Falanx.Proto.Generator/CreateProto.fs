@@ -11,6 +11,7 @@ module Proto =
     open FsAst
     open ProviderImplementation.ProvidedTypes
     open System.Text.RegularExpressions
+    open System.IO
     
     let createProvidedTypes protoDef defaultnamespace (codecs: Codec Set) =
         let protoFile = ProtoFile.fromString protoDef
@@ -154,6 +155,10 @@ module Proto =
               formattedCode ]
             |> String.concat (Environment.NewLine)
             |> normalizeBindingNames // make text deterministic
+
+        let outDir = Path.GetDirectoryName(outputFile)
+        if not (Directory.Exists(outDir)) then
+            Directory.CreateDirectory(outDir) |> ignore
 
         IO.File.WriteAllText(outputFile, content)
         #if DEBUG
