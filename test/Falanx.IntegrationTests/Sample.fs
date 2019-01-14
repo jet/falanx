@@ -567,6 +567,35 @@ let tests pkgUnderTestVersion =
         cmd |> checkExitNonCodeZero
       )
 
+      testCase |> withLog "check regen is deterministic" (fun _ fs ->
+        let testDir = inDir fs "sdkint_deterministic"
+
+        testDir
+        |> copyExampleWithTemplate fs ``template3 binary+json`` ``sample6 bundle``
+
+        let projPath = testDir/ (``template3 binary+json``.ProjectFile)
+
+        let outputFile = sprintf "%s.fs" (testDir/``template3 binary+json``.ProtoFile)
+
+        fs.cd testDir
+
+        let cmd, lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
+
+        Expect.isTrue (File.Exists outputFile) "check invocation args"
+
+        let firstRun = File.ReadAllText(outputFile)
+
+        fs.rm_rf outputFile // force regen
+
+        let cmd, lines = dotnetBuildWithFalanxArgsMock fs testDir projPath
+
+        Expect.isTrue (File.Exists outputFile) "check invocation args"
+
+        let secondRun = File.ReadAllText(outputFile)
+
+        Expect.equal firstRun secondRun "check generated content is deterministic"
+      )
+
     ]
 
   let interop =
