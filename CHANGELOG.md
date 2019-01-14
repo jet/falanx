@@ -8,6 +8,12 @@ The `Unreleased` section name is replaced by the expected version of next releas
 <a name="v0.5.0"></a>
 ## [0.5.0]
 
+<a name="v0.4.2"></a>
+## [0.4.2] - 2019-01-14
+
+### Fixed
+- generated files are deterministic [#121](https://github.com/jet/falanx/issues/121)
+
 <a name="v0.4.1"></a>
 ## [0.4.1] - 2019-01-07
 
