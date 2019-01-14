@@ -250,4 +250,4 @@ target/
 *.proto.fs
 /src/Falanx.Templates/*/.template.config/template.json
 /bin/
-/test/Falanx.Tests/my.bundle.fs
+/test/Falanx.Tests/Models/my.bundle.fs

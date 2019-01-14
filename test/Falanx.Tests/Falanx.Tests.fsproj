@@ -8,7 +8,7 @@
     <ProtoFile Include="schemas\falanx_test.proto" />
     <ProtoFile Include="schemas\bundle_with_package.proto" />
     <ProtoFile Include="schemas\bundle_with_package2.proto">
-      <OutputPath>my.bundle.fs</OutputPath>
+      <OutputPath>Models\my.bundle.fs</OutputPath>
     </ProtoFile>
   </ItemGroup>
   <ItemGroup>
