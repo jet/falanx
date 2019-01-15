@@ -295,6 +295,7 @@ module JsonCodec =
             let ifThenElse =
                 let none, some =
                     let optionType = typedefof<_ option>
+                    let optionType = ProvidedTypeBuilder.MakeGenericType(optionType, [propertyType])
                     let cases = Reflection.FSharpType.GetUnionCases(optionType)
                     let a = cases.[0]
                     let b = cases.[1]
@@ -308,8 +309,13 @@ module JsonCodec =
                     Expr.UnionCaseTest(arg1, unionCaseInfo)
                     
                 let thenExpr =
-                    let xVar = Var("x", unionType)
-                    let xx = Expr.Let(xVar, Expr.PropertyGet(arg1, property.ProvidedProperty), Expr.Var(xVar))
+                    let xVar = Var("x", propertyType)
+                    let xx = Expr.Let(xVar, Expr.PropertyGetUnchecked(arg1, property.ProvidedProperty), Expr.Var(xVar))
+                    
+                    //Type mismatch when building 'sum': incorrect argument type for an F# union.
+                    //Expected 'T', but received type 'System.String'.
+                    //Parameter name: receivedType
+
                     Expr.NewUnionCase(some, [xx])
                     
                 let elseExpr =
