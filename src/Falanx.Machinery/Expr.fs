@@ -16,13 +16,18 @@ namespace Falanx.Machinery
         let cleanUpTypeName (str:string) =
             let sb = Text.StringBuilder(str)
             sb.Replace("System.", "")
-              .Replace("Microsoft.FSharp.Core.", "")
+              .Replace("Microsoft.", "")
+              .Replace("FSharp.Core.", "")
               .Replace("Collections.Generic.","")
               .Replace("Falanx.JsonCodec.", "")
-              .Replace("Newtonsoft.Json.Linq.", "") 
+              .Replace("Newtonsoft.Json.Linq.", "")
+              .Replace("`4", "")
               .Replace("`2", "")
               .Replace("`1", "")
-              .Replace("FSharp", "")
+              .Replace("FSharp.Collections.", "")
+              .Replace("Fleece.Newtonsoft+", "")
+              .Replace("Falanx.Proto.Core.", "")
+              
               .Replace("Int32", "int") |> ignore
             sb.ToString()
             
