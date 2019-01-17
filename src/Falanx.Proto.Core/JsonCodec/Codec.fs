@@ -241,9 +241,18 @@ module JsonCodec =
                 Expr.Let(encoder, Expr.TupleGet(Expr.Var codec, 1),
                     Expr.CallUnchecked(jfieldMethodInfoTyped, [fieldName; getter; Expr.Var decoder; Expr.Var encoder]))))
     
+    let callJReq (descriptor: OneOfDescriptor) (property: PropertyDescriptor) fieldName codec =
+        //(Operators.jreq "First_name" (function First_name x -> Some x | _ -> None))
+        let jReqMi = Expr.methoddefof <@ Operators.jreq<string,string> x x @>
+        let propertyType = property.Type.RuntimeType
+        let unionType = descriptor.OneOfType :> Type
+        
+        let jReqArguments = [unionType; propertyType]
+        let jReqTyped = ProvidedTypeBuilder.MakeGenericMethod(jReqMi, jReqArguments)
+        Expr.CallUnchecked(jReqTyped, [fieldName; codec])
+    
     let callmap (descriptor: OneOfDescriptor) (property: PropertyDescriptor) =
-        
-        
+
         let unionCase =
             let case =
                 descriptor.OneOfType
@@ -286,43 +295,38 @@ module JsonCodec =
         //  [Value ("First_name"),
         //   Lambda (_arg1,
         //           IfThenElse (UnionCaseTest (_arg1, First_name),
-        //                       Let (x,
-        //                            PropertyGet (Some (_arg1), First_name, []),
-        //                            NewUnionCase (Some, x)),
-        //
+        //                       Let (x, PropertyGet (Some (_arg1), First_name, []), NewUnionCase (Some, x)),
         //                       NewUnionCase (None)))])
-
+        
+            let arg1 = Var("arg1", unionType)
             let ifThenElse =
                 let none, some =
                     let optionType = typedefof<_ option>
                     let optionType = ProvidedTypeBuilder.MakeGenericType(optionType, [propertyType])
                     let cases = Reflection.FSharpType.GetUnionCases(optionType)
-                    let a = cases.[0]
-                    let b = cases.[1]
-                    if a.Name = "None" then a,b
-                    else b,a
+                    let a, b  = cases.[0], cases.[1]
+                    if a.Name = "None" then a,b else b,a
                  
-                let arg1 = Expr.Var(Var("arg1", unionType))
+                let arg1Expr = Expr.Var(arg1)
                 
                 let caseTest =
                     let unionCaseInfo = Utils.mkUnionCaseInfo unionCase
-                    Expr.UnionCaseTest(arg1, unionCaseInfo)
+                    Expr.UnionCaseTest(arg1Expr, unionCaseInfo)
                     
                 let thenExpr =
                     let xVar = Var("x", propertyType)
-                    let xx = Expr.Let(xVar, Expr.PropertyGetUnchecked(arg1, property.ProvidedProperty), Expr.Var(xVar))
-                    
-                    //Type mismatch when building 'sum': incorrect argument type for an F# union.
-                    //Expected 'T', but received type 'System.String'.
-                    //Parameter name: receivedType
-
-                    Expr.NewUnionCase(some, [xx])
+                    Expr.Let(xVar, Expr.PropertyGetUnchecked(arg1Expr, property.ProvidedProperty), Expr.NewUnionCase(some, [Expr.Var(xVar)]))
                     
                 let elseExpr =
                     Expr.NewUnionCase(none, [])
                 Expr.IfThenElse(caseTest, thenExpr, elseExpr)
-            <@@ () @@>
-        let expr = Expr.CallUnchecked(mapMiTyped, [ <@@ () @@>; <@@ () @@>])
+                
+            let lambda = Expr.Lambda(arg1, ifThenElse) 
+            let fieldName = Expr.Value property.ProvidedProperty.Name
+            let call = callJReq descriptor property fieldName lambda
+            call
+            
+        let expr = Expr.CallUnchecked(mapMiTyped, [ parameter1; parameter2])
         expr
         
     let calljchoice =
