@@ -8,6 +8,7 @@ module Reflection =
 //thgis module is cloned from FSharp.Core, the only way to control some aspects of reflection on
 // provided types safely is to tweak the implementation here.
     module internal Impl =
+        let instancePropertyFlags = BindingFlags.Instance
         let inline checkNonNull argName (v: 'T) = 
             match box v with 
             | null -> nullArg argName 
@@ -121,10 +122,85 @@ module Reflection =
               get typ 
             else typ
             
+        let maxTuple = 8
+        
+        // Which field holds the nested tuple?
+        let tupleEncField = maxTuple - 1
+        
+        let simpleTupleNames = [|
+            "Tuple`1";      "Tuple`2";      "Tuple`3";
+            "Tuple`4";      "Tuple`5";      "Tuple`6";
+            "Tuple`7";      "Tuple`8";      
+            "ValueTuple`1"; "ValueTuple`2"; "ValueTuple`3";
+            "ValueTuple`4"; "ValueTuple`5"; "ValueTuple`6";
+            "ValueTuple`7"; "ValueTuple`8"; |]
+            
+        let isTupleType (typ:Type) = 
+            // We need to be careful that we only rely typ.IsGenericType, typ.Namespace and typ.Name here.
+            //
+            // Historically the FSharp.Core reflection utilities get used on implementations of 
+            // System.Type that don't have functionality such as .IsEnum and .FullName fully implemented.
+            // This happens particularly over TypeBuilderInstantiation types in the ProvideTypes implementation of System.TYpe
+            // used in F# type providers.
+            typ.IsGenericType &&
+            typ.Namespace = "System" && 
+            simpleTupleNames |> Seq.exists typ.Name.StartsWith
+            
+        let orderTupleProperties (props:PropertyInfo[]) =
+            // The tuple properties are of the form:
+            //   Item1
+            //   ..
+            //   Item1, Item2, ..., Item<maxTuple-1>
+            //   Item1, Item2, ..., Item<maxTuple-1>, Rest
+            // The PropertyInfo may not come back in order, so ensure ordering here.
+    #if !NETSTANDARD1_6
+            assert(maxTuple < 10) // Alphasort will only works for upto 9 items: Item1, Item10, Item2, Item3, ..., Item9, Rest
+    #endif
+            let props = props |> Array.sortBy (fun p -> p.Name) // they are not always in alphabetic order
+    #if !NETSTANDARD1_6  
+            assert(props.Length <= maxTuple)
+            assert(let haveNames   = props |> Array.map (fun p -> p.Name)
+                   let expectNames = Array.init props.Length (fun i -> let j = i+1 // index j = 1,2,..,props.Length <= maxTuple
+                                                                       if   j<maxTuple then "Item" + string j
+                                                                       elif j=maxTuple then "Rest"
+                                                                       else (assert false; "")) // dead code under prior assert, props.Length <= maxTuple
+                   haveNames = expectNames)
+    #endif
+            props
+            
+        let getTupleReaderInfo (typ:Type,index:int) =
+            if index < 0 then invalidArg "index" (sprintf "tuple: %s Index: %i Out Of Range" typ.FullName index)
+    
+            let get index =
+                if typ.IsValueType then
+                    let props = typ.GetProperties(instancePropertyFlags ||| BindingFlags.Public) |> orderTupleProperties
+                    if index >= props.Length then invalidArg "index" (sprintf "tuple: %s Index: %i Out Of Range" typ.FullName index)
+                    props.[index]
+                else
+                    let typ =
+                        match typ.GetType() with
+                        | t when t.Name.Contains "TypeBuilderInstantiation" ->
+                            typ.GetGenericTypeDefinition()
+                        | _ -> typ
+                    let props = typ.GetProperties(instancePropertyFlags ||| BindingFlags.Public) |> orderTupleProperties
+                    if index >= props.Length then invalidArg "index" (sprintf "tuple: %s Index: %i Out Of Range" typ.FullName index)
+                    props.[index]
+    
+            if index < tupleEncField then
+                get index, None
+            else
+                let etys = typ.GetGenericArguments()
+                get tupleEncField, Some(etys.[tupleEncField],index-(maxTuple-1))
+            
         let getFunctionTypeInfo (typ:Type) =
           if not (isFunctionType typ) then invalidArg "typ" (sprintf "%s is not a function type" typ.FullName)
           let tyargs = typ.GetGenericArguments()
           tyargs.[0], tyargs.[1]
+          
+        let checkTupleType(argName,(tupleType:Type)) =
+            checkNonNull argName tupleType;
+            if not (isTupleType tupleType) then invalidArg argName (sprintf "%s is not a tuple type" tupleType.FullName)
+
 
     type BindingFlags with
         static member AllInstance = BindingFlags.Public ||| BindingFlags.Instance ||| BindingFlags.NonPublic     
@@ -184,3 +260,9 @@ module Reflection =
             Impl.checkNonNull "functionType" functionType
             let functionType = Impl.getTypeOfReprType (functionType ,BindingFlags.Public ||| BindingFlags.NonPublic)
             Impl.getFunctionTypeInfo functionType
+            
+    type FSharpValueSafe =
+        
+        static member PreComputeTuplePropertyInfo(tupleType:Type,index:int) =
+            Impl.checkTupleType("tupleType",tupleType) 
+            Impl.getTupleReaderInfo (tupleType,index)
