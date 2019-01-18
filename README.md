@@ -66,7 +66,7 @@ More info in [example\README.md](example/README.md)
 
 More info in [docs/developer_guide.md](docs/developer_guide.md)
 
-Use the `sln/Falanx.sln` solution for development, or directly the projects with .NET Core Sdk (`dotnet`).
+Use the `src/Falanx.sln` solution for development, or directly the projects with .NET Core Sdk (`dotnet`).
 
 Projects:
 
