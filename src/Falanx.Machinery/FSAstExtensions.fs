@@ -143,8 +143,7 @@ namespace Falanx.Machinery
                     
                 let properties =
                     properties
-                    |> Seq.map (fun pp ->
-                                    SynMemberDefn.CreateFromProvidedProperty(pp, ?ommitEnclosingType = ommitEnclosingType, ?knownNamespaces = knownNamespaces))
+                    |> Seq.map (fun pp -> SynMemberDefn.CreateFromProvidedProperty(pp, ?ommitEnclosingType = ommitEnclosingType, ?knownNamespaces = knownNamespaces))
                     
                 let attributes =
                     let cliMutableAttribute =
@@ -182,12 +181,23 @@ namespace Falanx.Machinery
                                       else Some(SynMemberDefn.CreateFromProvidedMethod(pm, ?ommitEnclosingType = ommitEnclosingType, ?knownNamespaces = knownNamespaces))
                                   | _ -> None)
                     |> Seq.toList
+                    
+                let providedProperties =
+                    let props =
+                        pu.GetProperties()
+                        |> Array.choose (function :? ProvidedProperty as pp -> Some pp | _ -> None )
+                    props
+                    
+                let properties =
+                    providedProperties
+                    |> Seq.map (fun pp -> SynMemberDefn.CreateFromProvidedProperty(pp, ?ommitEnclosingType = ommitEnclosingType, ?knownNamespaces = knownNamespaces))
         
                 SynModuleDecl.CreateSimpleType (
                     { SynComponentInfoRcd.Create (Ident.CreateLong pu.Name) with
                           XmlDoc = PreXmlDoc.Create (ProvidedTypeDefinition.getXmlDocs pu) },
                     SynTypeDefnSimpleReprUnionRcd.Create(unionCases) |> SynTypeDefnSimpleReprRcd.Union,
-                    members = [yield! staticMethods]
+                    members = [ yield! properties
+                                yield! staticMethods ]
                 )
 
             static member CreateEnum(pe: ProvidedTypeDefinition) =
