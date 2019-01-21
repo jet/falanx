@@ -246,7 +246,6 @@ module TypeGeneration =
                      if codecs.Contains Json then
                          let jsonObjCodec = JsonCodec.createJsonObjCodecFromoneOf oneOfDescriptor
                          oneOfDescriptor.OneOfType.AddMember jsonObjCodec
-                         ()
                      )
 
              let properties =
