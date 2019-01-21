@@ -245,10 +245,9 @@ module TypeGeneration =
                      //also add json static property for json codec if present
                      if codecs.Contains Json then
                          let jsonObjCodec = JsonCodec.createJsonObjCodecFromoneOf oneOfDescriptor
-                         //TODO
-                         //oneOfDescriptor.OneOfType.AddMember jsonObjCodec
+                         oneOfDescriptor.OneOfType.AddMember jsonObjCodec
                          ()
-                          )
+                     )
 
              let properties =
                  message.Fields
