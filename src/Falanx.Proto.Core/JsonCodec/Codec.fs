@@ -419,15 +419,15 @@ module JsonCodec =
         let foldedFunctions = allPipedFunctions |> List.reduce callPipeRight                                   
 
         let ctast, ctpt = Quotations.ToAst( foldedFunctions, knownNamespaces = knownNamespaces )
- #if DEBUG
+#if DEBUG
         let code = Fantomas.CodeFormatter.FormatAST(ctpt, "test", None, Fantomas.FormatConfig.FormatConfig.Default)
 #endif                       
 
         let signatureType =
-            let def = typedefof<Codec<IReadOnlyDictionary<string,JsonValue>,_>>
+            let def = typedefof<Codec<_,_>>
             def.MakeGenericType [|typeof<IReadOnlyDictionary<string,JsonValue>>; typeDescriptor.Type :> _ |]
             
-        let createJsonObjCodec = ProvidedProperty("JsonObjCodec",signatureType, getterCode = (fun args -> foldedFunctions), isStatic = true )
+        let createJsonObjCodec = ProvidedProperty("JsonObjCodec", signatureType, getterCode = (fun args -> foldedFunctions), isStatic = true )
         createJsonObjCodec
  
 #if DEBUG
