@@ -250,7 +250,7 @@ module JsonCodec =
         let jReqArguments = [unionType; propertyType]
         let jReqTyped = ProvidedTypeBuilder.MakeGenericMethod(jReqMi, jReqArguments)
         Expr.CallUnchecked(jReqTyped, [fieldName; codec])
-    
+        
     let callmap (descriptor: OneOfDescriptor) (property: PropertyDescriptor) =
 
         let unionCase =
@@ -329,9 +329,23 @@ module JsonCodec =
         let expr = Expr.CallUnchecked(mapMiTyped, [ parameter1; parameter2])
         expr
         
-    let calljchoice =
+    let calljchoice (descriptor: OneOfDescriptor) elements =
+        //Operators.jchoice< list<KeyValuePair<string,JToken>>, unionType, unionType>
         let jchoiceMethodInfo = Expr.methoddefof <@ Newtonsoft.Operators.jchoice<seq<_>,_,_> x @>
-        <@@ () @@>
+        
+        let unionType = descriptor.OneOfType :> Type
+        
+        let jchoiceArguments = [typeof<KeyValuePair<string,JToken> list>; unionType; unionType]
+        let jchoiceMethodInfoTyped = ProvidedTypeBuilder.MakeGenericMethod(jchoiceMethodInfo, jchoiceArguments)
+        //ConcreteCodec<KeyValuePair<string,JToken> list,
+        //              KeyValuePair<string,JToken> list,
+        //              unionType,
+        //              unionType>
+               
+        let cc = typedefof<ConcreteCodec<_,_,_,_>>
+        let keyPairType = typeof<KeyValuePair<string, JsonValue> list>
+        let elementType = ProvidedTypeBuilder.MakeGenericType(cc, [keyPairType; keyPairType; unionType; unionType])
+        Expr.NewArray(elementType, elements)
         
     let createJsonObjCodecFromoneOf (descriptor: OneOfDescriptor) =
         let maps =
@@ -339,26 +353,18 @@ module JsonCodec =
             |> Map.toList
             |> List.map (fun (_i, propertyDescriptor) -> callmap descriptor propertyDescriptor)
             
-//        static member JsonObjCodec : ConcreteCodec<list<KeyValuePair<string, JToken>>, list<KeyValuePair<string, JToken>>, test_oneof, test_oneof> =
-//            Operators.jchoice<list<KeyValuePair<string,JToken>>, test_oneof, test_oneof>
-//                [
-//                    FSharpPlus.Operators.map<string,
-//                                             test_oneof,
-//                                             ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list,string,test_oneof>,
-//                                             ConcreteCodec<KeyValuePair<string,JToken> list, KeyValuePair<string,JToken> list,test_oneof,test_oneof> >
-//                                                 First_name (Operators.jreq "First_name" (function First_name x -> Some x | _ -> None))
-//                    FSharpPlus.Operators.map<int,
-//                                             test_oneof,
-//                                             ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list,int,test_oneof>,
-//                                             ConcreteCodec<KeyValuePair<string,JToken> list,KeyValuePair<string,JToken> list,test_oneof,test_oneof>>
-//                                                 Age (Operators.jreq "age" (function Age x -> Some x | _ -> None))
-//                    FSharpPlus.Operators.map<string,
-//                                             test_oneof,
-//                                             ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list,string,test_oneof>,
-//                                             ConcreteCodec<KeyValuePair<string,JToken> list,KeyValuePair<string,JToken> list,test_oneof,test_oneof>>
-//                                                 Last_name (Operators.jreq "last_name" (function Last_name x -> Some (x) | _ -> None))
-//                ]
-        ()
+        let jchoice = calljchoice descriptor maps
+        let signatureType =
+            //ConcreteCodec<list<KeyValuePair<string, JToken>>, list<KeyValuePair<string, JToken>>, unionType, unionType>
+            let untypedConcreteCodec = typedefof<ConcreteCodec<_,_,_,_>>
+            let unionType = descriptor.OneOfType :> Type
+            let arguments = [typeof<KeyValuePair<string,JToken> list>; typeof<KeyValuePair<string,JToken> list>; unionType; unionType]
+            let typedConcreteCodec = ProvidedTypeBuilder.MakeGenericType(untypedConcreteCodec, arguments)
+            typedConcreteCodec
+            
+        let createJsonObjCodec = ProvidedProperty("JsonObjCodec", signatureType, getterCode = (fun args -> jchoice), isStatic = true )
+        createJsonObjCodec
+        
                         
     let createRecordJFieldOpts (typeDescriptor: TypeDescriptor) =
         let recordType = typeDescriptor.Type :> Type
