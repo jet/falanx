@@ -7,6 +7,7 @@ module Proto =
     open Falanx.Proto.Generator.TypeGeneration
     open System
     open Microsoft.FSharp.Compiler.Ast
+    open Microsoft.FSharp.Compiler.Range
     open Froto.Parser.ClassModel
     open FsAst
     open ProviderImplementation.ProvidedTypes
@@ -76,8 +77,7 @@ module Proto =
 
         let nowarn =
             let createHashDirective directive values  =
-                SynModuleDecl.HashDirective (ParsedHashDirective (directive, values, Microsoft.FSharp.Compiler.Range.range.Zero), Microsoft.FSharp.Compiler.Range.range.Zero)
-
+                SynModuleDecl.HashDirective (ParsedHashDirective (directive, values, range.Zero), range.Zero)
             createHashDirective "nowarn" ["686"]
 
         let synTypes =   
