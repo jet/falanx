@@ -332,16 +332,11 @@ module JsonCodec =
     let calljchoice (descriptor: OneOfDescriptor) elements =
         //Operators.jchoice< list<KeyValuePair<string,JToken>>, unionType, unionType>
         let jchoiceMethodInfo = Expr.methoddefof <@ Newtonsoft.Operators.jchoice<seq<_>,_,_> x @>
-        
         let unionType = descriptor.OneOfType :> Type
-        
         let jchoiceArguments = [typeof<KeyValuePair<string,JToken> list>; unionType; unionType]
         let jchoiceMethodInfoTyped = ProvidedTypeBuilder.MakeGenericMethod(jchoiceMethodInfo, jchoiceArguments)
-        //ConcreteCodec<KeyValuePair<string,JToken> list,
-        //              KeyValuePair<string,JToken> list,
-        //              unionType,
-        //              unionType>
-               
+        
+        //ConcreteCodec<KeyValuePair<string,JToken> list, KeyValuePair<string,JToken> list, unionType, unionType>    
         let cc = typedefof<ConcreteCodec<_,_,_,_>>
         let keyPairType = typeof<KeyValuePair<string, JsonValue> list>
         let elementType = ProvidedTypeBuilder.MakeGenericType(cc, [keyPairType; keyPairType; unionType; unionType])
@@ -362,8 +357,8 @@ module JsonCodec =
             let typedConcreteCodec = ProvidedTypeBuilder.MakeGenericType(untypedConcreteCodec, arguments)
             typedConcreteCodec
             
-        let createJsonObjCodec = ProvidedProperty("JsonObjCodec", signatureType, getterCode = (fun args -> jchoice), isStatic = true )
-        createJsonObjCodec
+        let jsonObjCodec = ProvidedProperty("JsonObjCodec", signatureType, getterCode = (fun args -> jchoice), isStatic = true )
+        jsonObjCodec
         
                         
     let createRecordJFieldOpts (typeDescriptor: TypeDescriptor) =

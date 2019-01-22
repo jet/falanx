@@ -184,26 +184,17 @@ module TypeGeneration =
             
         //Union type internals information
         // [CompilationMapping(SourceConstructFlags.UnionCase, 0)]
-        // public static T NewFirst_Name(string item)
-        // {
-        //     return new First_Name(item);
-        // }
+        // public static T NewFirst_Name(string item) {
+        //     return new First_Name(item); }
         //
         // [CompilationMapping(SourceConstructFlags.UnionCase, 1)]
-        // public static T NewLast_Name(string item)
-        // {
-        //     return new Last_Name(item);
-        // }
+        // public static T NewLast_Name(string item) {
+        //     return new Last_Name(item); }
 
         //create Tags so FSharp.Reflection thinks this is a real union
-        // public static class Tags
-        // {
+        // public static class Tags {
         //     public const int One = 0;
-        //     public const int Two = 1;
-        // }
-        //let tag = ProvidedProperty("Tag", typeof<int>, getterCode = fun _ -> Expr.Value 0)
-        //unionType.AddMember tag
-
+        //     public const int Two = 1; }
         { Properties = propertyDescriptors |> Map.ofList
           Type = { Kind = unionKind; ProtobufType = name; RuntimeType = propertyType }
           OneOfType = unionType
