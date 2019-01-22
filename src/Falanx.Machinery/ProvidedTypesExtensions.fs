@@ -51,7 +51,7 @@ and ProvidedUnion(isTgt: bool, container:TypeContainer, className: string, getBa
         //|> Array.filter (fun x -> x.GetType().IsAssignableFrom(_attributeType))
         
     //fields is set to just one for now
-    member this.AddUnionCase(tag: int, position: int, name: string, fields: PropertyInfo list) =
+    member this.AddUnionCase(tag: int, position: int, name: string, fields: ProvidedProperty list) =
         let field = match fields with [field] -> field | _ -> failwith "Multiple fields are not yet supported as Union Cases"
         //Add tag to the `Tags` nested class
         tagsType.AddMember(ProvidedField.Literal(name, typeof<int>, tag))
@@ -59,26 +59,23 @@ and ProvidedUnion(isTgt: bool, container:TypeContainer, className: string, getBa
         //Add type and add a tag property to that to satisfy getUnionTypeTagNameMap in Union reflection
         let unionCaseType = ProvidedTypeDefinition(name, Some typeof<obj>, isErased = false)
         let unionTag = ProvidedProperty("Tag", typeof<int>, getterCode = fun _ -> Microsoft.FSharp.Quotations.Expr.Value tag)
-        let fieldProp =
-            let fp = field
-            let fieldProp = ProvidedProperty(fp.Name, fp.PropertyType, getterCode = fun _ -> Unchecked.defaultof<_>)
-            //[CompilationMapping(SourceConstructFlags.Field, 0, 0)]
-            let compilationAttributeType = typeof<CompilationMappingAttribute>
-            let constructor = compilationAttributeType.TryGetConstructor([|typeof<SourceConstructFlags>; typeof<int>; typeof<int> |])
-            let arguments = 
-            // CompilationMappingAttribute(sourceConstruct, variantNo, sequenceNo)
-            // type X = One of int * int //variant 0, sequenceNo 0,1 on Item1/Item2 properties
-            // type X =
-            //   | One of int // variant 0, sequenceNo 0 on Item prop
-            //   | Two of int // variant 1, sequenceNo 0 on Item prop
-                [| CustomAttributeTypedArgument (typeof<SourceConstructFlags>, SourceConstructFlags.Field)
-                   CustomAttributeTypedArgument (typeof<int>, tag)
-                   CustomAttributeTypedArgument (typeof<int>, 0)|]
-            fieldProp.AddCustomAttribute(CustomAttributeData.Make(constructor.Value, args = arguments))
-            fieldProp
+        
+        //[CompilationMapping(SourceConstructFlags.Field, 0, 0)]
+        let compilationAttributeType = typeof<CompilationMappingAttribute>
+        let constructor = compilationAttributeType.TryGetConstructor([|typeof<SourceConstructFlags>; typeof<int>; typeof<int> |])
+        let arguments = 
+        // CompilationMappingAttribute(sourceConstruct, variantNo, sequenceNo)
+        // type X = One of int * int //variant 0, sequenceNo 0,1 on Item1/Item2 properties
+        // type X =
+        //   | One of int // variant 0, sequenceNo 0 on Item prop
+        //   | Two of int // variant 1, sequenceNo 0 on Item prop
+            [| CustomAttributeTypedArgument (typeof<SourceConstructFlags>, SourceConstructFlags.Field)
+               CustomAttributeTypedArgument (typeof<int>, tag)
+               CustomAttributeTypedArgument (typeof<int>, 0)|]
+        field.AddCustomAttribute(CustomAttributeData.Make(constructor.Value, args = arguments))
             
         unionCaseType.AddMember unionTag
-        unionCaseType.AddMember fieldProp
+        unionCaseType.AddMember field
         this.AddMember unionCaseType           
         
         unionCases.Add { tag = tag
