@@ -292,7 +292,7 @@ message Uint64Message {
 message BoolMessage {
   bool data = 1;
 }
-
+*/
 // Test oneofs.
 message TestOneof {
   oneof foo {
@@ -301,7 +301,7 @@ message TestOneof {
     TestAllTypes foo_message = 3;
   }
 }
-
+/*
 // Test messages for packed fields
 
 message TestPackedTypes {
