@@ -156,7 +156,7 @@ module Proto =
             |> String.concat (Environment.NewLine)
             |> normalizeBindingNames // make text deterministic
 
-        let outDir = Path.GetDirectoryName(outputFile)
+        let outDir = Path.GetDirectoryName(Path.GetFullPath(outputFile))
         if not (Directory.Exists(outDir)) then
             Directory.CreateDirectory(outDir) |> ignore
 
