@@ -90,6 +90,7 @@ type TypeHelpers() =
                             | t when not useQualifiedNames && t.GetGenericTypeDefinition().Name = typeof<int option>.GetGenericTypeDefinition().Name -> "option", true
                             | t when not useQualifiedNames && t.GetGenericTypeDefinition().Name = typeof<int ref>.GetGenericTypeDefinition().Name -> "ref", true
                             | t when not useQualifiedNames && t.GetGenericTypeDefinition().Name = typeof<int ResizeArray>.GetGenericTypeDefinition().Name -> "ResizeArray", true
+                            | t when not useQualifiedNames && t.GetGenericTypeDefinition().Name = typeof<Result<int,int>>.GetGenericTypeDefinition().Name -> "Result", true
                             | t when not useQualifiedNames && t.Name = "FSharpAsync`1" -> "async", true
                             // Short names for types in F# namespaces
                             | t when not useQualifiedNames && knownNamespaces.Contains t.Namespace -> t.Name, false
