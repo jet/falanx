@@ -350,10 +350,10 @@ module JsonCodec =
             
         let jchoice = calljchoice descriptor maps
         let signatureType =
-            //ConcreteCodec<list<KeyValuePair<string, JToken>>, list<KeyValuePair<string, JToken>>, unionType, unionType>
+            //ConcreteCodec<KeyValuePair<string, JToken> list, KeyValuePair<string, JToken> list, unionType, unionType> 
             let untypedConcreteCodec = typedefof<ConcreteCodec<_,_,_,_>>
             let unionType = descriptor.OneOfType :> Type
-            let arguments = [typeof<KeyValuePair<string,JToken> list>; typeof<KeyValuePair<string,JToken> list>; unionType; unionType]
+            let arguments = [typeof<KeyValuePair<string, JToken> list>; typeof<KeyValuePair<string, JToken> list>; unionType; unionType]
             let typedConcreteCodec = ProvidedTypeBuilder.MakeGenericType(untypedConcreteCodec, arguments)
             typedConcreteCodec
             
@@ -446,7 +446,7 @@ type test_oneof =
     | Last_name of Last_name : string
     with
         [<ReflectedDefinition>]
-        static member JsonObjCodec : ConcreteCodec<list<KeyValuePair<string, JToken>>, list<KeyValuePair<string, JToken>>, test_oneof, test_oneof> =
+        static member JsonObjCodec : ConcreteCodec<KeyValuePair<string, JToken> list, KeyValuePair<string, JToken> list, test_oneof, test_oneof> =
             Operators.jchoice<list<KeyValuePair<string,JToken>>, test_oneof, test_oneof>
                 [|
                     FSharpPlus.Operators.map<string,
@@ -471,4 +471,55 @@ type test_oneof =
             |> function x -> x.GetMethod
             |> Expr.TryGetReflectedDefinition
             |> Option.iter (Expr.quotationsTypePrinter >> ignore)
+    
+type foo =
+    | Foo_int of Foo_int : int
+    | Foo_string of Foo_string : string
+    | Foo_message of Foo_message : TestAllTypes
+    static member JsonObjCodec : ConcreteCodec<KeyValuePair<string,JToken> list,KeyValuePair<string,JToken> list,foo,foo> [] =
+        [| FSharpPlus.Operators.map<int, foo, ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list,Int32,foo>, ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list,foo,foo>>
+               (fun (arg0 : Int32) -> (Foo_int(arg0) : foo)) (Fleece.Newtonsoft.Operators.jreq<foo, Int32> 
+                                                                                      ("Foo_int") (fun (arg1 : foo) -> 
+                                                                                      if match arg1 with
+                                                                                         | Foo_int _ -> 
+                                                                                             true
+                                                                                         | _ -> false
+                                                                                      then 
+                                                                                          let x : Int32 =
+                                                                                              match arg1 with
+                                                                                              | Foo_int(Foo_int = x) -> 
+                                                                                                  x
+                                                                                              | _ -> 
+                                                                                                  failwith 
+                                                                                                      "Should never hit"
+                                                                                          (Some(x) : Option<Int32>)
+                                                                                      else (None : Option<Int32>)))
+           
+           FSharpPlus.Operators.map<string, foo, ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list,String,foo>, ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list,foo,foo>>
+               (fun (arg0 : String) -> (Foo_string(arg0) : foo)) 
+               (Fleece.Newtonsoft.Operators.jreq<foo, String> ("Foo_string") (fun (arg1 : foo) -> 
+                    if match arg1 with
+                       | Foo_string _ -> true
+                       | _ -> false
+                    then 
+                        let x : String =
+                            match arg1 with
+                            | Foo_string(Foo_string = x) -> x
+                            | _ -> failwith "Should never hit"
+                        (Some(x) : Option<String>)
+                    else (None : Option<String>)))
+           
+           FSharpPlus.Operators.map<TestAllTypes, foo, ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list,TestAllTypes,foo>, ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list,foo,foo>> 
+               (fun (arg0 : TestAllTypes) -> (Foo_message(arg0) : foo)) 
+               (Fleece.Newtonsoft.Operators.jreq<foo, TestAllTypes> ("Foo_message") (fun (arg1 : foo) -> 
+                    if match arg1 with
+                       | Foo_message _ -> true
+                       | _ -> false
+                    then 
+                        let x : TestAllTypes =
+                            match arg1 with
+                            | Foo_message(Foo_message = x) -> x
+                            | _ -> failwith "Should never hit"
+                        (Some(x) : Option<TestAllTypes>)
+                    else (None : Option<TestAllTypes>))) |]
 #endif
