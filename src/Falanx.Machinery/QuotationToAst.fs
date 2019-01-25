@@ -433,7 +433,7 @@ type Quotations() =
                 | None -> sysMemberToSynMember range fieldInfo knownNamespaces ommitEnclosingType
                 | Some inst ->
                     let synInst = exprToAst inst
-                    SynExpr.DotGet(synInst, range, mkLongIdent range [mkIdent range (getFSharpName fieldInfo)], range)
+                    SynExpr.DotGet(synInst, range, mkLongIdent range [mkIdent range (getFSharpName fieldInfo knownNamespaces ommitEnclosingType )], range)
     
             | FieldSet(instance, fieldInfo, value) ->
                 //dependencies.Append fieldInfo.DeclaringType
