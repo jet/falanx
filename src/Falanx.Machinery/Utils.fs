@@ -146,30 +146,33 @@ namespace Falanx.Machinery
         let private moduleSuffixRegex = new Regex(@"^(.*)Module$", RegexOptions.Compiled)
         let private fsharpPrefixRegex = new Regex(@"^FSharp(.*)(`[0-9]+)?$", RegexOptions.Compiled)
         /// recover the F# source name for given member declaration
-        let getFSharpName (m : MemberInfo) =
+        let getFSharpName (m : MemberInfo) knownNamespaces ommitEnclosingType =
             match m.TryGetCustomAttribute<CompilationSourceNameAttribute> () with
-            | Some a ->
-                a.SourceName
+            | Some a -> a.SourceName
             | None ->
-        
-            // this is a hack; need a better solution in the long term
-            // see https://visualfsharp.codeplex.com/workitem/177
-            if m.Assembly = typeof<int option>.Assembly && fsharpPrefixRegex.IsMatch m.Name then
-                let rm = fsharpPrefixRegex.Match m.Name
-                let group = rm.Groups.[1].Value
-                let demangled = Microsoft.FSharp.Compiler.PrettyNaming.DemangleGenericTypeName group
-                demangled
-            elif m.Name = "DefaultAsyncBuilder" && m.Assembly = typeof<int option>.Assembly then
-                "async"
-            else
-        
-            match m, m.TryGetCustomAttribute<CompilationRepresentationAttribute> () with
-            | :? Type as t, Some attr when attr.Flags.HasFlag CompilationRepresentationFlags.ModuleSuffix && FSharpType.IsModule t ->
-                let rm = moduleSuffixRegex.Match m.Name
-                if rm.Success then rm.Groups.[1].Value
+                // this is a hack; need a better solution in the long term
+                // see https://visualfsharp.codeplex.com/workitem/177
+                if m.Assembly = typeof<int option>.Assembly && fsharpPrefixRegex.IsMatch m.Name then
+                    //use the FormatType here which converts F# named types into their common types names
+                    //this will deal with things like list, option, Result
+                    match m with
+                    | :? Type as typ ->
+                        let result = TypeHelpers.FormatType(false, true, typ, ommitEnclosingType, false, knownNamespaces)
+                        result
+                    | _ ->
+                        let rm = fsharpPrefixRegex.Match m.Name
+                        let group = rm.Groups.[1].Value
+                        let demangled = Microsoft.FSharp.Compiler.PrettyNaming.DemangleGenericTypeName group
+                        demangled
+                elif m.Name = "DefaultAsyncBuilder" && m.Assembly = typeof<int option>.Assembly then
+                    "async"
                 else
-                    m.Name
-            | _ -> m.Name.Split('`').[0]
+                    match m, m.TryGetCustomAttribute<CompilationRepresentationAttribute> () with
+                    | :? Type as t, Some attr when attr.Flags.HasFlag CompilationRepresentationFlags.ModuleSuffix && FSharpType.IsModule t ->
+                        let rm = moduleSuffixRegex.Match m.Name
+                        if rm.Success then rm.Groups.[1].Value
+                        else m.Name
+                    | _ -> m.Name.Split('`').[0]
         
         /// generate full path for given memberinfo
         let getMemberPath range (m : MemberInfo) (knownNamespaces : _ Set) (ommitEnclosingType : Type option) =
@@ -186,7 +189,7 @@ namespace Falanx.Machinery
                     | Some(et) when et.Name = dt.Name -> ()
                     | _ -> yield! aux dt 
             
-                yield getFSharpName m
+                yield getFSharpName m knownNamespaces ommitEnclosingType
             }
         
             aux m |> Seq.map (mkIdent range) |> Seq.toList
