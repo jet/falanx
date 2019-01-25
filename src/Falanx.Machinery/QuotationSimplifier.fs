@@ -1,13 +1,13 @@
 namespace Falanx.Machinery
 module QuotationSimplifier =
-open System
-open System.Collections.Generic
-open System.Reflection
-open Microsoft.FSharp.Quotations
-open Microsoft.FSharp.Quotations.Patterns
-open Microsoft.FSharp.Quotations.DerivedPatterns
-open ProviderImplementation
-open ProviderImplementation.ProvidedTypes
+    open System
+    open System.Collections.Generic
+    open System.Reflection
+    open Microsoft.FSharp.Quotations
+    open Microsoft.FSharp.Quotations.Patterns
+    open Microsoft.FSharp.Quotations.DerivedPatterns
+    open ProviderImplementation
+    open ProviderImplementation.ProvidedTypes
 
 //--------------------------------------------------------------------------------
     // The quotation simplifier
