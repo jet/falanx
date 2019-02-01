@@ -5,13 +5,13 @@ version: 5.195.4
 
 nuget ArgU
 nuget FSAst
-nuget FSharp.Compiler.Service
+nuget FSharp.Compiler.Service 25.0.1
 nuget FSharp.Core
-nuget Fantomas 2.9.0
+nuget Fantomas
 nuget FParsec 1.0.3
 nuget Froto.Parser
 nuget Froto.Serialization
-nuget Fleece.NewtonsoftJson 0.8.0-alpha-2
+nuget Fleece.NewtonsoftJson 0.8.0-alpha-3
 nuget Newtonsoft.Json 11.0.2
 
 nuget Microsoft.SourceLink.GitHub 1.0.0-beta2-18618-05 copy_local: true
