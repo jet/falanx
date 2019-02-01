@@ -79,7 +79,7 @@ message TestAllTypes {
   double single_double = 12;
   bool single_bool = 13;
   string single_string = 14;
-  //bytes single_bytes = 15;
+  bytes single_bytes = 15;
 
   //NestedMessage single_nested_message = 18;
   //ForeignMessage single_foreign_message = 19;

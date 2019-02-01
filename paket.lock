@@ -2,12 +2,12 @@ STORAGE: NONE
 RESTRICTION: || (== netcoreapp2.1) (== netstandard2.0)
 NUGET
   remote: https://www.nuget.org/api/v2
-    Argu (5.1)
+    Argu (5.2)
       FSharp.Core (>= 4.3.2)
       System.Configuration.ConfigurationManager (>= 4.4)
-    Fantomas (2.9)
-      FSharp.Compiler.Service (>= 23.0.3)
-    Fleece.NewtonsoftJson (0.8.0-alpha-2)
+    Fantomas (2.9.1)
+      FSharp.Compiler.Service (>= 25.0.1)
+    Fleece.NewtonsoftJson (0.8.0-alpha-3)
       FSharp.Core (>= 4.5.2)
       FSharpPlus (>= 1.1.0-CI00252)
       Newtonsoft.Json (>= 10.0.2)
@@ -32,11 +32,11 @@ NUGET
       System.Reflection.TypeExtensions (>= 4.3)
       System.Runtime.Loader (>= 4.0)
       System.Security.Cryptography.Algorithms (>= 4.3)
-    FSharp.Core (4.5.4)
+    FSharp.Core (4.6)
     FSharpPlus (1.1.0-CI00252)
       FSharp.Core (>= 4.3.4)
     Microsoft.Build.Tasks.Git (1.0.0-beta2-18618-05) - copy_local: true
-    Microsoft.NETCore.Platforms (2.1.1)
+    Microsoft.NETCore.Platforms (2.2)
     Microsoft.NETCore.Targets (2.1)
     Microsoft.SourceLink.Common (1.0.0-beta2-18618-05) - copy_local: true
     Microsoft.SourceLink.GitHub (1.0.0-beta2-18618-05) - copy_local: true
@@ -178,10 +178,10 @@ NUGET
       System.Resources.ResourceManager (>= 4.3)
       System.Runtime (>= 4.3)
       System.Runtime.Extensions (>= 4.3)
-    System.Memory (4.5.1) - restriction: == netstandard2.0
+    System.Memory (4.5.2) - restriction: == netstandard2.0
       System.Buffers (>= 4.4) - restriction: || (&& (== netcoreapp2.1) (>= monotouch)) (&& (== netcoreapp2.1) (>= net461)) (&& (== netcoreapp2.1) (< netcoreapp2.0)) (&& (== netcoreapp2.1) (< netstandard1.1)) (&& (== netcoreapp2.1) (< netstandard2.0)) (&& (== netcoreapp2.1) (>= xamarinios)) (&& (== netcoreapp2.1) (>= xamarinmac)) (&& (== netcoreapp2.1) (>= xamarintvos)) (&& (== netcoreapp2.1) (>= xamarinwatchos)) (== netstandard2.0)
       System.Numerics.Vectors (>= 4.4) - restriction: || (&& (== netcoreapp2.1) (>= net461)) (&& (== netcoreapp2.1) (< netcoreapp2.0)) (== netstandard2.0)
-      System.Runtime.CompilerServices.Unsafe (>= 4.5) - restriction: || (&& (== netcoreapp2.1) (>= monotouch)) (&& (== netcoreapp2.1) (>= net461)) (&& (== netcoreapp2.1) (< netcoreapp2.0)) (&& (== netcoreapp2.1) (< netstandard1.1)) (&& (== netcoreapp2.1) (< netstandard2.0)) (&& (== netcoreapp2.1) (>= uap10.1)) (&& (== netcoreapp2.1) (>= xamarinios)) (&& (== netcoreapp2.1) (>= xamarinmac)) (&& (== netcoreapp2.1) (>= xamarintvos)) (&& (== netcoreapp2.1) (>= xamarinwatchos)) (== netstandard2.0)
+      System.Runtime.CompilerServices.Unsafe (>= 4.5.2) - restriction: || (&& (== netcoreapp2.1) (>= monotouch)) (&& (== netcoreapp2.1) (>= net461)) (&& (== netcoreapp2.1) (< netcoreapp2.0)) (&& (== netcoreapp2.1) (< netstandard1.1)) (&& (== netcoreapp2.1) (< netstandard2.0)) (&& (== netcoreapp2.1) (>= uap10.1)) (&& (== netcoreapp2.1) (>= xamarinios)) (&& (== netcoreapp2.1) (>= xamarinmac)) (&& (== netcoreapp2.1) (>= xamarintvos)) (&& (== netcoreapp2.1) (>= xamarinwatchos)) (== netstandard2.0)
     System.Numerics.Vectors (4.5) - restriction: == netstandard2.0
     System.Reflection (4.3)
       Microsoft.NETCore.Platforms (>= 1.1)
@@ -315,20 +315,21 @@ STORAGE: NONE
 RESTRICTION: || (== netcoreapp2.1) (== netstandard2.0)
 NUGET
   remote: https://www.nuget.org/api/v2
-    Argu (5.1)
+    Argu (5.2)
       FSharp.Core (>= 4.3.2)
       System.Configuration.ConfigurationManager (>= 4.4)
-    Expecto (8.4.3)
-      Argu (>= 5.1)
-      Mono.Cecil (>= 0.10)
+    Expecto (8.8)
+      Argu (>= 5.2)
+      Mono.Cecil (>= 0.10.1)
       System.Diagnostics.FileVersionInfo (>= 4.3)
-    Expecto.TestResults (8.4.3)
-      Expecto (>= 8.4.3)
-    FSharp.Core (4.5.2)
+    Expecto.TestResults (8.8)
+      Expecto (>= 8.8)
+      FSharp.Core (>= 4.3.4)
+    FSharp.Core (4.6)
     MedallionShell (1.5.1)
       NETStandard.Library (>= 1.6)
       System.Diagnostics.Process (>= 4.1)
-    Microsoft.NETCore.Platforms (2.1.1)
+    Microsoft.NETCore.Platforms (2.2)
     Microsoft.NETCore.Targets (2.1)
     Microsoft.Win32.Primitives (4.3)
       Microsoft.NETCore.Platforms (>= 1.1)
@@ -339,7 +340,7 @@ NUGET
       System.Memory (>= 4.5) - restriction: || (&& (== netcoreapp2.1) (< netcoreapp2.0)) (&& (== netcoreapp2.1) (>= uap10.1)) (== netstandard2.0)
       System.Security.AccessControl (>= 4.5)
       System.Security.Principal.Windows (>= 4.5)
-    Mono.Cecil (0.10.1)
+    Mono.Cecil (0.10.3)
       System.Collections (>= 4.0.11)
       System.IO.FileSystem (>= 4.0.1)
       System.IO.FileSystem.Primitives (>= 4.0.1)
@@ -474,10 +475,10 @@ NUGET
       System.Resources.ResourceManager (>= 4.3)
       System.Runtime (>= 4.3)
       System.Runtime.Extensions (>= 4.3)
-    System.Memory (4.5.1) - restriction: || (&& (== netcoreapp2.1) (< netcoreapp2.0)) (&& (== netcoreapp2.1) (>= uap10.1)) (== netstandard2.0)
+    System.Memory (4.5.2) - restriction: || (&& (== netcoreapp2.1) (< netcoreapp2.0)) (&& (== netcoreapp2.1) (>= uap10.1)) (== netstandard2.0)
       System.Buffers (>= 4.4) - restriction: || (&& (== netcoreapp2.1) (>= monotouch)) (&& (== netcoreapp2.1) (>= net461)) (&& (== netcoreapp2.1) (< netcoreapp2.0)) (&& (== netcoreapp2.1) (< netstandard1.1)) (&& (== netcoreapp2.1) (< netstandard2.0)) (&& (== netcoreapp2.1) (>= xamarinios)) (&& (== netcoreapp2.1) (>= xamarinmac)) (&& (== netcoreapp2.1) (>= xamarintvos)) (&& (== netcoreapp2.1) (>= xamarinwatchos)) (== netstandard2.0)
       System.Numerics.Vectors (>= 4.4) - restriction: || (&& (== netcoreapp2.1) (>= net461)) (&& (== netcoreapp2.1) (< netcoreapp2.0)) (== netstandard2.0)
-      System.Runtime.CompilerServices.Unsafe (>= 4.5) - restriction: || (&& (== netcoreapp2.1) (>= monotouch)) (&& (== netcoreapp2.1) (>= net461)) (&& (== netcoreapp2.1) (< netcoreapp2.0)) (&& (== netcoreapp2.1) (< netstandard1.1)) (&& (== netcoreapp2.1) (< netstandard2.0)) (&& (== netcoreapp2.1) (>= uap10.1)) (&& (== netcoreapp2.1) (>= xamarinios)) (&& (== netcoreapp2.1) (>= xamarinmac)) (&& (== netcoreapp2.1) (>= xamarintvos)) (&& (== netcoreapp2.1) (>= xamarinwatchos)) (== netstandard2.0)
+      System.Runtime.CompilerServices.Unsafe (>= 4.5.2) - restriction: || (&& (== netcoreapp2.1) (>= monotouch)) (&& (== netcoreapp2.1) (>= net461)) (&& (== netcoreapp2.1) (< netcoreapp2.0)) (&& (== netcoreapp2.1) (< netstandard1.1)) (&& (== netcoreapp2.1) (< netstandard2.0)) (&& (== netcoreapp2.1) (>= uap10.1)) (&& (== netcoreapp2.1) (>= xamarinios)) (&& (== netcoreapp2.1) (>= xamarinmac)) (&& (== netcoreapp2.1) (>= xamarintvos)) (&& (== netcoreapp2.1) (>= xamarinwatchos)) (== netstandard2.0)
     System.Numerics.Vectors (4.5) - restriction: || (&& (== netcoreapp2.1) (>= net461)) (&& (== netcoreapp2.1) (< netcoreapp2.0)) (&& (== netcoreapp2.1) (>= uap10.1)) (== netstandard2.0)
     System.Reflection (4.3)
       Microsoft.NETCore.Platforms (>= 1.1)
@@ -603,7 +604,7 @@ NUGET
       System.Runtime.Handles (>= 4.3)
 GITHUB
   remote: enricosada/dotnet-proj-info
-    test/dotnet-proj.Tests/FileUtils.fs (b80e8c411169387ff92a3ce0e5b2b5fbd04e47e7)
+    test/dotnet-proj.Tests/FileUtils.fs (e4f77210af5cdd71d99aad0ac9f3ca011fce4119)
 GROUP MergeNupkgTool
 STORAGE: NONE
 RESTRICTION: || (== netcoreapp2.0) (== netstandard2.0)
@@ -612,8 +613,8 @@ NUGET
     dotnet-mergenupkg (2.4) - clitool: true
       FSharp.Core (>= 4.3.4) - restriction: || (== netcoreapp2.0) (&& (== netstandard2.0) (>= netcoreapp1.0))
       Microsoft.NETCore.App (>= 2.0) - restriction: || (== netcoreapp2.0) (&& (== netstandard2.0) (>= netcoreapp2.0))
-    FSharp.Core (4.5.2) - restriction: || (== netcoreapp2.0) (&& (== netstandard2.0) (>= netcoreapp1.0))
-    Microsoft.NETCore.App (2.1.5) - restriction: || (== netcoreapp2.0) (&& (== netstandard2.0) (>= netcoreapp2.0))
+    FSharp.Core (4.6) - restriction: || (== netcoreapp2.0) (&& (== netstandard2.0) (>= netcoreapp1.0))
+    Microsoft.NETCore.App (2.2.1) - restriction: || (== netcoreapp2.0) (&& (== netstandard2.0) (>= netcoreapp2.0))
 
 GROUP ProtoTests
 
