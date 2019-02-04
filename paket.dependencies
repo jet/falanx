@@ -7,7 +7,7 @@ storage: none
 nuget ArgU
 nuget FSAst
 nuget FSharp.Compiler.Service 25.0.1
-nuget FSharp.Core
+nuget FSharp.Core 4.5.4 strategy: min
 nuget Fantomas 2.9.2
 nuget FParsec 1.0.3
 nuget Froto.Parser
@@ -25,7 +25,7 @@ source https://www.nuget.org/api/v2
 framework: netcoreapp2.1, netstandard2.0
 storage: none
 
-nuget FSharp.Core
+nuget FSharp.Core 4.5.4 strategy: min
 nuget Expecto ~> 8.4
 nuget Expecto.TestResults ~> 8.4
 nuget MedallionShell ~> 1.5
