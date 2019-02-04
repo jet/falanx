@@ -30,14 +30,6 @@ jobs:
     inputs:
       pathtoPublish: 'bin/nupkg'
       artifactName: 'nupkgs'
-  - task: NuGetCommand@2
-    inputs:
-      command: push
-      nuGetFeedType: external
-      publishFeedCredentials: 'Jet-MyGet-Falanx'
-      versioningScheme: byEnvVar
-      versionEnvVar: Version
-      packagesToPush: 'bin/nupkg/*.nupkg'
 - job: Linux
   pool:
     vmImage: 'ubuntu-16.04'
