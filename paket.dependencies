@@ -7,7 +7,7 @@ nuget ArgU
 nuget FSAst
 nuget FSharp.Compiler.Service 25.0.1
 nuget FSharp.Core
-nuget Fantomas
+nuget Fantomas 2.9.2
 nuget FParsec 1.0.3
 nuget Froto.Parser
 nuget Froto.Serialization

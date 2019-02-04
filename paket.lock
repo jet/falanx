@@ -5,7 +5,7 @@ NUGET
     Argu (5.2)
       FSharp.Core (>= 4.3.2)
       System.Configuration.ConfigurationManager (>= 4.4)
-    Fantomas (2.9.1)
+    Fantomas (2.9.2)
       FSharp.Compiler.Service (>= 25.0.1)
     Fleece.NewtonsoftJson (0.8.0-alpha-3)
       FSharp.Core (>= 4.5.2)
@@ -32,7 +32,7 @@ NUGET
       System.Reflection.TypeExtensions (>= 4.3)
       System.Runtime.Loader (>= 4.0)
       System.Security.Cryptography.Algorithms (>= 4.3)
-    FSharp.Core (4.6)
+    FSharp.Core (4.6.1)
     FSharpPlus (1.1.0-CI00252)
       FSharp.Core (>= 4.3.4)
     Microsoft.Build.Tasks.Git (1.0.0-beta2-18618-05) - copy_local: true
@@ -325,7 +325,7 @@ NUGET
     Expecto.TestResults (8.8)
       Expecto (>= 8.8)
       FSharp.Core (>= 4.3.4)
-    FSharp.Core (4.6)
+    FSharp.Core (4.6.1)
     MedallionShell (1.5.1)
       NETStandard.Library (>= 1.6)
       System.Diagnostics.Process (>= 4.1)
@@ -613,7 +613,7 @@ NUGET
     dotnet-mergenupkg (2.4) - clitool: true
       FSharp.Core (>= 4.3.4) - restriction: || (== netcoreapp2.0) (&& (== netstandard2.0) (>= netcoreapp1.0))
       Microsoft.NETCore.App (>= 2.0) - restriction: || (== netcoreapp2.0) (&& (== netstandard2.0) (>= netcoreapp2.0))
-    FSharp.Core (4.6) - restriction: || (== netcoreapp2.0) (&& (== netstandard2.0) (>= netcoreapp1.0))
+    FSharp.Core (4.6.1) - restriction: || (== netcoreapp2.0) (&& (== netstandard2.0) (>= netcoreapp1.0))
     Microsoft.NETCore.App (2.2.1) - restriction: || (== netcoreapp2.0) (&& (== netstandard2.0) (>= netcoreapp2.0))
 
 GROUP ProtoTests
