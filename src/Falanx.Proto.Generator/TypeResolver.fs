@@ -39,7 +39,7 @@ module TypeResolver =
                                   | _ -> None)
 
             //messages
-            yield Class(scope, message.Name), fullName
+            yield TypeKind.Class(scope, message.Name), fullName
             
             //message enums
             yield! message.Enums |> Seq.map (fun enum -> TypeKind.Enum(fullName, enum.Name), fullName +.+ enum.Name)
