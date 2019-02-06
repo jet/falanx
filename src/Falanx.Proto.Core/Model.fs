@@ -57,8 +57,13 @@ module Model =
           OneOfGroups: OneOfDescriptor list
           Maps: MapDescriptor list }
         member x.Fields : FieldDescriptor list =
-            [
-                yield! x.Properties |> List.map Property
-                yield! x.OneOfGroups |> List.map OneOf
-                yield! x.Maps |> List.map Map
-            ]
+            [ yield! x.Properties |> List.map Property
+              yield! x.OneOfGroups |> List.map OneOf
+              yield! x.Maps |> List.map Map ]
+            |> List.sortBy (function
+                            | Property p -> int p.Position
+                            | OneOf o ->
+                                o.Properties
+                                |> Seq.map ((|KeyValue|) >> fst)
+                                |> Seq.min
+                            | Map m -> int m.Position  )
