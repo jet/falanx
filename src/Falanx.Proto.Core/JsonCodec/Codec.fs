@@ -23,35 +23,36 @@ module JsonCodec =
     let createLambdaRecord (typeDescriptor: TypeDescriptor) =
         //Lambda (u, Lambda (t, NewRecord (Result2, u, t))
         let recordType = typeDescriptor.Type :?> ProvidedRecord
-        let recordFields = recordType.RecordFields
-        let recordFields2 = typeDescriptor.Fields
+        let recordFields = typeDescriptor.Fields
         
-        let recordVars =
-            recordFields2
+        let lambdaVars =
+            recordFields
             |> List.map(function
                         | Property{PropertyDescriptor.Rule = ProtoFieldRule.Repeated; ProvidedProperty = pp} ->
-                            //For fleece we need to wrap repeat field types in option.  We also add the flatten
-                            //and expand methods in the to lambda construction and field map respectively.
-                            Var(pp.Name, typedefof<Option<_>>.MakeGenericType(pp.PropertyType)) , Some(pp.PropertyType.GenericTypeArguments.[0])
+                            //For fleece we need to wrap repeat field types in option.  
+                            Var(pp.Name, typedefof<Option<_>>.MakeGenericType(pp.PropertyType))
                         | Property{ProvidedProperty = pp} ->
-                            Var(pp.Name, pp.PropertyType), None
+                            Var(pp.Name, pp.PropertyType)
                         | OneOf oneOf ->
-                            Var(oneOf.CaseProperty.Name, oneOf.CaseProperty.PropertyType), None
+                            Var(oneOf.CaseProperty.Name, oneOf.CaseProperty.PropertyType)
                         | Map m ->
-                            Var(m.ProvidedProperty.Name, m.ProvidedProperty.PropertyType), None )
+                            Var(m.ProvidedProperty.Name, m.ProvidedProperty.PropertyType))
 
-        let mapRepeatOrStandard =
-            fun (v, maybeFlattened) ->
-                match v, maybeFlattened with
-                | v, Some flattened ->
-                    let v = Expr.Var v
-                    let exp = Expr.callStaticGeneric [flattened] [v] <@ flatten x @>
-                    exp
-                | v, None -> Expr.Var v
+        let recordArguments =
+            lambdaVars
+            |> List.zip recordFields 
+            |> List.map(function
+                        | (Property{PropertyDescriptor.Rule = ProtoFieldRule.Repeated; ProvidedProperty = pp}, v) ->
+                            //For fleece we need to flatten and expand methods in the to lambda construction and field map respectively.
+                            Expr.callStaticGeneric [pp.PropertyType.GenericTypeArguments.[0] ] [Expr.Var v] <@ flatten x @>
+                        | _, v -> Expr.Var v )
+            
  
         let result =
-            List.foldBack (fun (v, isRepeated) acc -> Expr.Lambda(v,acc))
-                recordVars (Expr.NewRecordUnchecked(recordType, recordVars |> List.map mapRepeatOrStandard))
+            let state = Expr.NewRecordUnchecked(recordType, recordArguments)
+            List.foldBack (fun var acc ->
+                                            Expr.Lambda(var, acc)) lambdaVars state
+            
         result
               
     let  getFunctionReturnType (typ: Type) =
@@ -127,7 +128,7 @@ module JsonCodec =
         expr
         
 
-    //this needs to be done at the Expt -> AST level to remove the extra lambda call  
+//TODO: this needs to be done at the Expt -> AST level to remove the extra lambda call  
 //    let callPipeRight2 (arg:Expr) (func:Expr) =
 //        let methodInfoGeneric = Expr.methoddefof<@ (|>) @>
 //        let funcTypeReturn = getFunctionReturnType func.Type
