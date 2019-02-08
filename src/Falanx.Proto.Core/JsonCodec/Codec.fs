@@ -145,19 +145,19 @@ module JsonCodec =
     // |> mapping<Option<String> -> Option<int> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken>
     // |> jfieldopt<Result2, string, Option<int> -> Result2> "url"   (fun x -> x.url)
     // |> jfieldopt<Result2, int   , Result2>                "title" (fun x -> x.title)   
-    let callJfieldopt (recordType: Type) (propertyDescriptor: PropertyDescriptor) (fieldType: Type ) (nextFieldType: Type) =
+    let callJfieldopt (recordType: Type) protoFieldRule (providedProperty: ProvidedProperty) (fieldType: Type ) (nextFieldType: Type) =
         let jfieldoptMethodInfo = Expr.methoddefof <@ jfieldOpt<_,string,_> x x x @>
 
         let jFieldTypeArguments = [recordType; fieldType; nextFieldType]
         let jfieldoptMethodInfoTyped = ProvidedTypeBuilder.MakeGenericMethod(jfieldoptMethodInfo, jFieldTypeArguments)
         
-        let fieldName = Expr.Value propertyDescriptor.ProvidedProperty.Name
+        let fieldName = Expr.Value providedProperty.Name
         
         let xvar = Var("x", recordType)
         
         let getter =
-            let property = Expr.PropertyGet( Expr.Var xvar, propertyDescriptor.ProvidedProperty)
-            match propertyDescriptor.Rule with
+            let property = Expr.PropertyGet( Expr.Var xvar, providedProperty)
+            match protoFieldRule with
             | ProtoFieldRule.Optional ->
                 Expr.Lambda(xvar, property)
             | ProtoFieldRule.Repeated ->
@@ -341,7 +341,8 @@ module JsonCodec =
         let cc = typedefof<ConcreteCodec<_,_,_,_>>
         let keyPairType = typeof<KeyValuePair<string, JsonValue> list>
         let elementType = ProvidedTypeBuilder.MakeGenericType(cc, [keyPairType; keyPairType; unionType; unionType])
-        Expr.NewArray(elementType, elements)
+        let choiceElements = Expr.NewArray(elementType, elements)
+        Expr.CallUnchecked(jchoiceMethodInfoTyped, [choiceElements])
         
     let createJsonObjCodecFromoneOf (descriptor: OneOfDescriptor) =
         let maps =
@@ -364,24 +365,30 @@ module JsonCodec =
                         
     let createRecordJFieldOpts (typeDescriptor: TypeDescriptor) =
         let recordType = typeDescriptor.Type :> Type
-        let recordFields = typeDescriptor.Properties
+        let recordFields = typeDescriptor.Fields
         
-        let optionType (o: Type) = o.GetGenericArguments().[0]
+        let getOptionType (o: Type) = o.GetGenericArguments().[0]
         
-        let createJfieldopt (propertyDescriptor: PropertyDescriptor) rest =
-            match propertyDescriptor.Rule with
-            | ProtoFieldRule.Optional ->
-                let fieldType = optionType propertyDescriptor.ProvidedProperty.PropertyType
-                callJfieldopt typeDescriptor.Type propertyDescriptor fieldType rest
-            | ProtoFieldRule.Repeated -> //will call expand, so type signature affected
-                
-                let fieldType = propertyDescriptor.ProvidedProperty.PropertyType
-                callJfieldopt typeDescriptor.Type propertyDescriptor fieldType rest
-            | ProtoFieldRule.Required ->
-                failwith "not supported"
+        let createJfieldopt (propertyDescriptor: FieldDescriptor) rest =
+            match propertyDescriptor with
+            | Property propertyDescriptor -> 
+                match propertyDescriptor.Rule with
+                | ProtoFieldRule.Optional as rule ->
+                    let fieldType = getOptionType propertyDescriptor.ProvidedProperty.PropertyType
+                    callJfieldopt typeDescriptor.Type rule propertyDescriptor.ProvidedProperty fieldType rest
+                | ProtoFieldRule.Repeated as rule -> //will call expand, so type signature affected
+                    
+                    let fieldType = propertyDescriptor.ProvidedProperty.PropertyType
+                    callJfieldopt typeDescriptor.Type rule propertyDescriptor.ProvidedProperty fieldType rest
+                | ProtoFieldRule.Required ->
+                    failwith "not supported"
+            | OneOf oneOf ->
+                let fieldType = getOptionType oneOf.CaseProperty.PropertyType
+                callJfieldopt typeDescriptor.Type ProtoFieldRule.Optional oneOf.CaseProperty fieldType rest
+            | Map map -> failwith "not implemented"
 
         let fieldTypeWithRest =
-            let rec loop (recordFields: PropertyDescriptor list) =
+            let rec loop (recordFields: FieldDescriptor list) =
                 [
                     match recordFields with
                     | [] -> ()
@@ -390,11 +397,15 @@ module JsonCodec =
                     | head :: tail ->
                         let rest =
                             tail
-                            |> List.map (fun pd -> match pd.Rule with
-                                                   | ProtoFieldRule.Repeated ->
-                                                       typedefof<Option<_>>.MakeGenericType(pd.ProvidedProperty.PropertyType)
-                                                   | _ ->
-                                                       pd.ProvidedProperty.PropertyType)
+                            |> List.map (function
+                                         | Property propertyDescriptor when propertyDescriptor.Rule = ProtoFieldRule.Repeated ->
+                                             typedefof<Option<_>>.MakeGenericType(propertyDescriptor.ProvidedProperty.PropertyType)
+                                         | Property propertyDescriptor ->
+                                             propertyDescriptor.ProvidedProperty.PropertyType
+                                         | OneOf oneOf ->
+                                             oneOf.CaseProperty.PropertyType
+                                         | Map map ->
+                                             failwith "not implemented" )
                             
                         let restAsType = makeFunctionTypeFromElements (rest @ [recordType])
                         yield createJfieldopt head restAsType
@@ -472,6 +483,17 @@ type test_oneof =
             |> function x -> x.GetMethod
             |> Expr.TryGetReflectedDefinition
             |> Option.iter (Expr.quotationsTypePrinter >> ignore)
+            
+[<CLIMutable>]
+type SampleMessage =
+    { mutable martId : int option
+      mutable test_oneof : test_oneof option }
+    static member JsonObjCodec =
+        fun m t -> {martId = m; test_oneof = t}
+        |> withFields
+        |> jfieldOpt "martId"  (fun b -> b.martId)
+        |> jfieldOpt "test_oneof" (fun a -> a.test_oneof)
+
     
 type foo =
     | Foo_int of Foo_int : int
