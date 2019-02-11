@@ -112,7 +112,7 @@ message TestAllTypes {
   repeated    bytes repeated_bytes    = 45;
 
   repeated NestedMessage                        repeated_nested_message  = 48;
-  //repeated ForeignMessage                       repeated_foreign_message = 49;
+  repeated ForeignMessage                       repeated_foreign_message = 49;
   //repeated protobuf_unittest_import.ImportMessage repeated_import_message  = 50;
 
   //repeated NestedEnum                           repeated_nested_enum     = 51;
@@ -141,13 +141,13 @@ message NestedTestAllTypes {
 message TestDeprecatedFields {
   int32 deprecated_int32 = 1 [deprecated=true];
 }
-
+*/
 // Define these after TestAllTypes to make sure the compiler can handle
 // that.
 message ForeignMessage {
   int32 c = 1;
 }
-
+/*
 enum ForeignEnum {
   FOREIGN_UNSPECIFIED = 0;
   FOREIGN_FOO = 4;
