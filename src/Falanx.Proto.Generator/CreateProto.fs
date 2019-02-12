@@ -1,8 +1,33 @@
 namespace Falanx.Proto.Generator
 
-type TypeContainer = class end
-    
+type TypeContainer = class end     
+
+module Topo =
+    open System
+    open System.Collections.Generic
+    /// <summary>
+    /// Sorts a graph of nodes in topological order.
+    /// </summary>
+    /// <param name="nodes">Nodes to sort.</param>
+    /// <param name="dependencies">Function, that should return dependent nodes of the given node.</param>
+    /// <param name="comparer">Nodes equality comparer.</param>
+    let topologySort (dependencies: 'a -> 'a seq) (comparer: 'a IEqualityComparer) (nodes: 'a seq): 'a seq =
+        seq {
+            let visited = HashSet comparer
+
+            let rec visit node =
+                seq {
+                    if visited.Add node then
+                        for pN in dependencies node do
+                            yield! visit pN
+                        yield node
+                }
+            for node in nodes do
+                yield! visit node
+        }
+   
 module Proto =
+    open System.Collections
     open Falanx.Machinery
     open Falanx.Proto.Generator.TypeGeneration
     open System
@@ -36,9 +61,42 @@ module Proto =
         |> Seq.map (TypeGeneration.createEnum scope typelookup)
         |> Seq.iter container.AddMember
         
-        let generatedTypes =
+        let processTopology (messages: ProtoMessage list) =
+            let rec loop (message: ProtoMessage) =
+                [|
+                    for field in message.Fields do
+                        yield (message.Name, field.Type)
+                    for subMessage in message.Messages do
+                        yield! loop subMessage
+                |] 
+            
+            messages
+            |> List.map loop |> List.toArray
+            //|> List.concat
+            //|> List.filter (fun (p, c) -> not (Set.contains c Falanx.Proto.Core.Model.ProtoTypes) )
+            //|> Set.ofList
+            //|> Set.toArray
+            
+        let messagesTopo = protoFile.Messages |> processTopology
+
+        let sort =
+            let comparer = { new System.Collections.Generic.IEqualityComparer<ProtoMessage> with
+                                 member x.Equals(a, b) = a.Name = b.Name
+                                 member x.GetHashCode(obj: ProtoMessage) = obj.Name.GetHashCode() }
+                                 
+            Topo.topologySort (fun (x:ProtoMessage) ->  let fieldTypes =
+                                                            x.Fields
+                                                            |> List.filter (fun f -> not (Falanx.Proto.Core.Model.ProtoTypes.Contains f.Type) )
+                                                            |> List.map (fun f -> ProtoMessage(f.Type, [], false))
+                                                        List.append x.Messages fieldTypes |> List.toSeq)
+                                                        
+                              comparer 
+                              protoFile.Messages
+        let sort2 = sort |> Seq.toArray
+        let generatedTypes = 
             protoFile.Messages
-            |> Seq.map (TypeGeneration.createType container scope typelookup codecs)
+            |> Seq.map (fun pm ->
+                                    TypeGeneration.createType container scope typelookup codecs pm)
             |> Seq.iter container.AddMember
         provider
 
