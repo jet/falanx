@@ -59,22 +59,27 @@ module Proto =
         |> Seq.map (TypeGeneration.createEnum scope typelookup)
         |> Seq.iter container.AddMember
 
-        let sort =
+        let topologySorted =
             let comparer = { new System.Collections.Generic.IEqualityComparer<ProtoMessage> with
                                  member x.Equals(a, b) = a.Name = b.Name
                                  member x.GetHashCode(obj: ProtoMessage) = obj.Name.GetHashCode() }
+            
+            let gatherDependencies (x: ProtoMessage) =
+                let fieldTypes =
+                    x.Fields
+                    |> List.filter (fun f -> not (Falanx.Proto.Core.Model.ProtoTypes.Contains f.Type) )
+                    |> List.map (fun f -> ProtoMessage(f.Type, [], false))
+                List.append x.Messages fieldTypes |> List.toSeq
                                  
-            Topo.topologySort (fun (x:ProtoMessage) ->  let fieldTypes =
-                                                            x.Fields
-                                                            |> List.filter (fun f -> not (Falanx.Proto.Core.Model.ProtoTypes.Contains f.Type) )
-                                                            |> List.map (fun f -> ProtoMessage(f.Type, [], false))
-                                                        List.append x.Messages fieldTypes |> List.toSeq)
-                                                        
-                              comparer 
-                              protoFile.Messages
-        let sort2 = sort |> Seq.toArray
+            Topo.topologySort gatherDependencies comparer protoFile.Messages
+                              
+        let topologySortedOnlyRoots =
+            let rootMessages = protoFile.Messages |> List.map (fun pm -> pm.Name)
+            topologySorted
+            |> Seq.filter (fun pm -> List.contains pm.Name rootMessages )
+
         let generatedTypes = 
-            protoFile.Messages
+            topologySortedOnlyRoots
             |> Seq.map (TypeGeneration.createType container scope typelookup codecs)
             |> Seq.iter container.AddMember
         container
