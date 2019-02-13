@@ -5,6 +5,7 @@ module Model =
     open ProviderImplementation.ProvidedTypes
     open Froto.Parser.ClassModel
     open Falanx.Machinery
+    open Falanx.Machinery.Prelude
     
     type ProtobufType = string
     
@@ -28,10 +29,16 @@ module Model =
     
 
     type TypeKind = 
-        | Primitive
+        | Primitive of string
         | Class of scope: string * name : string
         | Enum of scope : string * fullName : string
-        | Union of scope : string * name : string * fields : POneOfStatement list
+        | OneOf of scope : string * name : string * fields : POneOfStatement list
+        member x.FullName =
+            match x with
+            | Primitive type' -> type'
+            | Class(scope, name) -> scope +.+ name
+            | Enum(scope, fullName) -> scope +.+ fullName
+            | OneOf(scope, name, fields) -> scope +.+ name
     
     type TypeContext = 
         { Kind: TypeKind

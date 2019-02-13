@@ -35,14 +35,14 @@ module TypeResolver =
             yield! message.Parts
                    |> Seq.choose (function
                                   | TOneOf(name, members) ->
-                                      Some(TypeKind.Union(fullName, name, members), fullName +.+ name)
+                                      Some(TypeKind.OneOf(fullName, name, members))
                                   | _ -> None)
 
             //messages
-            yield TypeKind.Class(scope, message.Name), fullName
+            yield TypeKind.Class(scope, message.Name)
             
             //message enums
-            yield! message.Enums |> Seq.map (fun enum -> TypeKind.Enum(fullName, enum.Name), fullName +.+ enum.Name)
+            yield! message.Enums |> Seq.map (fun enum -> TypeKind.Enum(fullName, enum.Name))
               
             //nested messages     
             yield! message.Messages |> Seq.collect (processMessage fullName)
@@ -67,14 +67,14 @@ module TypeResolver =
                 yield!
                     file.Messages
                     |> Seq.collect (processMessage scope)
-                    |> Seq.map (fun (kind, fullName) -> 
-                        let ty = 
+                    |> Seq.map (fun kind -> 
+                        let ty : ProvidedTypeDefinition = 
                             match kind with
-                            | Union(_scope, name, _unionFields) -> ProvidedUnion(name, Some typeof<obj>, isErased = false) :> ProvidedTypeDefinition
+                            | TypeKind.OneOf(_scope, name, _unionFields) -> ProvidedUnion(name, Some typeof<obj>, isErased = false) :> _
                             | Class(scope, name) -> ProvidedRecord(name, Some typeof<obj>, isErased = false) :> _
                             | Enum(scope, name) -> ProvidedTypeDefinition.mkEnum name
-                            | Primitive -> invalidOpf "Primitive type '%s' does not require custom Type" fullName
-                        fullName, (kind, ty))
+                            | Primitive type' -> invalidOpf "Primitive type '%s' does not require custom Type" type'
+                        kind.FullName, (kind, ty))
                     |> Seq.append enums
             }   
         processFile file scope
@@ -128,7 +128,7 @@ module TypeResolver =
             |> Option.map (fun (kind, ty) -> kind, ty :> Type)
     
         resolveScalar targetType 
-        |> Option.map (fun t -> Primitive, t)
+        |> Option.map (fun t -> Primitive targetType, t)
         |> Option.orElseWith findInLookup
         
     let resolvePType scope targetType (lookup: TypesLookup) = 

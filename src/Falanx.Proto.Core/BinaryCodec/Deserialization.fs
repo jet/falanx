@@ -37,13 +37,13 @@ module Deserialization =
     /// Creates quotation that converts RawField quotation to target property type
     let private deserializeField (property: PropertyDescriptor) (rawField: Expr) =
         match property.Type.Kind with
-        | Primitive -> Expr.Application(primitiveReader property.Type.ProtobufType, rawField)
+        | Primitive _type -> Expr.Application(primitiveReader property.Type.ProtobufType, rawField)
         | Enum(_scope, _name) ->    
             let enumMethodDef = Expr.methoddefof(<@ enum<DayOfWeek> x @>)
             let enumMethod = MethodSymbol2(enumMethodDef,[|property.Type.UnderlyingType|])
             Expr.Call(enumMethod, [ <@@ readInt32 (%%rawField) @@> ])
         | Class(_scope, _name) -> Expr.callStaticGeneric [property.Type.UnderlyingType] [rawField ] <@@ readEmbedded<Template> x @@>
-        | Union _ -> failwith "Not implemented"
+        | TypeKind.OneOf _ -> failwith "Not implemented"
     
     let private samePosition field idx = <@@ (%%field: RawField).FieldNum = idx @@>
     
@@ -54,7 +54,7 @@ module Deserialization =
     
         let readMethod, args =
             match mapDescriptor.ValueType.Kind with
-            | Primitive -> 
+            | Primitive _type -> 
                 <@@ readMapElement x x x x @@>,
                 [map; keyReader; primitiveReader mapDescriptor.ValueType.ProtobufType; field]
             | Enum(_scope, _name) -> 
@@ -63,7 +63,7 @@ module Deserialization =
             | Class(_scope, _name) -> 
                 <@@ readMessageMapElement<_, Template> x x x @@>,
                 [map; keyReader; field ]
-            | Union _ -> failwith "Not implemented"
+            | TypeKind.OneOf _ -> failwith "Not implemented"
                     
         Expr.callStaticGeneric
             (map.Type.GenericTypeArguments |> List.ofArray)
