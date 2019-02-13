@@ -117,35 +117,7 @@ module TypeGeneration =
           Position = position
           ProvidedProperty = property
           ProvidedField = field }   
-              
-//    let private createConstructor (typeDescriptor: TypeDescriptor) (providedType:ProvidedTypeDefinition) =
-//        // constructor should set default values to fields: repeated fields should be initialized with empty collections
-//        // and required string fiels - with ""
-//    
-//        let pc =
-//            ProvidedConstructor([], invokeCode = fun args ->
-//                let this = args.[0]
-//                let initializeRepeatedFields =
-//                    let repeated = typeDescriptor.Properties |> Seq.filter (fun prop -> prop.Rule = Repeated)
-//                    repeated
-//                    |> Seq.map (fun prop -> 
-//                        Expr.FieldSet(args.[0], prop.ProvidedField.Value, Expr.callStaticGeneric [prop.Type.RuntimeType] [] <@@ create<_>() @@>))
-//        
-//                let initializeMapFields = 
-//                    typeDescriptor.Maps
-//                    |> Seq.map (fun map -> 
-//                        Expr.FieldSet(args.[0], map.ProvidedField, Expr.callStaticGeneric [map.ProvidedProperty.PropertyType] [] <@@ create<_>() @@>))
-//        
-//                let initializeRequiredStringFields = 
-//                    typeDescriptor.Properties
-//                    |> Seq.filter (fun prop -> prop.Rule = Required && prop.Type.RuntimeType = typeof<proto_string>)
-//                    |> Seq.map (fun prop -> Expr.FieldSet(args.[0], prop.ProvidedField.Value, Expr.Value(String.Empty)))
-//                
-//                [initializeRepeatedFields; initializeMapFields; initializeRequiredStringFields]
-//                |> Seq.concat
-//                |> Expr.sequence)
-//        pc 
-               
+                             
     let createOneOfDescriptor scope (typesLookup: TypesLookup) (name: string) (members: POneOfStatement list) = 
         let unionKind, unionType = 
             match TypeResolver.resolveNonScalar scope name typesLookup with 
