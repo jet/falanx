@@ -37,7 +37,7 @@ module Serialization =
         let mapExpr = Expr.PropertyGet(this, map.ProvidedProperty)
         
         match map.ValueType.Kind with
-        | Primitive ->
+        | Primitive _type ->
             Expr.callStaticGeneric 
                 [keyType; valueType]
                 [keyWriter; primitiveWriter map.ValueType.ProtobufType; positionExpr; buffer; mapExpr]
@@ -47,7 +47,7 @@ module Serialization =
                 [keyType; valueType]
                 [keyWriter; positionExpr; buffer; mapExpr]
                 <@@ writeMessageMap x x x x @@>
-        | Union _ -> failwith "oneOf map type are not currently supported"
+        | TypeKind.OneOf _ -> failwith "oneOf map type are not currently supported"
         | Enum(_scope, _name) ->
             Expr.callStaticGeneric
                 [keyType]
@@ -92,7 +92,7 @@ module Serialization =
                 <@@ writeEmbedded x x x @@>
                 |> Expr.methodof
                 |> Expr.callStatic [position; buffer; value]
-            | Union _, _ -> failwith "union fields should not be serialized here"
+            | TypeKind.OneOf _, _ -> failwith "union fields should not be serialized here"
             | Enum(_scope, _name), rule ->
                 let intMethod = 
                     let arg = Var("x",prop.Type.UnderlyingType)
@@ -113,7 +113,7 @@ module Serialization =
                         [typeof<int>]
                         [ <@@ writeInt32 @@> ;position; buffer; seqMap]
                         <@@ writeRepeated x x x x @@>
-            | Primitive, rule ->
+            | Primitive _type, rule ->
                 callPrimitive (primitiveWriter prop.Type.ProtobufType) prop rule position buffer value
         with
         | ex -> 
@@ -122,7 +122,7 @@ module Serialization =
              
     let serializeUnion buffer this (prop : OneOfDescriptor) =
         match prop.Type.Kind with 
-        | Union(_scope, _name, fields) ->
+        | TypeKind.OneOf(_scope, _name, fields) ->
 
             let oneOfExpr = Expr.PropertyGet(this, prop.CaseProperty)
             

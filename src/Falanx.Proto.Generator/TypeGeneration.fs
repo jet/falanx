@@ -109,7 +109,7 @@ module TypeGeneration =
         { KeyType = 
             { ProtobufType = keyTypeName
               RuntimeType = keyType
-              Kind = Primitive }
+              Kind = Primitive valueTypeName}
           ValueType = 
             { ProtobufType = valueTypeName
               RuntimeType = valueType
@@ -284,7 +284,7 @@ module TypeGeneration =
                         providedType.AddMember serializedLengthMethod
                         providedType.DefineMethodOverride(serializedLengthMethod, typeof<IMessage>.GetMethod("SerializedLength"))
                     | Json ->
-#if DEBUG
+#if DEBUG && VERBOSE
                         test_oneof.PrintDebug()
 #endif
                         let jsonObjCodec = JsonCodec.createJsonObjCodec typeInfo
