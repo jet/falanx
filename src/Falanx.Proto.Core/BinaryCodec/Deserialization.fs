@@ -89,7 +89,7 @@ module Deserialization =
         let value = deserializeField propertyDescriptor field
         //create a union constructor and feed the deserialised field into it
 
-        match providedUnion |> ProvidedUnion.tryGetUnionCaseByPosition (int propertyDescriptor.Position) with 
+        match providedUnion |> ProvidedUnion.tryGetUnionCaseByPosition (int propertyDescriptor.Position) with
         | Some puc ->
             let unionCaseInfo = mkUnionCaseInfo puc
             let unionCtor = Expr.NewUnionCaseUnchecked(unionCaseInfo, [value] )
@@ -126,14 +126,14 @@ module Deserialization =
                         | Optional -> prop.Position, handleOptional this prop
                         | Repeated -> prop.Position, handleRepeated this prop)
 
-                //create oneOf handlers
-                //SPEC: Setting a oneof field will automatically clear all other members of the oneof. 
+                //SPEC: States that setting a oneof field will automatically clear all other members of the oneof. 
                 // So if you set several oneof fields, only the last field you set will still have a value
-                let oneOfHandlers = 
+                let oneOfHandlers =
                     typeInfo.OneOfGroups
                     |> Seq.map (fun descriptor -> descriptor.Properties
                                                   |> Seq.map (fun (KeyValue(_, prop)) -> prop.Position, handleOptionalUnion this descriptor.CaseProperty prop descriptor.OneOfType))
                     |> Seq.concat
+
                     
                 //create map handlers
                 let mapHandlers = typeInfo.Maps |> Seq.map(fun map -> map.Position, handleMapElement this map)
