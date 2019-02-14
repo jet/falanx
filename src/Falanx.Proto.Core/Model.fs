@@ -30,13 +30,13 @@ module Model =
 
     type TypeKind = 
         | Primitive of string
-        | Class of scope: string * name : string
+        | Class of scope: string * message: ProtoMessage
         | Enum of scope : string * fullName : string
         | OneOf of scope : string * name : string * fields : POneOfStatement list
         member x.FullName =
             match x with
             | Primitive type' -> type'
-            | Class(scope, name) -> scope +.+ name
+            | Class(scope, message) -> scope +.+ message.Name
             | Enum(scope, fullName) -> scope +.+ fullName
             | OneOf(scope, name, fields) -> scope +.+ name
     
