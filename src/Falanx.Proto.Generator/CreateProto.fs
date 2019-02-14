@@ -29,6 +29,7 @@ module Topo =
 module Proto =
     open System.Collections
     open Falanx.Machinery
+    open Falanx.Proto.Core.Model
     open Falanx.Proto.Generator.TypeGeneration
     open System
     open Microsoft.FSharp.Compiler.Ast
@@ -67,8 +68,12 @@ module Proto =
             let gatherDependencies (x: ProtoMessage) =
                 let fieldTypes =
                     x.Fields
-                    |> List.filter (fun f -> not (Falanx.Proto.Core.Model.ProtoTypes.Contains f.Type) )
-                    |> List.map (fun f -> ProtoMessage(f.Type, [], false))
+                    |> List.choose (fun field -> TypeResolver.resolveNonScalar scope field.Type typelookup
+                                                 |> Option.map (fun (tk,_) -> match tk with
+                                                                              | TypeKind.Class(_, message) ->Some message
+                                                                              | _ -> None )
+                                                 |> Option.flatten )
+
                 List.append x.Messages fieldTypes |> List.toSeq
                                  
             Topo.topologySort gatherDependencies comparer protoFile.Messages
