@@ -42,7 +42,7 @@ module Deserialization =
             let enumMethodDef = Expr.methoddefof(<@ enum<DayOfWeek> x @>)
             let enumMethod = MethodSymbol2(enumMethodDef,[|property.Type.UnderlyingType|])
             Expr.Call(enumMethod, [ <@@ readInt32 (%%rawField) @@> ])
-        | Class(_scope, _name) -> Expr.callStaticGeneric [property.Type.UnderlyingType] [rawField ] <@@ readEmbedded<Template> x @@>
+        | Class(_scope, _message) -> Expr.callStaticGeneric [property.Type.UnderlyingType] [rawField ] <@@ readEmbedded<Template> x @@>
         | TypeKind.OneOf _ -> failwith "Not implemented"
     
     let private samePosition field idx = <@@ (%%field: RawField).FieldNum = idx @@>
@@ -60,7 +60,7 @@ module Deserialization =
             | Enum(_scope, _name) -> 
                 <@@ readMapElement x x x x @@>,
                 [map; keyReader; <@@ readInt32 @@>; field]
-            | Class(_scope, _name) -> 
+            | Class(_scope, _message) -> 
                 <@@ readMessageMapElement<_, Template> x x x @@>,
                 [map; keyReader; field ]
             | TypeKind.OneOf _ -> failwith "Not implemented"

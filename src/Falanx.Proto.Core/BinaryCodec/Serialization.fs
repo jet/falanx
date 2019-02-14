@@ -42,7 +42,7 @@ module Serialization =
                 [keyType; valueType]
                 [keyWriter; primitiveWriter map.ValueType.ProtobufType; positionExpr; buffer; mapExpr]
                 <@@ writePrimitiveMap x x x x x @@>
-        | Class(_scope, _name) -> 
+        | Class(_scope, _message) -> 
             Expr.callStaticGeneric
                 [keyType; valueType]
                 [keyWriter; positionExpr; buffer; mapExpr]
@@ -77,18 +77,18 @@ module Serialization =
         
         try
             match prop.Type.Kind, prop.Rule with
-            | Class(_scope, _name), Optional -> 
+            | Class(_scope, _message), Optional -> 
                 Expr.callStaticGeneric 
                     [prop.Type.UnderlyingType] 
                     [position; buffer; value]  
                     <@@ writeOptionalEmbedded x x x @@>
-            | Class(_scope, _name), Repeated ->
+            | Class(_scope, _message), Repeated ->
                 Expr.callStaticGeneric
                     [prop.Type.UnderlyingType]
                     [position; buffer; value]
                     <@@ writeRepeatedEmbedded(x, x, x) @@>
             //required is proto2 specific
-            | Class(_scope, _name), Required ->
+            | Class(_scope, _message), Required ->
                 <@@ writeEmbedded x x x @@>
                 |> Expr.methodof
                 |> Expr.callStatic [position; buffer; value]
