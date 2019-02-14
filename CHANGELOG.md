@@ -5,23 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 The `Unreleased` section name is replaced by the expected version of next release. A stable versions log contains all changes between that version and the previous stable version (can duplicate the prereleases logs)
 
+<a name="v0.5.1"></a>
+## [0.5.1]
+
 <a name="v0.5.0"></a>
-## [0.6.0] - 2019-02-14
+## [0.5.0] - 2019-02-14
 
 ### Added
-- Support for bytes primitive type as represented by ArraySegment<byte>
+- Support for bytes primitive type as represented by `ArraySegment<byte>`
 - Support for oneOf fields
 - Support for generating simplified let bindings for tuple deconstruction
 
-###Fixed
-- fix missing property assignment in oneOf message
-- fix proto file that specified a normal field followed by a oneOf generated invalid code
-
-<a name="v0.5.0"></a>
-## [0.5.0]
-
 ### Fixed
 - fix failure if the generated file output directory doesnt exists
+- fix missing property assignment in oneOf message
+- fix proto file that specified a normal field followed by a oneOf generated invalid code
 
 <a name="v0.4.2"></a>
 ## [0.4.2] - 2019-01-14
