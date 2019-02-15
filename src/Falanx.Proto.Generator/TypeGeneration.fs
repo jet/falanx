@@ -213,6 +213,7 @@ module TypeGeneration =
 
              let properties =
                  message.Fields
+                 |> List.sortBy(fun f-> f.Position)
                  |> List.mapi (createPropertyDescriptor nestedScope lookup providedType)
         
              for prop in properties do
