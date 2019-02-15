@@ -232,7 +232,7 @@ message TestCamelCaseFieldNames {
   repeated ForeignMessage RepeatedMessageField = 10;
 }
 
-
+*/
 // We list fields out of order, to ensure that we're using field number and not
 // field index to determine serialization order.
 message TestFieldOrderings {
@@ -249,7 +249,7 @@ message TestFieldOrderings {
 
   NestedMessage single_nested_message  = 200;
 }
-
+/*
 message SparseEnumMessage {
   TestSparseEnum sparse_enum = 1;
 }
