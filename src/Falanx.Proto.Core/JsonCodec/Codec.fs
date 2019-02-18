@@ -4,6 +4,7 @@ open System.Reflection
 open System.Collections.Generic
 open Fleece
 open Fleece.Newtonsoft
+open Fleece.Newtonsoft.Operators
 open Microsoft.FSharp.Quotations
 open ProviderImplementation.ProvidedTypes
 open ProviderImplementation.ProvidedTypes.UncheckedQuotations
@@ -493,6 +494,15 @@ type SampleMessage =
         |> withFields
         |> jfieldOpt "martId"  (fun b -> b.martId)
         |> jfieldOpt "test_oneof" (fun a -> a.test_oneof)
+        
+[<CLIMutable>]
+type NewSampleMessage =
+    { mutable martId : int option
+      mutable test_oneof : test_oneof option }
+    static member JsonObjCodec =
+        fun m t -> {martId = m; test_oneof = t}
+        <!> jopt "martId"  (fun b -> b.martId)
+        <*> jopt "test_oneof" (fun a -> a.test_oneof)
 
     
 type foo =
