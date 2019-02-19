@@ -50,7 +50,7 @@ module JsonCodec =
             
  
         let result =
-            let state = Expr.NewRecordUnchecked(recordType, recordArguments)
+            let state = Expr.NewRecord(recordType, recordArguments)
             List.foldBack (fun var acc ->
                                             Expr.Lambda(var, acc)) lambdaVars state
             
