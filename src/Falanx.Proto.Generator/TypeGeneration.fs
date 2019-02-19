@@ -23,7 +23,7 @@ module TypeGeneration =
         | Repeated -> Expr.makeGenericType [fieldType] typedefof<proto_repeated<_>>
         | Optional -> Expr.makeGenericType [fieldType] typedefof<option<_>>
         
-    let private createPropertyDescriptor scope (lookup: TypesLookup) (ty: ProvidedTypeDefinition) (* index used by records field custom attribute *) index (field: ProtoField) =
+    let private createPropertyDescriptor scope (lookup: TypesLookup) (ty: ProvidedTypeDefinition) getFieldTag (field: ProtoField) =
     
         let typeKind, propertyType = 
             match TypeResolver.resolve scope field.Type lookup with
@@ -41,13 +41,13 @@ module TypeGeneration =
                 ProvidedTypeDefinition.mkRecordPropertyWithField propertyType propertyName false
             
         //apply custom attributes for record field
-        let constructor = typeof<CompilationMappingAttribute>.TryGetConstructor([|typeof<SourceConstructFlags>; typeof<int> |])
+        let constructorInfo = typeof<CompilationMappingAttribute>.TryGetConstructor([|typeof<SourceConstructFlags>; typeof<int> |])
         // a records field has attributes that look like: (where n is field number)"
         // [CompilationMapping(SourceConstructFlags.Field, n)]
         let arguments = 
             [| CustomAttributeTypedArgument (typeof<SourceConstructFlags>, SourceConstructFlags.Field)
-               CustomAttributeTypedArgument (typeof<int>, index)|]
-        property.AddCustomAttribute(CustomAttributeData.Make(constructor.Value, args = arguments))
+               CustomAttributeTypedArgument (typeof<int>, getFieldTag())|]
+        property.AddCustomAttribute(CustomAttributeData.Make(constructorInfo.Value, args = arguments))
     
         { ProvidedProperty = property
           ProvidedField = Some backingField
@@ -118,22 +118,30 @@ module TypeGeneration =
           ProvidedProperty = property
           ProvidedField = field }   
                              
-    let createOneOfDescriptor scope (typesLookup: TypesLookup) (name: string) (members: POneOfStatement list) = 
-        let unionKind, unionType = 
-            match TypeResolver.resolveNonScalar scope name typesLookup with 
+    let createOneOfDescriptor scope (typesLookup: TypesLookup) (name: string) (members: POneOfStatement list) getFieldTag =
+        let unionKind, unionType =
+            match TypeResolver.resolveNonScalar scope name typesLookup with
             | Some (k, u) -> k, u :?> ProvidedUnion
             | None -> failwithf "unknown union type: %s" name
-       
-        let propertyType = applyRule ProtoFieldRule.Optional unionType
-        let propertyName = Naming.snakeToCamel name                
-        let caseProperty, caseField = ProvidedTypeDefinition.mkRecordPropertyWithField propertyType propertyName false
    
-        let propertyDescriptors = 
+        let propertyType = applyRule ProtoFieldRule.Optional unionType
+        let propertyName = Naming.snakeToCamel name
+        let caseProperty, caseField = ProvidedTypeDefinition.mkRecordPropertyWithField propertyType propertyName false
+        //apply custom attributes for record field
+        let constructorInfo = typeof<CompilationMappingAttribute>.TryGetConstructor([|typeof<SourceConstructFlags>; typeof<int> |])
+        // a records field has attributes that look like: (where n is field number)"
+        // [CompilationMapping(SourceConstructFlags.Field, n)]
+        let arguments = 
+            [| CustomAttributeTypedArgument (typeof<SourceConstructFlags>, SourceConstructFlags.Field)
+               CustomAttributeTypedArgument (typeof<int>, getFieldTag())|]
+        caseProperty.AddCustomAttribute(CustomAttributeData.Make(constructorInfo.Value, args = arguments))
+   
+        let propertyDescriptors =
             members
-            |> List.mapi (fun i (TOneOfField(name, ptype, position, _)) -> 
+            |> List.mapi (fun i (TOneOfField(name, ptype, position, _)) ->
                 let kind, propertyType =
                     match TypeResolver.resolvePType scope ptype typesLookup with
-                    | Some (kind, ty) -> 
+                    | Some (kind, ty) ->
                         let actualType = match kind with TypeKind.Enum _ -> typeof<int32> | _ -> ty
                         kind, actualType
                     | None -> failwithf "Unable to find type %A" ptype
@@ -149,8 +157,10 @@ module TypeGeneration =
                       Position = position
                       Rule = Optional
                       ProvidedField = None
-                      Type = { Kind = kind; ProtobufType = TypeResolver.ptypeToString ptype; RuntimeType = propertyType }
-                    }
+                      Type =
+                        { ProtobufType = TypeResolver.ptypeToString ptype
+                          Kind = kind
+                          RuntimeType = propertyType } }
     
                 i, propertyInfo)
             
@@ -176,6 +186,13 @@ module TypeGeneration =
             
     let rec createType (container: ProvidedTypeDefinition) scope (lookup: TypesLookup) (codecs: Codec Set) (message: ProtoMessage) : ProvidedTypeDefinition = 
          try
+             let getFieldTag =
+                 let currentTag = ref 0
+                 fun() ->
+                     let tag = !currentTag
+                     incr currentTag
+                     tag
+             
              let _kind, providedType = 
                  match TypeResolver.resolveNonScalar scope message.Name lookup with
                  | Some x -> x
@@ -196,7 +213,7 @@ module TypeGeneration =
                  message.Parts 
                  |> List.choose (function
                                  | TOneOf(name, members) ->
-                                     Some(createOneOfDescriptor nestedScope lookup name members)
+                                     Some(createOneOfDescriptor nestedScope lookup name members getFieldTag)
                                  | _ -> None)
 
              if not oneOfDescriptors.IsEmpty then
@@ -214,7 +231,7 @@ module TypeGeneration =
              let properties =
                  message.Fields
                  |> List.sortBy(fun f-> f.Position)
-                 |> List.mapi (createPropertyDescriptor nestedScope lookup providedType)
+                 |> List.map (createPropertyDescriptor nestedScope lookup providedType getFieldTag)
         
              for prop in properties do
                  providedType.AddMember prop.ProvidedProperty
@@ -257,8 +274,9 @@ module TypeGeneration =
                         providedType.AddMember serializedLengthMethod
                         providedType.DefineMethodOverride(serializedLengthMethod, typeof<IMessage>.GetMethod("SerializedLength"))
                     | Json ->
-#if DEBUG && VERBOSE
-                        test_oneof.PrintDebug()
+#if DEBUG
+                        unionWithOperators.JsonObjCodec()
+                        NewSampleMessage.PrintDebug()
 #endif
                         let jsonObjCodec = JsonCodec.createJsonObjCodec typeInfo
                         providedType.AddMember jsonObjCodec
