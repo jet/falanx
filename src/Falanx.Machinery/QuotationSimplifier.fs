@@ -8,6 +8,7 @@ module QuotationSimplifier =
     open Microsoft.FSharp.Quotations.DerivedPatterns
     open ProviderImplementation
     open ProviderImplementation.ProvidedTypes
+    open ProviderImplementation.ProvidedTypes.UncheckedQuotations
 
 //--------------------------------------------------------------------------------
     // The quotation simplifier
