@@ -19,7 +19,7 @@ open Falanx.Proto.Codec.Json.ResizeArray
 #nowarn "686"   
 module JsonCodec =
     let knownNamespaces = ["System"; "System.Collections.Generic"; "Fleece.Newtonsoft"; "Microsoft.FSharp.Core"; "Newtonsoft.Json.Linq"] |> Set.ofList
-    let qs = QuotationSimplifier(true)                          
+    let qs = QuotationSimplifier.QuotationSimplifier(true)                          
              
     let createLambdaRecord (typeDescriptor: TypeDescriptor) =
         //Lambda (u, Lambda (t, NewRecord (Result2, u, t))
@@ -253,6 +253,12 @@ module JsonCodec =
         let jReqTyped = ProvidedTypeBuilder.MakeGenericMethod(jReqMi, jReqArguments)
         Expr.CallUnchecked(jReqTyped, [fieldName; codec])
         
+    let callMapSymbol (property: FieldDescriptor) =
+        let genericMethod = typedefof<Fleece.Newtonsoft.ConcreteCodec<_,_,_,_>>
+        let method = genericMethod.GetMethod "op_LessBangGreater"
+        let temp = method
+        ()
+        
     let callmap (descriptor: OneOfDescriptor) (property: PropertyDescriptor) =
 
         let unionCase =
@@ -263,7 +269,11 @@ module JsonCodec =
             | Some case -> case
             | None -> failwithf "A union case was not found for: %s" property.ProvidedProperty.Name 
             
-        let mapMi = Expr.methoddefof <@ FSharpPlus.Operators.map<int, string, int [], string []> x x @>
+        let mapMi =
+            Expr.methoddefof <@ FSharpPlus.Operators.map<int, string, int [], string []> x x @>
+//            let genericMethod = typedefof<Fleece.Newtonsoft.ConcreteCodec<_,_,_,_>>
+//            let method = genericMethod.GetMethod "op_LessBangGreater"
+//            method
         
         let propertyType = property.Type.RuntimeType
         let unionType = descriptor.OneOfType :> Type
@@ -419,6 +429,9 @@ module JsonCodec =
         let recordType = typeDescriptor.Type :?> ProvidedRecord
         let lambdaRecord = createLambdaRecord typeDescriptor
         let mapping = callwithFields lambdaRecord
+        
+        let xxx = callMapSymbol typeDescriptor.Fields.[0]
+        
         let pipeLambdaToMapping = callPipeRight lambdaRecord mapping
 
         let jFieldOpts = createRecordJFieldOpts typeDescriptor
@@ -498,11 +511,17 @@ type SampleMessage =
 [<CLIMutable>]
 type NewSampleMessage =
     { mutable martId : int option
-      mutable test_oneof : test_oneof option }
+      mutable test_oneof : string option }
     static member JsonObjCodec =
         fun m t -> {martId = m; test_oneof = t}
         <!> jopt "martId"  (fun b -> b.martId)
         <*> jopt "test_oneof" (fun a -> a.test_oneof)
+        
+    static member PrintDebug() =
+        Expr.propertyof <@ NewSampleMessage.JsonObjCodec @>
+        |> function x -> x.GetMethod
+        |> Expr.TryGetReflectedDefinition
+        |> Option.iter (Expr.quotationsTypePrinter >> ignore)
 
     
 type foo =
@@ -555,4 +574,19 @@ type foo =
                             | _ -> failwith "Should never hit"
                         (Some(x) : Option<TestAllTypes>)
                     else (None : Option<TestAllTypes>))) |]
+        
+type unionWithOperators =
+    | Foo_int of Foo_int : int
+    | Foo_string of Foo_string : string
+    | Foo_message of Foo_message : TestAllTypes
+    static member JsonObjCodec =
+        let map a b = (<!>) a b
+        let xx = <@ map Foo_int (jreq<unionWithOperators, Int32> "Foo_int" (function Foo_int     x -> Some x | _ -> None)) @>
+        let yy = <@ xx @>
+        jchoice
+            [
+                Foo_int     <!> jreq "Foo_int"     (function Foo_int     x -> Some x | _ -> None)
+                Foo_string  <!> jreq "Foo_string"  (function Foo_string  x -> Some x | _ -> None)
+                Foo_message <!> jreq "Foo_message" (function Foo_message x -> Some x | _ -> None)
+            ]
 #endif
