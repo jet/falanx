@@ -40,7 +40,7 @@ module Deserialization =
         | Primitive _type -> Expr.Application(primitiveReader property.Type.ProtobufType, rawField)
         | Enum(_scope, _name) ->    
             let enumMethodDef = Expr.methoddefof(<@ enum<DayOfWeek> x @>)
-            let enumMethod = MethodSymbol2(enumMethodDef,[|property.Type.UnderlyingType|])
+            let enumMethod = ProvidedTypeBuilder.MakeGenericMethod(enumMethodDef, [property.Type.UnderlyingType])
             Expr.Call(enumMethod, [ <@@ readInt32 (%%rawField) @@> ])
         | Class(_scope, _message) -> Expr.callStaticGeneric [property.Type.UnderlyingType] [rawField ] <@@ readEmbedded<Template> x @@>
         | TypeKind.OneOf _ -> failwith "Not implemented"
@@ -95,7 +95,7 @@ module Deserialization =
             let unionCtor = Expr.NewUnionCaseUnchecked(unionCaseInfo, [value] )
             let wrappedAsOption = 
                 let uinfo = 
-                    FSharp.Reflection.FSharpType.GetUnionCases(TypeSymbol(TypeSymbolKind.OtherGeneric(typedefof<option<_>>),[|providedUnion|])) 
+                    FSharp.Reflection.FSharpType.GetUnionCases(ProvidedTypeBuilder.MakeGenericType(typedefof<option<_>>,[providedUnion])) 
                     |> Seq.find (fun x -> x.Name = "Some")
                 Expr.NewUnionCase(uinfo,[unionCtor])
             Expr.PropertySetUnchecked(this, unionProp, wrappedAsOption)
