@@ -13,8 +13,8 @@ type ProvidedUnionCase =
       fields: PropertyInfo list
       unionCaseType: ProvidedTypeDefinition }  
 
-and ProvidedUnion(isTgt: bool, container:TypeContainer, className: string, getBaseType: (unit -> Type option), attrs: TypeAttributes, getEnumUnderlyingType, staticParams, staticParamsApply, backingDataSource, customAttributesData, nonNullable, hideObjectMethods) =
-    inherit ProvidedTypeDefinition(isTgt, container, className, getBaseType, attrs,  getEnumUnderlyingType, staticParams, staticParamsApply, backingDataSource, customAttributesData, nonNullable, hideObjectMethods)
+and ProvidedUnion(className:string, baseType, ?hideObjectMethods, ?nonNullable, ?isErased) =
+    inherit ProvidedTypeDefinition(className, baseType, ?hideObjectMethods = hideObjectMethods, ?nonNullable = nonNullable, ?isErased = isErased)
     let tagsType =
         let tags = ProvidedTypeDefinition("Tags", Some typeof<obj>, isErased = false)
         tags.SetAttributes (TypeAttributes.Public ||| TypeAttributes.Class ||| TypeAttributes.Sealed ||| TypeAttributes.Abstract)
@@ -28,22 +28,7 @@ and ProvidedUnion(isTgt: bool, container:TypeContainer, className: string, getBa
       
     static let defaultAttributes isErased = 
          TypeAttributes.Public ||| TypeAttributes.Class ||| TypeAttributes.Sealed ||| enum (if isErased then int32 TypeProviderTypeAttributes.IsErased else 0)
-                
-    new (assembly:Assembly, namespaceName, className, baseType, ?hideObjectMethods, ?nonNullable, ?isErased) = 
-        let isErased = defaultArg isErased true
-        let nonNullable = defaultArg nonNullable false
-        let hideObjectMethods = defaultArg hideObjectMethods false
-        let attrs = defaultAttributes isErased
-        //if not isErased && assembly.GetType().Name <> "ProvidedAssembly" then failwithf "a non-erased (i.e. generative) ProvidedTypeDefinition '%s.%s' was placed in an assembly '%s' that is not a ProvidedAssembly" namespaceName className (assembly.GetName().Name)
-        ProvidedUnion(false, TypeContainer.Namespace (K assembly, namespaceName), className, K baseType, attrs, K None, [], None, None, K [| |], nonNullable, hideObjectMethods)
-
-    new (className:string, baseType, ?hideObjectMethods, ?nonNullable, ?isErased) = 
-        let isErased = defaultArg isErased true
-        let nonNullable = defaultArg nonNullable false
-        let hideObjectMethods = defaultArg hideObjectMethods false
-        let attrs = defaultAttributes isErased
-        ProvidedUnion(false, TypeContainer.TypeToBeDecided, className, K baseType, attrs, K None, [], None, None, K [| |], nonNullable, hideObjectMethods)
-        
+      
     override this.GetCustomAttributes(_inherit) = unionAttribs
     override this.GetCustomAttributes(_attributeType, _inherit) =
         unionAttribs
@@ -87,39 +72,26 @@ and ProvidedUnion(isTgt: bool, container:TypeContainer, className: string, getBa
         
     member __.UnionCases = unionCases.ToArray()
 
-type ProvidedRecordProperty(isTgt: bool, propertyName: string, attrs: PropertyAttributes, propertyType: Type, isStatic: bool, getter: (unit -> MethodInfo) option, setter: (unit -> MethodInfo) option, indexParameters: ProvidedParameter[], customAttributesData) =
-    inherit ProvidedProperty(isTgt, propertyName, attrs, propertyType, isStatic, getter, setter, indexParameters, customAttributesData)
-    
-    new (propertyName, propertyType, ?getterCode, ?setterCode, ?isStatic, ?indexParameters) =
-            let isStatic = defaultArg isStatic false
-            let indexParameters = defaultArg indexParameters []
-            let pattrs = (if isStatic then MethodAttributes.Static else enum<MethodAttributes>(0)) ||| MethodAttributes.Public ||| MethodAttributes.SpecialName
-            let getter = getterCode |> Option.map (fun _ -> ProvidedMethod(false, "get_" + propertyName, pattrs, Array.ofList indexParameters, propertyType, getterCode, [], None, K [| |]) :> MethodInfo)
-            let setter = setterCode |> Option.map (fun _ -> ProvidedMethod(false, "set_" + propertyName, pattrs, [| yield! indexParameters; yield ProvidedParameter(false, "value",propertyType,isOut=Some false,optionalValue=None) |], typeof<Void>, setterCode, [], None, K [| |]) :> MethodInfo)
-            ProvidedRecordProperty(false, propertyName, PropertyAttributes.None, propertyType, isStatic, Option.map K getter, Option.map K setter, Array.ofList indexParameters, K [| |])
+type ProvidedRecordProperty(propertyName, propertyType, ?getterCode, ?setterCode, ?isStatic, ?indexParameters) =
+    inherit ProvidedProperty(propertyName, propertyType, ?getterCode = getterCode, ?setterCode = setterCode, ?isStatic = isStatic, ?indexParameters = indexParameters)
 
-type ProvidedRecord(isTgt: bool, container:TypeContainer, className: string, getBaseType: (unit -> Type option), attrs: TypeAttributes, getEnumUnderlyingType, staticParams, staticParamsApply, backingDataSource, customAttributesData, nonNullable, hideObjectMethods) =
-    inherit ProvidedTypeDefinition(isTgt, container, className, getBaseType, attrs,  getEnumUnderlyingType, staticParams, staticParamsApply, backingDataSource, customAttributesData, nonNullable, hideObjectMethods)
+type ProvidedRecord(className:string, baseType, ?hideObjectMethods, ?nonNullable, ?isErased) =
+    inherit ProvidedTypeDefinition(className, baseType, ?hideObjectMethods = hideObjectMethods, ?nonNullable = nonNullable, ?isErased = isErased)
     
     let recordAttribs = [|(CompilationMappingAttribute(SourceConstructFlags.RecordType) :> Attribute)|] |> box |> unbox<obj[]>
     
     static let defaultAttributes isErased = 
              TypeAttributes.Public ||| TypeAttributes.Class ||| TypeAttributes.Sealed ||| enum (if isErased then int32 TypeProviderTypeAttributes.IsErased else 0)
 
-    new (assembly:Assembly, namespaceName, className, baseType, ?hideObjectMethods, ?nonNullable, ?isErased) = 
-        let isErased = defaultArg isErased true
-        let nonNullable = defaultArg nonNullable false
-        let hideObjectMethods = defaultArg hideObjectMethods false
-        let attrs = defaultAttributes isErased
-        //if not isErased && assembly.GetType().Name <> "ProvidedAssembly" then failwithf "a non-erased (i.e. generative) ProvidedTypeDefinition '%s.%s' was placed in an assembly '%s' that is not a ProvidedAssembly" namespaceName className (assembly.GetName().Name)
-        ProvidedRecord(false, TypeContainer.Namespace (K assembly, namespaceName), className, K baseType, attrs, K None, [], None, None, K [| |], nonNullable, hideObjectMethods)
+//    new (assembly:Assembly, namespaceName, className, baseType, ?hideObjectMethods, ?nonNullable, ?isErased) = 
+//        let isErased = defaultArg isErased true
+//        let nonNullable = defaultArg nonNullable false
+//        let hideObjectMethods = defaultArg hideObjectMethods false
+//        let attrs = defaultAttributes isErased
+//        //if not isErased && assembly.GetType().Name <> "ProvidedAssembly" then failwithf "a non-erased (i.e. generative) ProvidedTypeDefinition '%s.%s' was placed in an assembly '%s' that is not a ProvidedAssembly" namespaceName className (assembly.GetName().Name)
+//        ProvidedRecord(false, TypeContainer.Namespace (K assembly, namespaceName), className, K baseType, attrs, K None, [], None, None, K [| |], nonNullable, hideObjectMethods)
+//
 
-    new (className:string, baseType, ?hideObjectMethods, ?nonNullable, ?isErased) = 
-        let isErased = defaultArg isErased true
-        let nonNullable = defaultArg nonNullable false
-        let hideObjectMethods = defaultArg hideObjectMethods false
-        let attrs = defaultAttributes isErased
-        ProvidedRecord(false, TypeContainer.TypeToBeDecided, className, K baseType, attrs, K None, [], None, None, K [| |], nonNullable, hideObjectMethods)
         
     override this.GetCustomAttributes(_inherit) = recordAttribs
     override this.GetCustomAttributes(_attributeType, _inherit) = recordAttribs
