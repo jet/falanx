@@ -17,8 +17,8 @@ nuget Newtonsoft.Json 11.0.2
 
 nuget Microsoft.SourceLink.GitHub 1.0.0-beta2-18618-05 copy_local: true
 
+github 7sharp9/FSharp.TypeProviders.SDK:falanx src/ProvidedTypes.fsi
 github 7sharp9/FSharp.TypeProviders.SDK:falanx src/ProvidedTypes.fs 
-github 7sharp9/FSharp.TypeProviders.SDK:falanx src/ProvidedTypes.fsi 
 github 7sharp9/FSharp.TypeProviders.SDK:falanx src/ProvidedTypesTesting.fs 
 
 group IntegrationTests
