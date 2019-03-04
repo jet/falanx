@@ -28,10 +28,15 @@ module main =
         let parser = ArgumentParser.Create<Arguments>(programName = "falanx")
 
         try
-
             let results = parser.Parse argv
             let inputFile = results.GetResult InputFile
             let outputFile = results.GetResult OutputFile
+            let waitForDebugger = results.Contains Wait_Debugger
+            if waitForDebugger then
+                printfn "Please attach the debugger now..."
+                while not(System.Diagnostics.Debugger.IsAttached) do
+                    System.Threading.Thread.Sleep(100)
+                
             let defaultNamespace =
                 match results.TryGetResult DefaultNamespace with
                 | Some ns -> ns
