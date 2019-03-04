@@ -21,6 +21,7 @@ module main =
                 | DefaultNamespace _ -> "specify a default namespace to use for code generation."
                 | OutputFile _ -> "Specify the file name that the generated code will be written to."
                 | Serializer _ -> "serialization format. default binary"
+                | Wait_Debugger -> "Waits for a debugger to attach before proceeding."
 
     [<EntryPoint>]
     let main argv =
