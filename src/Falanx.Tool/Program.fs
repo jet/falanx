@@ -12,6 +12,7 @@ module main =
         | DefaultNamespace of string
         | [<Mandatory>] OutputFile of string
         | Serializer of Codec
+        | [<Hidden>]Wait_Debugger
     with
         interface IArgParserTemplate with
             member s.Usage =
