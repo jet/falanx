@@ -41,6 +41,9 @@
       Lines="$(FalanxSdk_UpdatedInputCacheContents)"
       WriteOnlyWhenDifferent="True" />
 
+    <Touch Files="$(_FalanxSdkCodeGenInputCache)"
+           Condition= " '$(FalanxWaitDebugger)' == 'true' " />
+
   </Target>
 
   <PropertyGroup>
@@ -64,6 +67,7 @@
       <FalanxSdk_CodeGenArgs Include='--outputfile "$(_FalanxSdk_OutputFileName)"' />
       <FalanxSdk_CodeGenArgs Include='--defaultnamespace "$(RootNamespace)"' />
       <FalanxSdk_CodeGenArgs Include='--serializer %(FalanxSdkSerializer.Identity)' />
+      <FalanxSdk_CodeGenArgs Include='--wait-debugger' Condition= " '$(FalanxWaitDebugger)' == 'true' " />
     </ItemGroup>
 
     <!-- Use dotnet to execute the process. -->
