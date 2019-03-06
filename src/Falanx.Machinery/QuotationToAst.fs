@@ -333,28 +333,13 @@ type Quotations() =
                 //let decode =
                 //    let _bind_3a275d2c95084ce4935a7051c305c76b, _ = codec
                 //    _bind_3a275d2c95084ce4935a7051c305c76b
-                //
                 //let encode =
                 //    let _, _bind_09062551283a4403a3c23744272b1be3 = codec
                 //    _bind_09062551283a4403a3c23744272b1be3
 
-                //let qs = Falanx.Machinery.QuotationSimplifier.QuotationSimplifier(true)
-                //let tgSimplified = qs.TranslateExpression tg 
-                //exprToAst tgSimplified
-                let synTuple = exprToAst tuple
-                let arity = FSharpType.GetTupleElements(tuple.Type).Length
-                let ident = mkUniqueIdentifier range
-                let synIdent = SynExpr.Ident(ident)
-                let patterns = 
-                    [ 
-                        for _i in 0 .. idx - 1 -> SynPat.Wild range
-                        yield SynPat.Named(SynPat.Wild range, ident, false, None, range)
-                        for _i in idx + 1 .. arity - 1 -> SynPat.Wild range
-                    ]
-    
-                let synPat = SynPat.Tuple(patterns, range)
-                let binding = mkBinding range false synPat synTuple
-                SynExpr.LetOrUse(false, false, [binding], synIdent, range)
+                let qs = Falanx.Machinery.QuotationSimplifier.QuotationSimplifier(true)
+                let tgSimplified = qs.TranslateExpression tg 
+                exprToAst tgSimplified
     
             // pattern matching with union case field binding
             | UnionCasePropertyGet(instance, ucType, ucName, position) ->
