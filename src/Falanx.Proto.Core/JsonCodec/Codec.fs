@@ -195,12 +195,12 @@ module JsonCodec =
         
         //<*> jopt  "ids"  (fun x -> expand x.Ids)
         
-        Expr.Lambda(codec,
-            Expr.Let(decoder, Expr.TupleGet(Expr.Var codec, 0),
-                Expr.Let(encoder, Expr.TupleGet(Expr.Var codec, 1),
-                    Expr.CallUnchecked(jfieldoptMethodInfoTyped, [fieldName; getter; Expr.Var decoder; Expr.Var encoder]))))
+//        Expr.Lambda(codec,
+//            Expr.Let(decoder, Expr.TupleGet(Expr.Var codec, 0),
+//                Expr.Let(encoder, Expr.TupleGet(Expr.Var codec, 1),
+//                    Expr.CallUnchecked(jfieldoptMethodInfoTyped, [fieldName; getter; Expr.Var decoder; Expr.Var encoder]))))
         //this can be simplified to:
-        //Expr.Lambda(codec, Expr.CallUnchecked(jfieldoptMethodInfoTyped, [fieldName; getter; Expr.TupleGet(Expr.Var codec, 0) ; Expr.TupleGet(Expr.Var codec, 1)]))
+        Expr.Lambda(codec, Expr.CallUnchecked(jfieldoptMethodInfoTyped, [fieldName; getter; Expr.TupleGet(Expr.Var codec, 0) ; Expr.TupleGet(Expr.Var codec, 1)]))
         //but fantomas breaks on this
         
     let callJfield (recordType: Type) (propertyDescriptor: PropertyDescriptor) (fieldType: Type ) (nextFieldType: Type) =
