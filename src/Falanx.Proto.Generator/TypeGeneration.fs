@@ -70,7 +70,7 @@ module TypeGeneration =
         
         providedEnum 
         
-    let private createMapDescriptor scope typesLookup (name: string) (keyTy: PKeyType) (valueTy: PType) position =
+    let private createMapDescriptor scope typesLookup (name: string) (keyTy: PKeyType) (valueTy: PType) position getFieldTag =
         let keyTypeName = 
             let keyType =
                 match keyTy with 
@@ -105,6 +105,14 @@ module TypeGeneration =
         let mapType = Expr.makeGenericType [ keyType; valueType] typedefof<proto_map<_, _>>
     
         let property, field = ProvidedTypeDefinition.mkRecordPropertyWithField mapType (Naming.snakeToPascal name) true
+        //apply custom attributes for record field
+        let constructorInfo = typeof<CompilationMappingAttribute>.TryGetConstructor([|typeof<SourceConstructFlags>; typeof<int> |])
+        // a records field has attributes that look like: (where n is field number)"
+        // [CompilationMapping(SourceConstructFlags.Field, n)]
+        let arguments = 
+            [| CustomAttributeTypedArgument (typeof<SourceConstructFlags>, SourceConstructFlags.Field)
+               CustomAttributeTypedArgument (typeof<int>, getFieldTag())|]
+        property.AddCustomAttribute(CustomAttributeData.Make(constructorInfo.Value, args = arguments))
         
         { KeyType = 
             { ProtobufType = keyTypeName
@@ -241,7 +249,7 @@ module TypeGeneration =
                  message.Parts
                  |> List.choose (function
                                 | TMap(name, keyTy, valueTy, position, _) ->
-                                    Some(createMapDescriptor nestedScope lookup name keyTy valueTy position)
+                                    Some(createMapDescriptor nestedScope lookup name keyTy valueTy position getFieldTag)
                                 | _ -> None)
         
              for map in maps do
