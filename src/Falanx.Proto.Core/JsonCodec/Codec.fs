@@ -421,7 +421,7 @@ module JsonCodec =
                                          | OneOf oneOf ->
                                              oneOf.CaseProperty.PropertyType
                                          | Map map ->
-                                             failwith "not implemented" )
+                                             map.ProvidedProperty.PropertyType )
                             
                         let restAsType = makeFunctionTypeFromElements (rest @ [recordType])
                         yield createJfieldopt head restAsType
