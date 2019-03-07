@@ -429,13 +429,8 @@ module JsonCodec =
         fieldTypeWithRest
         
     let createJsonObjCodec (typeDescriptor: TypeDescriptor) =     
-        let recordType = typeDescriptor.Type :?> ProvidedRecord
         let lambdaRecord = createLambdaRecord typeDescriptor
         let mapping = callwithFields lambdaRecord
-        
-        let xxx = callMapSymbol typeDescriptor.Fields.[0]
-        
-        let pipeLambdaToMapping = callPipeRight lambdaRecord mapping
 
         let jFieldOpts = createRecordJFieldOpts typeDescriptor
         
