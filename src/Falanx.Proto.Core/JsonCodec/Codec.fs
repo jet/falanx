@@ -416,12 +416,10 @@ module JsonCodec =
                             |> List.map (function
                                          | Property propertyDescriptor when propertyDescriptor.Rule = ProtoFieldRule.Repeated ->
                                              typedefof<Option<_>>.MakeGenericType(propertyDescriptor.ProvidedProperty.PropertyType)
-                                         | Property propertyDescriptor ->
-                                             propertyDescriptor.ProvidedProperty.PropertyType
-                                         | OneOf oneOf ->
-                                             oneOf.CaseProperty.PropertyType
-                                         | Map map ->
-                                             map.ProvidedProperty.PropertyType )
+                                         | Property { ProvidedProperty = property }
+                                         | OneOf    { CaseProperty     = property }
+                                         | Map      { ProvidedProperty = property } ->
+                                             property.PropertyType )
                             
                         let restAsType = makeFunctionTypeFromElements (rest @ [recordType])
                         yield createJfieldopt head restAsType
