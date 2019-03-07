@@ -99,7 +99,9 @@ The `Unreleased` section name is replaced by the expected version of next releas
 - the `Deserialization` helper method
 - the `Falanx.Sdk` package to integrate with .NET Sdk projects (fsproj)
 
-[0.5.0]: https://github.com/jet/falanx/compare/v0.4.0...HEAD
+[0.5.1]: https://github.com/jet/falanx/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/jet/falanx/compare/v0.4.0...v0.5.0
+[0.4.2]: https://github.com/jet/falanx/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/jet/falanx/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/jet/falanx/compare/v0.3.0...v0.4.0
 [0.4.0-alpha3]: https://github.com/jet/falanx/compare/v0.4.0-alpha2...v0.4.0-alpha3
