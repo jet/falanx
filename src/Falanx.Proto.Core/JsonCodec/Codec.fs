@@ -129,7 +129,7 @@ module JsonCodec =
         expr
         
 
-//TODO: this needs to be done at the Expt -> AST level to remove the extra lambda call  
+//TODO: this needs to be done at the Expr -> AST level to remove the extra lambda call  
 //    let callPipeRight2 (arg:Expr) (func:Expr) =
 //        let methodInfoGeneric = Expr.methoddefof<@ (|>) @>
 //        let funcTypeReturn = getFunctionReturnType func.Type
