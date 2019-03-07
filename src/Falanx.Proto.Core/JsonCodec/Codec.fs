@@ -399,7 +399,9 @@ module JsonCodec =
             | OneOf oneOf ->
                 let fieldType = getOptionType oneOf.CaseProperty.PropertyType
                 callJfieldopt typeDescriptor.Type ProtoFieldRule.Optional oneOf.CaseProperty fieldType rest
-            | Map map -> failwith "not implemented"
+            | Map map ->
+                let fieldType = getOptionType map.ProvidedProperty.PropertyType
+                callJfieldopt typeDescriptor.Type ProtoFieldRule.Optional map.ProvidedProperty fieldType rest
 
         let fieldTypeWithRest =
             let rec loop (recordFields: FieldDescriptor list) =
