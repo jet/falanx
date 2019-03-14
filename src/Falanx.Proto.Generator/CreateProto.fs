@@ -68,7 +68,7 @@ module Proto =
             let gatherDependencies (x: ProtoMessage) =
                 let fieldTypes =
                     x.Fields
-                    |> List.choose (fun field -> TypeResolver.resolveNonScalar scope field.Type typelookup
+                    |> List.choose (fun field -> TypeResolver.tryResolveNonScalar scope field.Type typelookup
                                                  |> Option.map (fun (tk,_) -> match tk with
                                                                               | TypeKind.Class(_, message) ->Some message
                                                                               | _ -> None )

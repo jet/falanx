@@ -26,7 +26,7 @@ module TypeGeneration =
     let private createPropertyDescriptor scope (lookup: TypesLookup) (ty: ProvidedTypeDefinition) getFieldTag (field: ProtoField) =
     
         let typeKind, propertyType = 
-            match TypeResolver.resolve scope field.Type lookup with
+            match TypeResolver.tryResolve scope field.Type lookup with
             | Some(kind, t) -> kind, t
             | None -> failwithf "Message definition not found: %A" field.Type
         
@@ -60,7 +60,7 @@ module TypeGeneration =
                      
     let createEnum scope lookup (enum: ProtoEnum) =
         let providedEnum = 
-            match TypeResolver.resolveNonScalar scope enum.Name lookup with
+            match TypeResolver.tryResolveNonScalar scope enum.Name lookup with
             | Some(_typeKind, providedType) -> providedType
             | None -> failwithf "Enum '%s' is not defined" enum.Name
         
@@ -90,7 +90,7 @@ module TypeGeneration =
             
         let valueTypeName = TypeResolver.ptypeToString valueTy
         let valueTypeKind, valueType = 
-            match TypeResolver.resolve scope valueTypeName typesLookup with
+            match TypeResolver.tryResolve scope valueTypeName typesLookup with
             | Some (Enum _ as e, _) ->
                 e, typeof<proto_int32>
             | Some(kind, ty) ->
@@ -98,7 +98,7 @@ module TypeGeneration =
             | None -> failwithf "Can't resolve type '%s'" valueTypeName               
     
         let keyType = 
-            match TypeResolver.resolveScalar keyTypeName with
+            match TypeResolver.tryResolveScalar keyTypeName with
             | Some x -> x
             | None -> failwithf "Can't resolve scalar type '%s'" keyTypeName
         
@@ -128,7 +128,7 @@ module TypeGeneration =
                              
     let createOneOfDescriptor scope (typesLookup: TypesLookup) (name: string) (members: POneOfStatement list) getFieldTag =
         let unionKind, unionType =
-            match TypeResolver.resolveNonScalar scope name typesLookup with
+            match TypeResolver.tryResolveNonScalar scope name typesLookup with
             | Some (k, u) -> k, u :?> ProvidedUnion
             | None -> failwithf "unknown union type: %s" name
    
@@ -148,7 +148,7 @@ module TypeGeneration =
             members
             |> List.mapi (fun i (TOneOfField(name, ptype, position, _)) ->
                 let kind, propertyType =
-                    match TypeResolver.resolvePType scope ptype typesLookup with
+                    match TypeResolver.tryResolvePType scope ptype typesLookup with
                     | Some (kind, ty) ->
                         let actualType = match kind with TypeKind.Enum _ -> typeof<int32> | _ -> ty
                         kind, actualType
@@ -202,7 +202,7 @@ module TypeGeneration =
                      tag
              
              let _kind, providedType = 
-                 match TypeResolver.resolveNonScalar scope message.Name lookup with
+                 match TypeResolver.tryResolveNonScalar scope message.Name lookup with
                  | Some x -> x
                  | None -> failwithf "Type '%s' is not defined" message.Name
                   
