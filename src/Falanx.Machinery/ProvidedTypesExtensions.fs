@@ -79,19 +79,6 @@ type ProvidedRecord(className:string, baseType, ?hideObjectMethods, ?nonNullable
     inherit ProvidedTypeDefinition(className, baseType, ?hideObjectMethods = hideObjectMethods, ?nonNullable = nonNullable, ?isErased = isErased)
     
     let recordAttribs = [|(CompilationMappingAttribute(SourceConstructFlags.RecordType) :> Attribute)|] |> box |> unbox<obj[]>
-    
-    static let defaultAttributes isErased = 
-             TypeAttributes.Public ||| TypeAttributes.Class ||| TypeAttributes.Sealed ||| enum (if isErased then int32 TypeProviderTypeAttributes.IsErased else 0)
-
-//    new (assembly:Assembly, namespaceName, className, baseType, ?hideObjectMethods, ?nonNullable, ?isErased) = 
-//        let isErased = defaultArg isErased true
-//        let nonNullable = defaultArg nonNullable false
-//        let hideObjectMethods = defaultArg hideObjectMethods false
-//        let attrs = defaultAttributes isErased
-//        //if not isErased && assembly.GetType().Name <> "ProvidedAssembly" then failwithf "a non-erased (i.e. generative) ProvidedTypeDefinition '%s.%s' was placed in an assembly '%s' that is not a ProvidedAssembly" namespaceName className (assembly.GetName().Name)
-//        ProvidedRecord(false, TypeContainer.Namespace (K assembly, namespaceName), className, K baseType, attrs, K None, [], None, None, K [| |], nonNullable, hideObjectMethods)
-//
-
         
     override this.GetCustomAttributes(_inherit) = recordAttribs
     override this.GetCustomAttributes(_attributeType, _inherit) = recordAttribs
