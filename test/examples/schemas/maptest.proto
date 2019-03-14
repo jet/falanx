@@ -5,5 +5,8 @@ message SomeMessage {
 }
 
 message SomeMessageWithMap {
-    map<string, SomeMessage> some_map = 1;
+    int64 aField = 1;
+    map<string, SomeMessage> some_map = 2;
+    string anotherField = 3;
+    
 }
