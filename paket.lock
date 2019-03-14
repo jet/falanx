@@ -308,23 +308,19 @@ NUGET
       System.Runtime.Handles (>= 4.3)
 GITHUB
   remote: 7sharp9/FSharp.TypeProviders.SDK
-    src/ProvidedTypes.fs (5dd0739e04416e53222e3a179038b99ad2611e86) 5dd0739e04416e53222e3a179038b99ad2611e86
-    src/ProvidedTypes.fsi (5dd0739e04416e53222e3a179038b99ad2611e86) 5dd0739e04416e53222e3a179038b99ad2611e86
-    src/ProvidedTypesTesting.fs (5dd0739e04416e53222e3a179038b99ad2611e86) 5dd0739e04416e53222e3a179038b99ad2611e86
+    src/ProvidedTypes.fs (06cb9aff39db50c179576f266dfa7130f25bf66f) 5dd0739e04416e53222e3a179038b99ad2611e86
+    src/ProvidedTypes.fsi (06cb9aff39db50c179576f266dfa7130f25bf66f) 5dd0739e04416e53222e3a179038b99ad2611e86
+    src/ProvidedTypesTesting.fs (06cb9aff39db50c179576f266dfa7130f25bf66f) 5dd0739e04416e53222e3a179038b99ad2611e86
 GROUP IntegrationTests
 STORAGE: NONE
 RESTRICTION: || (== netcoreapp2.1) (== netstandard2.0)
 NUGET
   remote: https://www.nuget.org/api/v2
-    Argu (5.2)
-      FSharp.Core (>= 4.3.2)
-      System.Configuration.ConfigurationManager (>= 4.4)
-    Expecto (8.8)
-      Argu (>= 5.2)
-      Mono.Cecil (>= 0.10.1)
-      System.Diagnostics.FileVersionInfo (>= 4.3)
-    Expecto.TestResults (8.8)
-      Expecto (>= 8.8)
+    Expecto (8.9.1)
+      FSharp.Core (>= 4.3.4)
+      Mono.Cecil (>= 0.10.3)
+    Expecto.TestResults (8.9.1)
+      Expecto (>= 8.9.1)
       FSharp.Core (>= 4.3.4)
     FSharp.Core (4.5.4)
     MedallionShell (1.5.1)
@@ -405,24 +401,10 @@ NUGET
       System.Runtime.Extensions (>= 4.3)
       System.Threading (>= 4.3)
       System.Threading.Tasks (>= 4.3)
-    System.Collections.Immutable (1.5) - restriction: || (&& (== netcoreapp2.1) (>= net45)) (&& (== netcoreapp2.1) (< netstandard1.1)) (&& (== netcoreapp2.1) (< netstandard2.0)) (== netstandard2.0)
-    System.Configuration.ConfigurationManager (4.5)
-      System.Security.Cryptography.ProtectedData (>= 4.5)
-      System.Security.Permissions (>= 4.5)
     System.Diagnostics.Debug (4.3)
       Microsoft.NETCore.Platforms (>= 1.1)
       Microsoft.NETCore.Targets (>= 1.1)
       System.Runtime (>= 4.3)
-    System.Diagnostics.FileVersionInfo (4.3)
-      Microsoft.NETCore.Platforms (>= 1.1)
-      System.Globalization (>= 4.3)
-      System.IO (>= 4.3)
-      System.IO.FileSystem (>= 4.3)
-      System.IO.FileSystem.Primitives (>= 4.3)
-      System.Reflection.Metadata (>= 1.4.1)
-      System.Runtime (>= 4.3)
-      System.Runtime.Extensions (>= 4.3)
-      System.Runtime.InteropServices (>= 4.3)
     System.Diagnostics.Process (4.3)
       Microsoft.NETCore.Platforms (>= 1.1)
       Microsoft.Win32.Primitives (>= 4.3)
@@ -487,8 +469,6 @@ NUGET
       System.IO (>= 4.3)
       System.Reflection.Primitives (>= 4.3)
       System.Runtime (>= 4.3)
-    System.Reflection.Metadata (1.6)
-      System.Collections.Immutable (>= 1.5) - restriction: || (&& (== netcoreapp2.1) (>= net45)) (&& (== netcoreapp2.1) (< netstandard1.1)) (&& (== netcoreapp2.1) (< netstandard2.0)) (== netstandard2.0)
     System.Reflection.Primitives (4.3)
       Microsoft.NETCore.Platforms (>= 1.1)
       Microsoft.NETCore.Targets (>= 1.1)
@@ -576,10 +556,6 @@ NUGET
       System.Runtime (>= 4.3)
       System.Threading (>= 4.3)
       System.Threading.Tasks (>= 4.3)
-    System.Security.Cryptography.ProtectedData (4.5)
-      System.Memory (>= 4.5) - restriction: == netstandard2.0
-    System.Security.Permissions (4.5)
-      System.Security.AccessControl (>= 4.5)
     System.Security.Principal.Windows (4.5.1)
       Microsoft.NETCore.Platforms (>= 2.0) - restriction: || (== netcoreapp2.1) (&& (== netstandard2.0) (>= netcoreapp2.0))
     System.Text.Encoding (4.3)
@@ -605,7 +581,7 @@ NUGET
       System.Runtime.Handles (>= 4.3)
 GITHUB
   remote: enricosada/dotnet-proj-info
-    test/dotnet-proj.Tests/FileUtils.fs (c8527fa3a44acbca4951abb29aaebf207482e0f1)
+    test/dotnet-proj.Tests/FileUtils.fs (43b4824c79137098b725794ea442e7062205613f)
 GROUP MergeNupkgTool
 STORAGE: NONE
 RESTRICTION: || (== netcoreapp2.0) (== netstandard2.0)
@@ -615,7 +591,7 @@ NUGET
       FSharp.Core (>= 4.3.4) - restriction: || (== netcoreapp2.0) (&& (== netstandard2.0) (>= netcoreapp1.0))
       Microsoft.NETCore.App (>= 2.0) - restriction: || (== netcoreapp2.0) (&& (== netstandard2.0) (>= netcoreapp2.0))
     FSharp.Core (4.6.2) - restriction: || (== netcoreapp2.0) (&& (== netstandard2.0) (>= netcoreapp1.0))
-    Microsoft.NETCore.App (2.2.2) - restriction: || (== netcoreapp2.0) (&& (== netstandard2.0) (>= netcoreapp2.0))
+    Microsoft.NETCore.App (2.2.3) - restriction: || (== netcoreapp2.0) (&& (== netstandard2.0) (>= netcoreapp2.0))
 
 GROUP ProtoTests
 
