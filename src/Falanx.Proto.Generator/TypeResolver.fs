@@ -80,7 +80,7 @@ module TypeResolver =
         processFile file scope
         |> Map.ofSeq
         
-    let resolveScalar = function
+    let tryResolveScalar = function
         | "double" -> Some typeof<proto_double>
         | "float" -> Some typeof<proto_float>
         | "int32" -> Some typeof<proto_int32>
@@ -116,20 +116,20 @@ module TypeResolver =
         | TBytes -> "bytes"
         | TIdent typeIdent -> typeIdent 
         
-    let resolveNonScalar scope targetType (lookup: TypesLookup) =
+    let tryResolveNonScalar scope targetType (lookup: TypesLookup) =
         allScopes scope
         |> Seq.map (fun s -> Map.tryFind (s +.+ targetType) lookup )
         |> Seq.tryFind Option.isSome
         |> Option.flatten
     
-    let resolve scope targetType (lookup: TypesLookup) = 
+    let tryResolve scope targetType (lookup: TypesLookup) = 
         let findInLookup () = 
-            resolveNonScalar scope targetType lookup
+            tryResolveNonScalar scope targetType lookup
             |> Option.map (fun (kind, ty) -> kind, ty :> Type)
     
-        resolveScalar targetType 
+        tryResolveScalar targetType 
         |> Option.map (fun t -> Primitive targetType, t)
         |> Option.orElseWith findInLookup
         
-    let resolvePType scope targetType (lookup: TypesLookup) = 
-        resolve scope (ptypeToString targetType) lookup
+    let tryResolvePType scope targetType (lookup: TypesLookup) = 
+        tryResolve scope (ptypeToString targetType) lookup
