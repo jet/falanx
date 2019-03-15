@@ -4,6 +4,16 @@ open System
 open System.Reflection
 open ProviderImplementation.ProvidedTypes
 
+module TypeHelpers =
+    let (|EnclosingTypeSuppressed|) (ommitEnclosingTypes: Type list option) (t:Type) =
+        match ommitEnclosingTypes with
+        | Some(types: Type list) when not (isNull t.DeclaringType) ->
+            let declaringType = t.DeclaringType.Name
+            types
+            |> List.tryPick(fun t -> if t.Name = declaringType then Some() else None )
+            |> Option.isSome
+        | _ -> false
+            
 type TypeHelpers() =
 
     static member FormatType(useFullName, ommitGenericArgs, t: Type, ?ommitEnclosingType, ?useQualifiedNames, ?knownNamespaces) =
@@ -31,13 +41,11 @@ type TypeHelpers() =
              t.Name = typeof<float>.Name ||
              t.Name = typeof<float32>.Name ||
              t.Name = typeof<decimal>.Name)
+            
+
+                
                                  
         let rec toString useFullName (ommitGenericArgs: bool) (t: Type) =
-        
-            let enclosingTypeSuppressed =
-                match ommitEnclosingType with
-                | Some (container:Type) when not (isNull t.DeclaringType) && container.Name = t.DeclaringType.Name -> true
-                | _ -> false
                 
             let hasUnit =  hasUnitOfMeasure t
         //                        | [ "System"; "Void"   ] -> ["unit"]
@@ -115,7 +123,9 @@ type TypeHelpers() =
                 | t when t.IsArray -> warnIfWrongAssembly <| t.GetElementType()
                 | t -> if not t.IsGenericParameter && t.Assembly = Assembly.GetExecutingAssembly() then " [DESIGNTIME]" else ""
         
-            if hasUnit || t.IsGenericParameter || isNull t.DeclaringType || enclosingTypeSuppressed then 
+            if hasUnit || t.IsGenericParameter
+                       || isNull t.DeclaringType
+                       || TypeHelpers.(|EnclosingTypeSuppressed|) ommitEnclosingType t then 
                 innerToString t + (warnIfWrongAssembly t)
             else
                 (toString useFullName ommitGenericArgs t.DeclaringType) + "." + (innerToString t) + (warnIfWrongAssembly t)
