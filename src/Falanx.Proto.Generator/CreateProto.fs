@@ -122,8 +122,13 @@ module Proto =
         let openBinaryCodec = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "Falanx.Proto.Codec.Binary")
         let openBinaryCodecPrimitive = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "Falanx.Proto.Codec.Binary.Primitives")
         let openJsonLinq = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "Newtonsoft.Json.Linq")
+        let openFleece = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "Fleece")
         let openFleeceNewtonsoft = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "Fleece.Newtonsoft")
         let openJsonCodec = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "Falanx.Proto.Codec.Json" )
+        
+        let ommitEnclosingTypes =
+            let moduleType = Expr.moduleof <@  Fleece.Newtonsoft.JType @>
+            [typeof<TypeContainer>; moduleType]
         
         let knownNamespaces =
             [ yield providedTypeRoot.Namespace
@@ -136,6 +141,7 @@ module Proto =
                   
               if codecs.Contains Json then
                   yield "Newtonsoft.Json.Linq"
+                  yield "Fleece"
                   yield "Fleece.Newtonsoft"
                   yield "Falanx.Proto.Codec.Json"
               
@@ -157,14 +163,14 @@ module Proto =
                     for t in pt.GetNestedTypes() do
                         match t with 
                         | :? ProvidedUnion as pu ->
-                            yield SynModuleDecl.CreateUnion(pu, typeof<TypeContainer>, knownNamespaces)
+                            yield SynModuleDecl.CreateUnion(pu, ommitEnclosingTypes, knownNamespaces)
                         | :? ProvidedRecord as pr ->
                             match loop t with 
                             | [] -> ()
                             | children -> 
                                 let info = SynComponentInfoRcd.Create(Ident.CreateLong t.Name)
                                 yield SynModuleDecl.CreateNestedModule(info, children)
-                            yield SynModuleDecl.CreateRecord(pr, typeof<TypeContainer>, knownNamespaces)
+                            yield SynModuleDecl.CreateRecord(pr, ommitEnclosingTypes, knownNamespaces)
                         | :? ProvidedTypeDefinition as pe when pe.IsEnum -> 
                             yield SynModuleDecl.CreateEnum(pe)
                         | _ -> () 
@@ -186,6 +192,7 @@ module Proto =
                                                      yield openBinaryCodecPrimitive
                                                  if codecs.Contains Json then
                                                      yield openJsonLinq
+                                                     yield openFleece
                                                      yield openFleeceNewtonsoft
                                                      yield openJsonCodec
                                                  yield nowarn
