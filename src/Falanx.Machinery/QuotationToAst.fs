@@ -1,5 +1,4 @@
 ﻿namespace Falanx.Machinery
-
 open System
 open System.Reflection
 open Microsoft.FSharp.Reflection
@@ -13,9 +12,10 @@ open Utils
 open Microsoft.FSharp.Compiler
 open Microsoft.FSharp.Compiler.SourceCodeServices
 open ProviderImplementation.ProvidedTypes
+open Falanx.Machinery
 
 type Quotations() =
-    static member ToAst(expr : Expr, ?ommitEnclosingType : Type, ?knownNamespaces : _ Set) =
+    static member ToAst(expr : Expr, ?ommitEnclosingType : Type list, ?knownNamespaces : _ Set) =
         let knownNamespaces = defaultArg knownNamespaces Set.empty
         let defaultRange = defaultArg (tryParseRange expr) range0               
     
@@ -311,10 +311,9 @@ type Quotations() =
                     if methodInfo.IsGenericMethod then
                         let margs =
                             methodInfo.GetGenericArguments()
-                            |> Seq.map (fun t -> match ommitEnclosingType with
-                                                 | Some container when t.DeclaringType <> null && container.Name = t.DeclaringType.Name ->
-                                                     let liwd =
-                                                         LongIdentWithDots( [getMemberPath range t knownNamespaces ommitEnclosingType |> List.last], [range])
+                            |> Seq.map (fun t -> match t with
+                                                 | TypeHelpers.EnclosingTypeSuppressed ommitEnclosingType true ->
+                                                     let liwd = LongIdentWithDots( [ (getMemberPath range t knownNamespaces ommitEnclosingType) |> List.last], [range])
                                                      SynType.LongIdent liwd 
                                                  | _ -> sysTypeToSynType range t knownNamespaces ommitEnclosingType )
                             |> Seq.toList
