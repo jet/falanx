@@ -38,7 +38,7 @@ namespace Falanx.Machinery
                     SynType.CreateLongIdent(LongIdentWithDots.CreateString (TypeHelpers.FormatType(false,false, typ, ommitEnclosingType = ommitEnclosingType, ?knownNamespaces = knownNamespaces) ) )
                    
         type SynMemberDefn with
-                static member  CreateFromProvidedMethod (pm:ProvidedMethod, ?ommitEnclosingType : Type, ?knownNamespaces: _ Set) =
+                static member  CreateFromProvidedMethod (pm:ProvidedMethod, ?ommitEnclosingType : Type list, ?knownNamespaces: _ Set) =
                     let ident =
                         let ident = if pm.IsStatic then pm.Name else (thisPrefix +.+ pm.Name)
                         LongIdentWithDots.CreateString ident
@@ -64,7 +64,7 @@ namespace Falanx.Machinery
                             ValData = SynValData(flags, SynValInfo.Empty, None)
                         }
                         
-                static member  CreateFromProvidedProperty (pp:ProvidedProperty, ?ommitEnclosingType : Type, ?knownNamespaces: _ Set) =
+                static member  CreateFromProvidedProperty (pp:ProvidedProperty, ?ommitEnclosingType : Type list, ?knownNamespaces: _ Set) =
                     let ident =
                         let ident = if pp.IsStatic then pp.Name else (thisPrefix +.+ pp.Name)
                         LongIdentWithDots.CreateString ident
@@ -91,11 +91,11 @@ namespace Falanx.Machinery
                 SynFieldRcd.Create(Ident.Create(fi.Name), typeName, isMutable)
         
         type SynModuleDecl with
-            static member CreateRecord (pr: ProvidedRecord, ?ommitEnclosingType, ?knownNamespaces) =
+            static member CreateRecord (pr: ProvidedRecord, ?ommitEnclosingTypes: Type list, ?knownNamespaces) =
                 let recordFields =
                     let props =
                         pr.RecordFields
-                        |> List.map (fun pi -> SynFieldRcd.CreateFromPropertyInfo(pi, true, ?ommitEnclosingType = ommitEnclosingType))
+                        |> List.map (fun pi -> SynFieldRcd.CreateFromPropertyInfo(pi, true, ?ommitEnclosingType = ommitEnclosingTypes))
                     props
                     
                 let interfacesAndMembers = ProvidedTypeDefinition.getMethodOverridesByInterfaceType pr
@@ -105,7 +105,7 @@ namespace Falanx.Machinery
                     [ for (interface', members) in interfacesAndMembers do
                           let methods =
                               members
-                              |> Array.map (fun (pm, _mi) -> SynMemberDefn.CreateFromProvidedMethod(pm, ?ommitEnclosingType = ommitEnclosingType, ?knownNamespaces = knownNamespaces))
+                              |> Array.map (fun (pm, _mi) -> SynMemberDefn.CreateFromProvidedMethod(pm, ?ommitEnclosingType = ommitEnclosingTypes, ?knownNamespaces = knownNamespaces))
                               |> Array.toList                                                                  
                           yield SynMemberDefn.CreateInterface(SynType.CreateFromType(interface', ?knownNamespaces = knownNamespaces), Some methods)
                     ]
@@ -117,7 +117,7 @@ namespace Falanx.Machinery
                                                  let name = pm.Name
                                                  if name.StartsWith("get_") || name.StartsWith("set_")
                                                  then None
-                                                 else Some(SynMemberDefn.CreateFromProvidedMethod(pm, ?ommitEnclosingType = ommitEnclosingType, ?knownNamespaces = knownNamespaces))
+                                                 else Some(SynMemberDefn.CreateFromProvidedMethod(pm, ?ommitEnclosingType = ommitEnclosingTypes, ?knownNamespaces = knownNamespaces))
                                              | _ -> None)
                     |> Seq.toList
                     
@@ -128,7 +128,7 @@ namespace Falanx.Machinery
                                                  let name = pm.Name
                                                  if name.StartsWith("get_") || name.StartsWith("set_")
                                                  then None
-                                                 else Some(SynMemberDefn.CreateFromProvidedMethod(pm, ?ommitEnclosingType = ommitEnclosingType, ?knownNamespaces = knownNamespaces))
+                                                 else Some(SynMemberDefn.CreateFromProvidedMethod(pm, ?ommitEnclosingType = ommitEnclosingTypes, ?knownNamespaces = knownNamespaces))
                                              | _ -> None)
                     |> Seq.toList
                     
@@ -143,7 +143,7 @@ namespace Falanx.Machinery
                     
                 let properties =
                     properties
-                    |> Seq.map (fun pp -> SynMemberDefn.CreateFromProvidedProperty(pp, ?ommitEnclosingType = ommitEnclosingType, ?knownNamespaces = knownNamespaces))
+                    |> Seq.map (fun pp -> SynMemberDefn.CreateFromProvidedProperty(pp, ?ommitEnclosingType = ommitEnclosingTypes, ?knownNamespaces = knownNamespaces))
                     
                 let attributes =
                     let cliMutableAttribute =
@@ -161,12 +161,12 @@ namespace Falanx.Machinery
                                 yield! interfaces ]
                 )
                 
-            static member CreateUnion(pu: ProvidedUnion, ?ommitEnclosingType, ?knownNamespaces) =
+            static member CreateUnion(pu: ProvidedUnion, ?ommitEnclosingTypes, ?knownNamespaces) =
                 let unionCases =
                     pu.UnionCases
                     |> Array.map (fun uc -> let unionFields =
                                                 uc.fields
-                                                |> List.map (fun pi -> SynFieldRcd.CreateFromPropertyInfo(pi, false, ?ommitEnclosingType = ommitEnclosingType))
+                                                |> List.map (fun pi -> SynFieldRcd.CreateFromPropertyInfo(pi, false, ?ommitEnclosingType = ommitEnclosingTypes))
                                             let unioncaseType = SynUnionCaseType.Create(unionFields)
                                             SynUnionCaseRcd.Create(Ident.Create uc.name, unioncaseType) )
                     |> Array.toList
@@ -178,7 +178,7 @@ namespace Falanx.Machinery
                                       let name = pm.Name
                                       if name.StartsWith("get_") || name.StartsWith("set_")
                                       then None
-                                      else Some(SynMemberDefn.CreateFromProvidedMethod(pm, ?ommitEnclosingType = ommitEnclosingType, ?knownNamespaces = knownNamespaces))
+                                      else Some(SynMemberDefn.CreateFromProvidedMethod(pm, ?ommitEnclosingType = ommitEnclosingTypes, ?knownNamespaces = knownNamespaces))
                                   | _ -> None)
                     |> Seq.toList
                     
@@ -190,7 +190,7 @@ namespace Falanx.Machinery
                     
                 let properties =
                     providedProperties
-                    |> Seq.map (fun pp -> SynMemberDefn.CreateFromProvidedProperty(pp, ?ommitEnclosingType = ommitEnclosingType, ?knownNamespaces = knownNamespaces))
+                    |> Seq.map (fun pp -> SynMemberDefn.CreateFromProvidedProperty(pp, ?ommitEnclosingType = ommitEnclosingTypes, ?knownNamespaces = knownNamespaces))
         
                 SynModuleDecl.CreateSimpleType (
                     { SynComponentInfoRcd.Create (Ident.CreateLong pu.Name) with
