@@ -175,27 +175,29 @@ namespace Falanx.Machinery
                     | _ -> m.Name.Split('`').[0]
         
         /// generate full path for given memberinfo
-        let getMemberPath range (m : MemberInfo) (knownNamespaces : _ Set) (ommitEnclosingType : Type option) =
-            let rec aux (m : MemberInfo) = seq {
+        let getMemberPath range (m : MemberInfo) (knownNamespaces : _ Set) (ommitEnclosingTypes : Type list option) =
+            
+            let rec aux (m : MemberInfo) = [
                 match m.DeclaringType with
                 | null -> 
                     match (m :?> Type).Namespace with
                     | null -> ()
-                    | ns ->
-                        if knownNamespaces.Contains ns then ()
-                        else yield! ns.Split('.') 
-                | dt -> 
-                    match ommitEnclosingType with
-                    | Some(et) when et.Name = dt.Name -> ()
-                    | _ -> yield! aux dt 
+                    | nameSpace ->
+                        if knownNamespaces.Contains nameSpace then ()
+                        else yield! nameSpace.Split('.') 
+                | TypeHelpers.EnclosingTypeSuppressed ommitEnclosingTypes true -> ()
+                | declaringType -> yield! aux declaringType 
             
-                yield getFSharpName m knownNamespaces ommitEnclosingType
-            }
+                yield getFSharpName m knownNamespaces ommitEnclosingTypes
+            ]
         
-            aux m |> Seq.map (mkIdent range) |> Seq.toList
+            let pieces = aux m
+            let vis = pieces |> List.toArray
+            let _ = vis
+            pieces |> List.map (mkIdent range)
         
         /// converts a System.Type to a F# compiler SynType expression
-        let rec sysTypeToSynType (range : range) (t : System.Type) knownNamespaces (ommitEnclosingType : Type Option) : SynType =
+        let rec sysTypeToSynType (range : range) (t : System.Type) knownNamespaces (ommitEnclosingType : Type list Option) : SynType =
             if FSharpType.IsTuple t then
                 let telems = 
                     FSharpType.GetTupleElements t 
