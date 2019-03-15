@@ -12,7 +12,7 @@ namespace Falanx.Machinery
         
         open ProviderImplementation.ProvidedTypes
         open ProviderImplementation.ProvidedTypes.UncheckedQuotations
-        
+     
         let cleanUpTypeName (str:string) =
             let sb = Text.StringBuilder(str)
             sb.Replace("System.", "")
@@ -84,24 +84,20 @@ namespace Falanx.Machinery
         let x<'T> : 'T = Unchecked.defaultof<'T>
         let private onlyVar = function Var v -> Some v | _ -> None
         
-        /// Get FieldInfo from expression
-        let fieldof expr =
-          match expr with
-            | FieldGet(_, info) -> info
+        let (|Field|_|) = function
+            | FieldGet(_, info) -> Some info
             | Lambda(arg, FieldGet(Some(Var var), info))
             | Let(arg, _, FieldGet(Some(Var var), info))
-                when arg = var -> info
-            | _ -> failwith "Not a field expression"
+                when arg = var -> Some info
+            | _ -> None
         
-        /// Get PropertyInfo from expression
-        let propertyof expr =
-          match expr with
-            | PropertyGet(_, info, _) -> info
+        let (|Property|_|) = function
+            | PropertyGet(_, info, _) -> Some info
             | Lambda(arg, PropertyGet(Some(Var var), info, _))
             | Let(arg, _, PropertyGet(Some(Var var), info, _))
-                when arg = var -> info
-            | _ -> failwith "Not a property expression"
-        
+                when arg = var -> Some info
+            | _ -> None
+                
         let private (|LetInCall|_|) expr =
             let rec loop e collectedArgs =
                 match e with
@@ -119,9 +115,7 @@ namespace Falanx.Machinery
                 | _ -> None
             loop expr Set.empty
         
-        let private (|Func| _ |) expr =
-            
-            match expr with
+        let private (|Func|_|) = function
             // function values without arguments
             | Lambda (arg, Call (target, info, []))
                 when arg.Type = typeof<unit> -> Some (target, info)
@@ -139,65 +133,85 @@ namespace Falanx.Machinery
                 None
             | _ -> None
             
-        /// Get a MethodInfo from an expression that is a method call or a function type value
-        let rec methodof expr =
-            match expr with
+        let (|Method|_|) = function
             // any ordinary calls: foo.Bar ()
-            | Call (_, info, _) -> info
+            | Call (_, info, _) -> Some info
             // calls and function values via a lambda argument:
             // fun (x: string) -> x.Substring (1, 2)
             // fun (x: string) -> x.StartsWith
             | Lambda (arg, Call (Some (Var var), info, _))
             | Lambda (arg, Func (Some (Var var), info))
-                when arg = var -> info
+                when arg = var -> Some info
             // any function values:someString.StartsWith
-            | Func (_, info) -> info
+            | Func (_, info) -> Some info
             // calls and function values ​​via instances:
             // "abc" .StartsWith ("a")
             // "abc" .Substring
             | Let (arg, _, Call (Some (Var var), info, _))
             | Let (arg, _, Func (Some (Var var), info))
-                when arg = var -> info
-            | LetInCall(info) -> info
-            | _ -> failwith "Not a method expression"
+                when arg = var -> Some info
+            | LetInCall(info) -> Some info
+            | _ -> None
             
-        /// Gets the generic method definition of an expression
-        /// which is a generic method, value expression orfunctional type
-        let methoddefof expr =
-          match methodof expr with
-          | info when info.IsGenericMethod -> info.GetGenericMethodDefinition()
-          | info -> failwithf "%A is not generic" info
-
-        /// Gets the ConstructorInfo from a new object or record expression
-        let constructorof expr =
-            match expr with
-            | NewObject (info, _) -> info
+        let (|Constructor|_|) = function
+            | NewObject (info, _) -> Some info
             // Get the record constructor
             | NewRecord (recordType, _) ->
                 match recordType.GetConstructors() with
-                | [| info |] -> info
-                | _ -> failwith "Invalid record type"
-            | _ -> failwith "Not a constructor expression"
+                | [| info |] -> Some info
+                | _ -> None
+            | _ -> None
         
-        /// Obtaining CLI-compliant EventInfo from an expression
-        let eventof expr =
-            match expr with
+        let (|Event|_|) = function
             | Call(None, createEvent, [Lambda (arg1, Call (_, add, [Var var1]))
                                        Lambda (arg2, Call (_, remove, [Var var2]))
                                        Lambda (_, NewDelegate _)] )
                 when createEvent.Name = "CreateEvent" && add.Name.StartsWith ("add_")
                                                       && remove.Name.StartsWith ("remove_")
                                                       && arg1 = var1 && arg2 = var2 ->
-                    add.DeclaringType.GetEvent(add.Name.[0..4], BindingFlags.Public ||| BindingFlags.Instance ||| BindingFlags.Static ||| BindingFlags.NonPublic)
-            | _ -> failwith "Not a event expression"
-        
-        /// Get UnionCaseInfo from an expression
-        let unioncaseof expr =
-            match expr with
+                    Some(add.DeclaringType.GetEvent(add.Name.[0..4], BindingFlags.Public ||| BindingFlags.Instance ||| BindingFlags.Static ||| BindingFlags.NonPublic))
+            | _ -> None
+            
+        let (|Union|_|) = function
             | NewUnionCase (info, _)
-            | UnionCaseTest (_, info) -> info
-            | _ -> failwith "Not a union case expression"
+            | UnionCaseTest (_, info) -> Some info
+            | _ -> None
         
+        /// Gets the ConstructorInfo from a new object or record expression
+        let constructorof = function Constructor ci -> ci | _ -> failwith "Not a constructor expression"
+        
+        /// Obtaining CLI-compliant EventInfo from an expression
+        let eventof = function Event e -> e | _ -> failwith "Not a event expression"
+        
+        /// Get FieldInfo from expression
+        let fieldof = function Field fi -> fi | _ -> failwith "Not a field expression"
+        
+        /// Get PropertyInfo from expression
+        let propertyof = function Property pi -> pi | _ -> failwith "Not a property expression"
+                   
+        /// Get UnionCaseInfo from an expression
+        let unioncaseof = function Union i -> i | _ -> failwith "Not a union case expression"
+        
+        /// Get a MethodInfo from an expression that is a method call or a function type value
+        let methodof = function Method mi -> mi | _ -> failwith "Not a method expression"
+        
+        /// Gets the generic method definition of an expression
+        /// which is a generic method, value expression or functional type
+        let methoddefof = function
+            | Method(info) when info.IsGenericMethod -> info.GetGenericMethodDefinition()
+            | info -> failwithf "%A is not generic" info
+           
+        /// Gets the module of the containing expression
+        let moduleof = function
+            | Constructor info -> info.DeclaringType
+            | Event e -> e.DeclaringType
+            | Method mi -> mi.DeclaringType
+            | Field fi -> fi.DeclaringType
+            | Property pi -> pi.DeclaringType
+            | Union uc -> uc.DeclaringType
+            | Lambda(_, DefaultValue(t)) -> t.DeclaringType
+            | _ -> failwith "Not a module, or not a supported module detection expression"
+
         
         let sequence expressions = 
             if expressions |> Seq.isEmpty then Expr.Value(()) 
