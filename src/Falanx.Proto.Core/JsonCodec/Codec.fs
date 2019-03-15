@@ -18,7 +18,6 @@ open Falanx.Proto.Codec.Json.ResizeArray
 
 #nowarn "686"   
 module JsonCodec =
-    let knownNamespaces = ["System"; "System.Collections.Generic"; "Fleece.Newtonsoft"; "Microsoft.FSharp.Core"; "Newtonsoft.Json.Linq"] |> Set.ofList
     let qs = QuotationSimplifier.QuotationSimplifier(true)                          
              
     let createLambdaRecord (typeDescriptor: TypeDescriptor) =
@@ -437,8 +436,8 @@ module JsonCodec =
         let allPipedFunctions = [yield lambdaRecord; yield mapping; yield! jFieldOpts]
         let foldedFunctions = allPipedFunctions |> List.reduce callPipeRight                                   
 
-#if DEBUG
-        let ctast, ctpt = Quotations.ToAst( foldedFunctions, knownNamespaces = knownNamespaces )
+#if DEBUG && ADV
+        let ctast, ctpt = Quotations.ToAst(foldedFunctions)
         let code = Fantomas.CodeFormatter.FormatAST(ctpt, "test", None, Fantomas.FormatConfig.FormatConfig.Default)
 #endif                       
 
