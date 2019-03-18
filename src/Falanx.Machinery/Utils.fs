@@ -185,7 +185,7 @@ namespace Falanx.Machinery
                     | nameSpace ->
                         if knownNamespaces.Contains nameSpace then ()
                         else yield! nameSpace.Split('.') 
-                | TypeHelpers.EnclosingTypeSuppressed ommitEnclosingTypes true -> ()
+                | TypeHelpers.TypeSuppressed ommitEnclosingTypes true -> ()
                 | declaringType -> yield! aux declaringType 
             
                 yield getFSharpName m knownNamespaces ommitEnclosingTypes

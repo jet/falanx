@@ -312,7 +312,7 @@ type Quotations() =
                         let margs =
                             methodInfo.GetGenericArguments()
                             |> Seq.map (fun t -> match t with
-                                                 | TypeHelpers.EnclosingTypeSuppressed ommitEnclosingType true ->
+                                                 | TypeHelpers.TypeSuppressed ommitEnclosingType true ->
                                                      let liwd = LongIdentWithDots( [ (getMemberPath range t knownNamespaces ommitEnclosingType) |> List.last], [range])
                                                      SynType.LongIdent liwd 
                                                  | _ -> sysTypeToSynType range t knownNamespaces ommitEnclosingType )
