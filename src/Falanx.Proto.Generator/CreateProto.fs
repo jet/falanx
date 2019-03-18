@@ -127,8 +127,9 @@ module Proto =
         let openJsonCodec = SynModuleDecl.CreateOpen (LongIdentWithDots.CreateString "Falanx.Proto.Codec.Json" )
         
         let ommitEnclosingTypes =
-            let moduleType = Expr.moduleof <@  Fleece.Newtonsoft.JType @>
-            [typeof<TypeContainer>; moduleType]
+            let FleeceModuleType = Expr.moduleof <@  Fleece.Newtonsoft.JType @>
+            let FrotoModuleType = Expr.moduleof <@ Falanx.Proto.Codec.Binary.Primitives.writeBool @>
+            [typeof<TypeContainer>; FleeceModuleType; FrotoModuleType]
         
         let knownNamespaces =
             [ yield providedTypeRoot.Namespace
