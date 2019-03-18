@@ -32,17 +32,11 @@ type TypeHelpers() =
                         
         let hasUnitOfMeasure (t: System.Type) = 
             t.IsGenericType && 
-            (t.Namespace = "System") &&
-            (t.Name = typeof<bool>.Name ||
-             t.Name = typeof<obj>.Name ||
-             t.Name = typeof<int>.Name ||
-             t.Name = typeof<int64>.Name ||
-             t.Name = typeof<float>.Name ||
-             t.Name = typeof<float32>.Name ||
-             t.Name = typeof<decimal>.Name)
-            
-
-                
+                (t.Namespace = "System") &&
+                    (t.Name = typeof<bool>.Name || t.Name = typeof<obj>.Name ||
+                     t.Name = typeof<int>.Name || t.Name = typeof<int64>.Name ||
+                     t.Name = typeof<float>.Name || t.Name = typeof<float32>.Name ||
+                     t.Name = typeof<decimal>.Name)
                                  
         let rec toString useFullName (ommitGenericArgs: bool) (t: Type) =
                 
@@ -72,7 +66,6 @@ type TypeHelpers() =
                 | _ when t.Name = typeof<unit>.Name -> "()"
                 | t when t.IsArray -> (t.GetElementType() |> toString useFullName ommitGenericArgs) + "[]"
                 | :? ProvidedTypeDefinition as t ->
-                    //add t
                     t.Name.Split(',').[0]
                 | t when t.IsGenericType ->
                     let args =
@@ -114,20 +107,11 @@ type TypeHelpers() =
                 // Short names for generic parameters
                 | t when t.IsGenericParameter -> t.Name
                 | t -> if useFullName then fullName t else t.Name
-        
-            let rec warnIfWrongAssembly (t:Type) =
-                match t with
-                | t when t.GetType().Name = "ProvidedTypeDefinition" -> ""
-                | t when t.IsGenericType -> defaultArg (t.GetGenericArguments() |> Seq.map warnIfWrongAssembly |> Seq.tryFind (fun s -> s <> "")) ""
-                | t when t.IsArray -> warnIfWrongAssembly <| t.GetElementType()
-                | t -> if not t.IsGenericParameter && t.Assembly = Assembly.GetExecutingAssembly() then " [DESIGNTIME]" else ""
-        
-            if hasUnit || t.IsGenericParameter
-                       || isNull t.DeclaringType
-                       || TypeHelpers.(|TypeSuppressed|) ommitEnclosingType t then 
-                innerToString t + (warnIfWrongAssembly t)
+       
+            if t.IsGenericParameter || isNull t.DeclaringType || hasUnit || TypeHelpers.(|TypeSuppressed|) ommitEnclosingType t.DeclaringType then
+                innerToString t
             else
-                (toString useFullName ommitGenericArgs t.DeclaringType) + "." + (innerToString t) + (warnIfWrongAssembly t)
+                (toString useFullName ommitGenericArgs t.DeclaringType) + "." + (innerToString t)
                 
         let name = toString useFullName ommitGenericArgs t
         name
