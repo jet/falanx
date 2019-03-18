@@ -146,7 +146,7 @@ namespace Falanx.Machinery
         let private moduleSuffixRegex = new Regex(@"^(.*)Module$", RegexOptions.Compiled)
         let private fsharpPrefixRegex = new Regex(@"^FSharp(.*)(`[0-9]+)?$", RegexOptions.Compiled)
         /// recover the F# source name for given member declaration
-        let getFSharpName (m : MemberInfo) knownNamespaces ommitEnclosingType =
+        let getFSharpName (m : MemberInfo) knownNamespaces ommitTypes =
             match m.TryGetCustomAttribute<CompilationSourceNameAttribute> () with
             | Some a -> a.SourceName
             | None ->
@@ -157,7 +157,7 @@ namespace Falanx.Machinery
                     //this will deal with things like list, option, Result
                     match m with
                     | :? Type as typ ->
-                        let result = TypeHelpers.FormatType(false, true, typ, ommitEnclosingType, false, knownNamespaces)
+                        let result = TypeHelpers.FormatType(false, true, typ, ommitTypes, false, knownNamespaces)
                         result
                     | _ ->
                         let rm = fsharpPrefixRegex.Match m.Name
