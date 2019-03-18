@@ -5,12 +5,11 @@ open System.Reflection
 open ProviderImplementation.ProvidedTypes
 
 module TypeHelpers =
-    let (|EnclosingTypeSuppressed|) (ommitEnclosingTypes: Type list option) (t:Type) =
-        match ommitEnclosingTypes with
-        | Some(types: Type list) when not (isNull t.DeclaringType) ->
-            let declaringType = t.DeclaringType.Name
+    let (|TypeSuppressed|) (ommitTypes: Type list option) (t:Type) =
+        match ommitTypes with
+        | Some(types: Type list) ->
             types
-            |> List.tryPick(fun t -> if t.Name = declaringType then Some() else None )
+            |> List.tryPick(fun omittedType -> if omittedType.Name = t.Name then Some() else None )
             |> Option.isSome
         | _ -> false
             
@@ -125,7 +124,7 @@ type TypeHelpers() =
         
             if hasUnit || t.IsGenericParameter
                        || isNull t.DeclaringType
-                       || TypeHelpers.(|EnclosingTypeSuppressed|) ommitEnclosingType t then 
+                       || TypeHelpers.(|TypeSuppressed|) ommitEnclosingType t then 
                 innerToString t + (warnIfWrongAssembly t)
             else
                 (toString useFullName ommitGenericArgs t.DeclaringType) + "." + (innerToString t) + (warnIfWrongAssembly t)
