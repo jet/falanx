@@ -505,16 +505,6 @@ type test_oneof =
             |> Expr.TryGetReflectedDefinition
             |> Option.iter (Expr.quotationsTypePrinter >> ignore)
             
-[<CLIMutable>]
-type SampleMessage =
-    { mutable martId : int option
-      mutable test_oneof : test_oneof option }
-    static member JsonObjCodec =
-        fun m t -> {martId = m; test_oneof = t}
-        |> withFields
-        |> jfieldOpt "martId"  (fun b -> b.martId)
-        |> jfieldOpt "test_oneof" (fun a -> a.test_oneof)
-
 open Fleece.Newtonsoft.Operators      
 [<CLIMutable>]
 type NewSampleMessage =
