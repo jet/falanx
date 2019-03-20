@@ -4,7 +4,7 @@ open System.Reflection
 open System.Collections.Generic
 open Fleece
 open Fleece.Newtonsoft
-open Fleece.Newtonsoft.Operators
+open FSharpPlus
 open Microsoft.FSharp.Quotations
 open ProviderImplementation.ProvidedTypes
 open ProviderImplementation.ProvidedTypes.UncheckedQuotations
@@ -16,6 +16,16 @@ open Reflection
 open Froto.Parser.ClassModel
 open Falanx.Proto.Codec.Json.ResizeArray
 
+[<AutoOpen>]
+module FleeceExtensions =
+
+    type ConcreteCodec<'S1, 'S2, 't1, 't2> with
+        static member inline map  (field: ConcreteCodec<'S, 'S, 'f, 'T>) (f) =
+            f <!> field
+        
+        static member inline apply  (currentField: ConcreteCodec<'S, 'S, 'f, 'T>) (remainderFields: ConcreteCodec<'S, 'S, 'f ->'r, 'T>) =
+            remainderFields <*> currentField
+            
 #nowarn "686"   
 module JsonCodec =
     let qs = QuotationSimplifier.QuotationSimplifier(true)                          
@@ -504,21 +514,24 @@ type SampleMessage =
         |> withFields
         |> jfieldOpt "martId"  (fun b -> b.martId)
         |> jfieldOpt "test_oneof" (fun a -> a.test_oneof)
-        
+
+open Fleece.Newtonsoft.Operators      
 [<CLIMutable>]
 type NewSampleMessage =
     { mutable martId : int option
       mutable test_oneof : string option }
-    static member JsonObjCodec =
+    
+    [<ReflectedDefinition>]
+    static member JsonObjCodec =                        
         fun m t -> {martId = m; test_oneof = t}
-        <!> jopt "martId"  (fun b -> b.martId)
-        <*> jopt "test_oneof" (fun a -> a.test_oneof)
+        |> ConcreteCodec.map (jopt "martId"  (fun b -> b.martId))
+        |> ConcreteCodec.apply (jopt "test_oneof" (fun a -> a.test_oneof))
         
     static member PrintDebug() =
-        Expr.propertyof <@ NewSampleMessage.JsonObjCodec @>
-        |> function x -> x.GetMethod
-        |> Expr.TryGetReflectedDefinition
-        |> Option.iter (Expr.quotationsTypePrinter >> ignore)
+        let property = Expr.propertyof <@ NewSampleMessage.JsonObjCodec @>
+        let getMethod = property.GetMethod
+        let reflectedDefinition = Expr.TryGetReflectedDefinition getMethod
+        reflectedDefinition |> Option.iter (Expr.quotationsTypePrinter >> ignore)
 
     
 type foo =
