@@ -60,25 +60,84 @@ module ASTCleaner =
         | SynPat.DeprecatedCharRange(char1, char2, range) -> node
         | SynPat.InstanceMember(ident1, ident2, ident3, accessibility,range) -> node
         | SynPat.FromParseError(synPat, range) -> node
-    
+
     and untypeSynExpr (node: SynExpr) =
         match node with
-        | SynExpr.Lambda(fromMeth, inSeq, args, body, range) ->
-            SynExpr.Lambda(fromMeth, inSeq, untypeSimplePats args, untypeSynExpr body, range)
-            
-        | SynExpr.App(atomic, isInfix, expr, expr2, range) ->
-            SynExpr.App(atomic, isInfix, untypeSynExpr expr, untypeSynExpr expr2, range)
-            
+        | SynExpr.Paren (expr, leftParenRange, rightParenRange, range) ->
+            SynExpr.Paren(untypeSynExpr expr, leftParenRange, rightParenRange, range)
+        
+        | SynExpr.Lambda( fromMethod, inLambdaSeq, args, body, range) ->
+            SynExpr.Lambda(fromMethod, inLambdaSeq, untypeSimplePats args, untypeSynExpr body, range)
+                
+        | SynExpr.App(exprAtomicFlag, isInfix, funcExpr, argExpr, range) ->
+            SynExpr.App(exprAtomicFlag, isInfix, untypeSynExpr funcExpr, untypeSynExpr argExpr, range)
+          
         | SynExpr.TypeApp(expr, lessRange, typeNames, commaRanges, greaterRange, typeArgsRange, range) ->
             SynExpr.TypeApp(expr, lessRange, typeNames, commaRanges, greaterRange, typeArgsRange, range)
             
-        | SynExpr.LetOrUse(a,b,bindings,expr,range) ->
-            SynExpr.LetOrUse(a,b, bindings |> List.map untypeSynBinding, untypeSynExpr expr,range)
+        | SynExpr.LetOrUse(isRecursive, isUse, bindings, body, range) ->
+            SynExpr.LetOrUse(isRecursive,isUse, bindings |> List.map untypeSynBinding, untypeSynExpr body,range)
             
-        | SynExpr.Paren(expr,lrange, rRange, range) ->
-            SynExpr.Paren(untypeSynExpr expr, lrange, rRange, range)
-        | a -> a
-     
+        | SynExpr.Sequential(seqPoint, isTrueSeq, expr1, expr2, range) ->
+            SynExpr.Sequential(seqPoint, isTrueSeq, untypeSynExpr expr1, untypeSynExpr expr2, range)
+            
+        | SynExpr.Quote(operator: SynExpr, isRaw: bool, quotedSynExpr: SynExpr, isFromQueryExpression: bool, range: range) -> node
+        | SynExpr.Const(constant: SynConst, range: range) -> node
+        | SynExpr.Typed( SynExpr.Record _ as record, typeName: SynType, range: range) -> record
+        | SynExpr.Typed( expr: SynExpr, typeName: SynType, range: range) -> node
+        | SynExpr.Tuple( (*isStruct: bool,*) exprs: SynExpr list, commaRanges: range list, range: range) -> node
+        //| SynExpr.AnonRecd( isStruct: bool,  copyInfo:(SynExpr, BlockSeparator) option, recordFields:(Ident, SynExpr) list, range: range) -> node
+        | SynExpr.ArrayOrList( isList: bool, exprs: SynExpr list, range: range) -> node
+        | SynExpr.Record(baseInfo: (SynType * SynExpr * range * BlockSeparator option * range) option, copyInfo:(SynExpr * BlockSeparator) option, recordFields:(RecordFieldName * (SynExpr option) * BlockSeparator option) list, range: range) -> node
+        | SynExpr.New(isProtected: bool, typeName: SynType, expr: SynExpr, range: range) -> node
+        | SynExpr.ObjExpr(objType: SynType, argOptions:(SynExpr * Ident option) option, bindings: SynBinding list, extraImpls: SynInterfaceImpl list, newExprRange: range, range: range) -> node
+        | SynExpr.While(whileSeqPoint: SequencePointInfoForWhileLoop, whileExpr: SynExpr, doExpr: SynExpr, range: range) -> node
+        | SynExpr.For(forSeqPoint: SequencePointInfoForForLoop, ident: Ident, identBody: SynExpr, bool, toBody: SynExpr, doBody: SynExpr, range: range) -> node
+        | SynExpr.ForEach(forSeqPoint: SequencePointInfoForForLoop, seqExprOnly: SeqExprOnly, isFromSource: bool, pat: SynPat, enumExpr: SynExpr, bodyExpr: SynExpr, range: range) -> node
+        | SynExpr.ArrayOrListOfSeqExpr(isArray: bool, expr: SynExpr, range: range) -> node
+        | SynExpr.CompExpr(isArrayOrList: bool, isNotNakedRefCell: bool ref, expr: SynExpr, range: range) -> node
+        | SynExpr.MatchLambda(isExnMatch, range1, clauses, matchSeqpoint, range2) -> node
+        | SynExpr.Match( matchSeqPoint, expr, clauses, isExnMatch, range) -> node
+        | SynExpr.Do( expr: SynExpr, range: range) -> node
+        | SynExpr.Assert(expr: SynExpr, range: range) -> node
+        | SynExpr.TryWith(tryExpr: SynExpr, tryRange: range, withCases: SynMatchClause list, withRange: range, range: range, trySeqPoint: SequencePointInfoForTry, withSeqPoint: SequencePointInfoForWith) -> node
+        | SynExpr.TryFinally(tryExpr: SynExpr, finallyExpr: SynExpr, range: range, trySeqPoint: SequencePointInfoForTry, finallySeqPoint: SequencePointInfoForFinally) -> node
+        | SynExpr.Lazy(expr, range: range) -> node
+        | SynExpr.IfThenElse(ifExpr: SynExpr, thenExpr: SynExpr, elseExpr: SynExpr option, spIfToThen: SequencePointInfoForBinding, isFromErrorRecovery: bool, ifToThenRange: range, range: range) -> node
+        | SynExpr.Ident(ident) -> node
+        | SynExpr.LongIdent(isOptional: bool, longDotId: LongIdentWithDots, altNameRefCell: SynSimplePatAlternativeIdInfo ref option, range: range) -> node
+        | SynExpr.LongIdentSet(longDotId: LongIdentWithDots, expr: SynExpr, range: range) -> node
+        | SynExpr.DotGet(expr: SynExpr, rangeOfDot: range, longDotId: LongIdentWithDots, range: range) -> node
+        | SynExpr.DotSet(expr1, longDotId: LongIdentWithDots, expr2, range: range) -> node
+        | SynExpr.Set(expr1, expr2, range: range) -> node
+        | SynExpr.DotIndexedGet(expr, args, range1, range2) -> node
+        | SynExpr.DotIndexedSet(objectExpr: SynExpr, indexExprs: SynIndexerArg list, valueExpr: SynExpr, leftOfSetRange: range, dotRange: range, range: range) -> node
+        | SynExpr.NamedIndexedPropertySet(longDotId: LongIdentWithDots, expr1, expr2, range: range) -> node
+        | SynExpr.DotNamedIndexedPropertySet(expr, longDotId: LongIdentWithDots, expr1, expr2, range: range) -> node
+        | SynExpr.TypeTest( expr: SynExpr, typeName: SynType, range: range) -> node
+        | SynExpr.Upcast( expr: SynExpr, typeName: SynType, range: range) -> node
+        | SynExpr.Downcast( expr: SynExpr, typeName: SynType, range: range) -> node
+        | SynExpr.InferredUpcast( expr: SynExpr, range: range) -> node
+        | SynExpr.InferredDowncast( expr: SynExpr, range: range) -> node
+        | SynExpr.Null(range: range) -> node
+        | SynExpr.AddressOf( isByref: bool, expr, range1, range2: range) -> node
+        | SynExpr.TraitCall(list, synMemberSig, expr, range: range) -> node
+        | SynExpr.JoinIn(expr1, range1, expr2, range2: range) -> node
+        | SynExpr.ImplicitZero(range: range) -> node
+        | SynExpr.YieldOrReturn(thing1, expr: SynExpr, range: range) -> node
+        | SynExpr.YieldOrReturnFrom(thing1, expr: SynExpr, range: range) -> node
+        | SynExpr.LetOrUseBang(bindSeqPoint: SequencePointInfoForBinding, isUse: bool, isFromSource: bool, pat, expr1, expr2, range: range) -> node
+        | SynExpr.MatchBang( matchSeqPoint, expr, clauses, isExnMatch, range2 ) -> node
+        | SynExpr.DoBang(expr: SynExpr, range: range) -> node
+        | SynExpr.LibraryOnlyILAssembly(ilInstr, types, exprs, types2, range: range ) -> node
+        | SynExpr.LibraryOnlyStaticOptimization(list, expr1, expr2, range: range) -> node
+        | SynExpr.LibraryOnlyUnionCaseFieldGet(expr: SynExpr, longId: LongIdent, int, range: range) -> node
+        | SynExpr.LibraryOnlyUnionCaseFieldSet(expr1, longId: LongIdent, int, expr2, range: range) -> node
+        | SynExpr.ArbitraryAfterError(debugStr: string, range: range) -> node
+        | SynExpr.FromParseError(expr: SynExpr, range: range) -> node
+        | SynExpr.DiscardAfterMissingQualificationAfterDot(SynExpr, range: range) -> node
+        | SynExpr.Fixed(expr: SynExpr, range: range) -> node
+         
     let untypeSynMemberDefn (node: SynMemberDefn) =
         match node with
         | SynMemberDefn.Member(binding, range) ->
@@ -105,5 +164,21 @@ module ASTCleaner =
         | other -> other
         
     let untypeSynModuleDecls (nodes: SynModuleDecls) =
-        nodes |> List.map untypeSynModuleDecl 
+        nodes |> List.map untypeSynModuleDecl
+    
+    let unTypeSynModuleOrNamespace (SynModuleOrNamespace.SynModuleOrNamespace(longident, isRecursive, isModule, moduleDecls, preXmlDoc, attributes, access, range)) =
+       let cleanModules = untypeSynModuleDecls moduleDecls
+       SynModuleOrNamespace(longident, isRecursive, isModule, cleanModules, preXmlDoc, attributes, access, range)
+        
+    let unTypeSynModuleOrNamespaces (nodes: SynModuleOrNamespace list) =
+        nodes |> List.map unTypeSynModuleOrNamespace
+
+    let untypeParseTree (node: Microsoft.FSharp.Compiler.Ast.ParsedInput) : ParsedInput =
+        match node with
+        | ParsedInput.SigFile sign -> ParsedInput.SigFile sign
+        | ParsedInput.ImplFile impFile ->
+            match impFile with
+            | ParsedImplFileInput.ParsedImplFileInput(name, isScript, qualifiedNameOfFile, scopedPragmas, hashDirectives, modules , g) ->
+                let cleanModulesOrNamespaces = unTypeSynModuleOrNamespaces modules
+                ParsedInput.ImplFile (ParsedImplFileInput(name, isScript, qualifiedNameOfFile, scopedPragmas, hashDirectives, cleanModulesOrNamespaces, g))
             
