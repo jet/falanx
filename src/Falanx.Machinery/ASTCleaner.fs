@@ -42,7 +42,7 @@ module ASTCleaner =
         match node with
         | SynPat.Const(synConst, range) -> node
         | SynPat.Wild(range) -> node
-        | SynPat.Named(synPat,ident,isSelfIdentifier,accessibility,range) -> node
+        | SynPat.Named(synPat, ident, isSelfIdentifier, accessibility, range) -> node
         | SynPat.Typed(synPat, synType, range) -> synPat
         | SynPat.Attrib(synPat, synAttributes, range) -> node
         | SynPat.Or(synPatL, synPatR, range_)-> node
@@ -81,7 +81,7 @@ module ASTCleaner =
         | SynExpr.Sequential(seqPoint, isTrueSeq, expr1, expr2, range) ->
             SynExpr.Sequential(seqPoint, isTrueSeq, untypeSynExpr expr1, untypeSynExpr expr2, range)
             
-        | SynExpr.Typed( SynExpr.Record _ as record, typeName: SynType, range) ->
+        | SynExpr.Typed( SynExpr.Record _ as record, typeName, range) ->
             record
         
         | SynExpr.Quote(operator, isRaw, quotedSynExpr, isFromQueryExpression, range) -> node
