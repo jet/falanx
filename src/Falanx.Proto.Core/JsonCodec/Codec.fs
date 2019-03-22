@@ -4,6 +4,7 @@ open System.Reflection
 open System.Collections.Generic
 open Fleece
 open Fleece.Newtonsoft
+open Fleece.Newtonsoft.Operators
 open FSharpPlus
 open Microsoft.FSharp.Quotations
 open ProviderImplementation.ProvidedTypes
@@ -436,6 +437,32 @@ module JsonCodec =
                 ]
             loop recordFields
         fieldTypeWithRest
+    
+    module M =
+        let inline (<*>) (x: ^T) (y: ^U) = ((^T or ^U) : (static member (<*>): ^T * ^U -> ^V) (x, y))
+        let inline (<!>) (x: ^T) (y: ^U) = ((^T or ^U) : (static member (<!>): ^T * ^U -> ^V) (x, y))
+    
+    open M
+
+    [<CLIMutable>]
+    type NewSampleMessage =
+        { mutable martId : int option
+          mutable test_oneof : string option }
+        
+        [<ReflectedDefinition>]
+        static member JsonObjCodec =
+            fun m t -> {martId = m; test_oneof = t}
+            <!> jopt "martId" (fun b -> b.martId)
+            <*> jopt "test_oneof" (fun a -> a.test_oneof)
+            
+            
+            
+        static member GetQuotedJsonObjCodec() =
+            let property = Expr.propertyof <@ NewSampleMessage.JsonObjCodec @>
+            let getMethod = property.GetMethod
+            let reflectedDefinition = Expr.TryGetReflectedDefinition getMethod
+            reflectedDefinition |> Option.iter (Expr.quotationsTypePrinter >> ignore)
+            reflectedDefinition.Value
         
     let createJsonObjCodec (typeDescriptor: TypeDescriptor) =     
         let lambdaRecord = createLambdaRecord typeDescriptor
@@ -446,9 +473,12 @@ module JsonCodec =
         let allPipedFunctions = [yield lambdaRecord; yield mapping; yield! jFieldOpts]
         let foldedFunctions = allPipedFunctions |> List.reduce callPipeRight                                   
 
-#if DEBUG && ADV
-        let ctast, ctpt = Quotations.ToAst(foldedFunctions)
-        let code = Fantomas.CodeFormatter.FormatAST(ctpt, "test", None, Fantomas.FormatConfig.FormatConfig.Default)
+#if DEBUG
+        let jsonObjCodec = NewSampleMessage.GetQuotedJsonObjCodec()
+        let _ctast, ctpt = Quotations.ToAst(jsonObjCodec)
+        let pt = ASTCleaner.untypeParseTree ctpt
+        let code = Fantomas.CodeFormatter.FormatAST(pt, "test", None, Fantomas.FormatConfig.FormatConfig.Default)
+        let _ = code
 #endif                       
 
         let signatureType =
@@ -504,25 +534,6 @@ type test_oneof =
             |> function x -> x.GetMethod
             |> Expr.TryGetReflectedDefinition
             |> Option.iter (Expr.quotationsTypePrinter >> ignore)
-            
-open Fleece.Newtonsoft.Operators      
-[<CLIMutable>]
-type NewSampleMessage =
-    { mutable martId : int option
-      mutable test_oneof : string option }
-    
-    [<ReflectedDefinition>]
-    static member JsonObjCodec =                        
-        fun m t -> {martId = m; test_oneof = t}
-        |> ConcreteCodec.map (jopt "martId"  (fun b -> b.martId))
-        |> ConcreteCodec.apply (jopt "test_oneof" (fun a -> a.test_oneof))
-        
-    static member PrintDebug() =
-        let property = Expr.propertyof <@ NewSampleMessage.JsonObjCodec @>
-        let getMethod = property.GetMethod
-        let reflectedDefinition = Expr.TryGetReflectedDefinition getMethod
-        reflectedDefinition |> Option.iter (Expr.quotationsTypePrinter >> ignore)
-
     
 type foo =
     | Foo_int of Foo_int : int
