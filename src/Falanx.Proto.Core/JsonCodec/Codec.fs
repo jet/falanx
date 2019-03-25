@@ -453,16 +453,16 @@ module JsonCodec =
         Expr.CallUnchecked(jchoiceMethodInfoTyped, [choiceElements])
     
     //a: record type, b: field type, c: next type
-    let inline joptR< ^a, ^b, ^c when (OfJson or ^b) : (static member OfJson : ^b*OfJson -> (JsonValue -> ^b ParseResult)) 
-                                 and  (ToJson or ^b) : (static member ToJson : ^b*ToJson -> JsonValue) >
-                                 (propertyInfo: ProvidedProperty) (protoFieldRule: ProtoFieldRule) =
+    let inline joptR< ^a, ^b, ^c when (OfJson or ^b) : (static member OfJson : ^b * OfJson -> (JsonValue -> ^b ParseResult)) 
+                                 and  (ToJson or ^b) : (static member ToJson : ^b * ToJson -> JsonValue) >
+                                 (propertyD: PropertyDescriptor) =
                                    
-        let fieldName = Expr.Value propertyInfo.Name
+        let fieldName = Expr.Value propertyD.ProvidedProperty.Name
         
         let getter = 
             let xvar = Var("x",typeof< ^a>)
-            let property = Expr.PropertyGet(Expr.Var xvar, propertyInfo)
-            match protoFieldRule with
+            let property = Expr.PropertyGet(Expr.Var xvar, propertyD.ProvidedProperty)
+            match propertyD.Rule with
             | ProtoFieldRule.Optional ->
                 <@ %%(Expr.Lambda(xvar, property)) : ^a -> ^b option @>
             | ProtoFieldRule.Repeated ->
@@ -472,8 +472,8 @@ module JsonCodec =
         
         <@ jopt (%%fieldName: string) %getter @>
         
-    let calljopt (recordType: Type) protoFieldRule (providedProperty: ProvidedProperty) (fieldType: Type ) (nextFieldType: Type) =
-        let tt = TypeTemplate.create joptR<_,string,_> "jopt" [recordType; fieldType; nextFieldType] providedProperty protoFieldRule
+    let calljopt (recordType: Type) (propertyD: PropertyDescriptor) (fieldType: Type ) (nextFieldType: Type) =
+        let tt = TypeTemplate.create joptR<_,string,_> "jopt" [recordType; fieldType; nextFieldType] propertyD
         tt
         //Expr.callStaticGeneric [recordType;fieldType;nextFieldType] [providedProperty; ""; protoFieldRule] joptR<_,string,_>
         
@@ -508,7 +508,7 @@ module JsonCodec =
                 match propertyDescriptor.Rule with
                 | ProtoFieldRule.Optional as rule ->
                     let fieldType = getOptionType propertyDescriptor.ProvidedProperty.PropertyType
-                    let jopt = calljopt typeDescriptor.Type rule propertyDescriptor.ProvidedProperty fieldType rest
+                    let jopt = calljopt typeDescriptor.Type propertyDescriptor fieldType rest
                     let jfieldOpt = callJfieldopt typeDescriptor.Type rule propertyDescriptor.ProvidedProperty fieldType rest
                     jfieldOpt
                 | ProtoFieldRule.Repeated as rule -> //will call expand, so type signature affected
