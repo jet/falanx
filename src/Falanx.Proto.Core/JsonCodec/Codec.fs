@@ -475,10 +475,8 @@ module JsonCodec =
         let t2 = callStaticGeneric [recordType; fieldType] [Expr.Value propertyD] <@ joptR<_,int> x @>
         
         let t3 = TypeBinder.create2(joptR<_,int>, propertyD) [recordType; fieldType]
-        
-        
-        let eq = FSharp.Linq.RuntimeHelpers.LeafExpressionConverter.EvaluateQuotation t1
-        let a,b,c, d = t1, t2, eq, t3
+
+        let a,b,c, d = t1, t2, t3
         let t3 = TypeTemplate.create joptR<_,string> "jopt" [recordType; fieldType] propertyD
         t3
         //Expr.callStaticGeneric [recordType;fieldType;nextFieldType] [providedProperty; ""; protoFieldRule] joptR<_,string,_>
