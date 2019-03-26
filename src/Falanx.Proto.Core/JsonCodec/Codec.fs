@@ -476,7 +476,7 @@ module JsonCodec =
         
         let t3 = TypeBinder.create2(joptR<_,int>, propertyD) [recordType; fieldType]
 
-        let a,b,c, d = t1, t2, t3
+        let a,b,c = t1, t2, t3
         let t3 = TypeTemplate.create joptR<_,string> "jopt" [recordType; fieldType] propertyD
         t3
         //Expr.callStaticGeneric [recordType;fieldType;nextFieldType] [providedProperty; ""; protoFieldRule] joptR<_,string,_>
