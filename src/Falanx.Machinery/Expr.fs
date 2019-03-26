@@ -1,17 +1,15 @@
 namespace Falanx.Machinery
+    open Prelude
+    open System
+    open System.Collections
+    open System.Collections.Generic
+    open System.Reflection
+    open FSharp.Quotations
+    open FSharp.Quotations.DerivedPatterns
+    open FSharp.Quotations.Patterns
+    open ProviderImplementation.ProvidedTypes
+    open ProviderImplementation.ProvidedTypes.UncheckedQuotations
     module Expr =
-        open Prelude
-        open System
-        open System.Collections
-        open System.Collections.Generic
-        open System.Reflection
-        
-        open FSharp.Quotations
-        open FSharp.Quotations.DerivedPatterns
-        open FSharp.Quotations.Patterns
-        
-        open ProviderImplementation.ProvidedTypes
-        open ProviderImplementation.ProvidedTypes.UncheckedQuotations
      
         let cleanUpTypeName (str:string) =
             let sb = Text.StringBuilder(str)
@@ -287,3 +285,11 @@ namespace Falanx.Machinery
             Seq.fold (fun l arg -> Expr.Application(l, arg)) lambda
         
         let box expr = Expr.Coerce(expr, typeof<obj>)
+        
+    type TypeBinder =
+         static member create ([<ReflectedDefinition(false)>] f : Expr<'a -> 'b>) =
+            fun types args -> Expr.callStaticGeneric types args f
+            
+         static member create2 ([<ReflectedDefinition(false)>] f : Expr<'a -> 'b>, [<ReflectedDefinition(false)>] arg: Expr<'a> ) =
+            fun types ->
+                Expr.callStaticGeneric types [arg] f
