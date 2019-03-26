@@ -58,10 +58,8 @@ module JsonCodec =
         static member Create() = ConditionalWeakTable<Type,TypeChainCache<'a>>() |> Lookup
         
     type TypeTemplate<'a,'b>() =
-        //static let cache = TypeChainCache.Create()
         static let cache = System.Collections.Generic.Dictionary<string,TypeChainCache<_>>()
-        static member bleh ([<ReflectedDefinition(true)>] f : Expr<'a -> 'b>) = printfn "%A" f
-        static member create ([<ReflectedDefinition(false)>] f : Expr<'a -> 'b>) : string -> Type list -> ('a -> 'b)  = 
+        static member create ([<ReflectedDefinition(false)>] f : Expr<'a -> 'b>) = 
             fun cacheName -> 
                 let cache = 
                     let scc,v = cache.TryGetValue cacheName
@@ -81,8 +79,8 @@ module JsonCodec =
                         let rec replaceMethod minfo e = 
                             match e with
                             | Patterns.Lambda(v,body) -> Expr.Lambda(v, replaceMethod minfo body)
-                            | Patterns.Call(Some o,_,args) -> Expr.Call(o,minfo,args)
-                            | Patterns.Call(None,_,args) -> Expr.Call(minfo,args)
+                            | Patterns.Call(Some o,_,args) -> Expr.CallUnchecked(o,minfo,args)
+                            | Patterns.Call(None,_,args) -> Expr.CallUnchecked(minfo,args)
                             | _ -> failwithf "Expression not of expected form %A" e
                         match f with
                         | Patterns.Lambda (_,e) -> 
@@ -97,7 +95,8 @@ module JsonCodec =
                             fun types -> 
                                 let method = makeMethod types
                                 let lambda = replaceMethod method f
-                                FSharp.Linq.RuntimeHelpers.LeafExpressionConverter.EvaluateQuotation lambda :?> ('a -> 'b)
+                                let res = FSharp.Linq.RuntimeHelpers.LeafExpressionConverter.EvaluateQuotation lambda :?> ('a -> 'b)
+                                res
                         | _ -> failwithf "Expression not of expected form %A" f
                     v
                 fun types -> 
@@ -185,7 +184,6 @@ module JsonCodec =
         let lambdaType = lambda.Type
         
         let mappingMethodInfoFull = replaceLambdaArgs mappingMethodInfo lambdaType
-        let mappingMiFullArgs = mappingMethodInfoFull.GetGenericArguments()
         
         //usage would normally be a lambda piped into mapping:
         //fun f : Option<String> -> Option<String> -> Result2 
@@ -453,9 +451,9 @@ module JsonCodec =
         Expr.CallUnchecked(jchoiceMethodInfoTyped, [choiceElements])
     
     //a: record type, b: field type, c: next type
-    let inline joptR< ^a, ^b, ^c when (OfJson or ^b) : (static member OfJson : ^b * OfJson -> (JsonValue -> ^b ParseResult)) 
-                                 and  (ToJson or ^b) : (static member ToJson : ^b * ToJson -> JsonValue) >
-                                 (propertyD: PropertyDescriptor) =
+                    
+    let inline joptR< ^a,^b  when (OfJson or ^b) : (static member OfJson : ^b*OfJson -> (JsonValue -> ^b ParseResult)) 
+                             and  (ToJson or ^b) : (static member ToJson : ^b*ToJson -> JsonValue) > (propertyD: PropertyDescriptor) =
                                    
         let fieldName = Expr.Value propertyD.ProvidedProperty.Name
         
@@ -465,16 +463,24 @@ module JsonCodec =
             match propertyD.Rule with
             | ProtoFieldRule.Optional ->
                 <@ %%(Expr.Lambda(xvar, property)) : ^a -> ^b option @>
-            | ProtoFieldRule.Repeated ->
-                let exp = Expr.callStaticGeneric [yield! property.Type.GenericTypeArguments] [property] <@ expand x @>
-                <@ %%Expr.Lambda(xvar, exp) : ^a -> ^b option @>
+//            | ProtoFieldRule.Repeated ->
+//                let exp = Expr.callStaticGeneric [yield! property.Type.GenericTypeArguments] [property] <@ expand x @>
+//                <@ %%Expr.Lambda(xvar, exp) : ^a -> ^b option @>
             | _ -> failwith "ProtoFieldRule Required is not supported"
         
-        <@ jopt (%%fieldName: string) %getter @>
+        <@@ jopt (%%fieldName: string) %getter : ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list, ^b option,'a> @@>
         
-    let calljopt (recordType: Type) (propertyD: PropertyDescriptor) (fieldType: Type ) (nextFieldType: Type) =
-        let tt = TypeTemplate.create joptR<_,string,_> "jopt" [recordType; fieldType; nextFieldType] propertyD
-        tt
+    let calljopt (recordType: Type) (propertyD: PropertyDescriptor) (fieldType: Type ) =
+        let t1 = TypeBinder.create joptR<_,int> [recordType; fieldType] [Expr.Value propertyD] 
+        let t2 = callStaticGeneric [recordType; fieldType] [Expr.Value propertyD] <@ joptR<_,int> x @>
+        
+        let t3 = TypeBinder.create2(joptR<_,int>, propertyD) [recordType; fieldType]
+        
+        
+        let eq = FSharp.Linq.RuntimeHelpers.LeafExpressionConverter.EvaluateQuotation t1
+        let a,b,c, d = t1, t2, eq, t3
+        let t3 = TypeTemplate.create joptR<_,string> "jopt" [recordType; fieldType] propertyD
+        t3
         //Expr.callStaticGeneric [recordType;fieldType;nextFieldType] [providedProperty; ""; protoFieldRule] joptR<_,string,_>
         
     let createJsonObjCodecFromoneOf (descriptor: OneOfDescriptor) =
@@ -508,7 +514,7 @@ module JsonCodec =
                 match propertyDescriptor.Rule with
                 | ProtoFieldRule.Optional as rule ->
                     let fieldType = getOptionType propertyDescriptor.ProvidedProperty.PropertyType
-                    let jopt = calljopt typeDescriptor.Type propertyDescriptor fieldType rest
+                    let jopt = calljopt typeDescriptor.Type propertyDescriptor fieldType
                     let jfieldOpt = callJfieldopt typeDescriptor.Type rule propertyDescriptor.ProvidedProperty fieldType rest
                     jfieldOpt
                 | ProtoFieldRule.Repeated as rule -> //will call expand, so type signature affected
@@ -564,9 +570,9 @@ module JsonCodec =
         [<ReflectedDefinition>]
         static member JsonObjCodec =
             fun m t tt -> {martId = m; test_oneof = t; test_two = tt}
-            <!> jopt "martId" (fun b -> b.martId)
-            <*> jopt "test_oneof" (fun a -> a.test_oneof)
-            <*> jopt "test_two" (fun a -> a.test_two)
+            <!> jopt<NewSampleMessage,int> "martId" (fun b -> b.martId)
+            <*> jopt<NewSampleMessage,string> "test_oneof" (fun a -> a.test_oneof)
+            <*> jopt<NewSampleMessage,float> "test_two" (fun a -> a.test_two)
             
             
             
@@ -587,7 +593,6 @@ module JsonCodec =
         let foldedFunctions = allPipedFunctions |> List.reduce callPipeRight                                   
 
 #if DEBUG
-        let test = callMap <@ () @> <@ () @>
         let jsonObjCodec = NewSampleMessage.GetQuotedJsonObjCodec()
         let _ctast, ctpt = Quotations.ToAst(jsonObjCodec)
         let pt = ASTCleaner.untypeParseTree ctpt
