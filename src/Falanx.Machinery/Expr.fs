@@ -215,7 +215,7 @@ namespace Falanx.Machinery
             if expressions |> Seq.isEmpty then Expr.Value(()) 
             else expressions |> Seq.reduce (fun acc s -> Expr.Sequential(acc, s))
                
-        let private isGenerated (ty: Type) =
+        let isGenerated (ty: Type) =
             ty :? ProvidedTypeDefinition || 
             (ty.IsGenericType && ty.GetGenericArguments() |> Seq.exists (fun gt -> gt :? ProvidedTypeDefinition))
         
@@ -289,7 +289,3 @@ namespace Falanx.Machinery
     type TypeBinder =
          static member create ([<ReflectedDefinition(false)>] f : Expr<'a -> 'b>) =
             fun types args -> Expr.callStaticGeneric types args f
-            
-         static member create2 ([<ReflectedDefinition(false)>] f : Expr<'a -> 'b>, [<ReflectedDefinition(false)>] arg: Expr<'a> ) =
-            fun types ->
-                Expr.callStaticGeneric types [arg] f
