@@ -67,7 +67,7 @@ module JsonCodec =
             List.foldBack (fun var acc -> Expr.Lambda(var, acc)) lambdaVars state
         result
               
-    let  getFunctionReturnType (typ: Type) =
+    let getFunctionReturnType (typ: Type) =
         let rec loop (typ: Type) = 
             if FSharpTypeSafe.IsFunction typ then
                 let _domain, range = FSharpTypeSafe.GetFunctionElements typ                   
@@ -154,20 +154,6 @@ module JsonCodec =
         let expr = Expr.CallUnchecked(methodInfoTyped, [arg; func])
         expr
         
-
-//TODO: this needs to be done at the Expr -> AST level to remove the extra lambda call  
-//    let callPipeRight2 (arg:Expr) (func:Expr) =
-//        let methodInfoGeneric = Expr.methoddefof<@ (|>) @>
-//        let funcTypeReturn = getFunctionReturnType func.Type
-//
-//        let methodInfoTyped = methodInfoGeneric.MakeGenericMethod([|arg.Type; funcTypeReturn|])
-//        let expr = 
-//            match func with 
-//            | Lambda(_, Call(Some obj,minfo,args)) ->  Expr.Call(methodInfoTyped, [arg; Expr.Call(obj,minfo,args |> List.truncate (args.Length - 1))])
-//            | Lambda(_, Call(None,minfo,args)) ->  Expr.CallUnchecked(methodInfoTyped, [arg; Expr.CallUnchecked(minfo,args |> List.truncate (args.Length - 1))])
-//            | _ -> Expr.Call(methodInfoTyped, [arg; func])
-//        expr
-
     // fun u t -> { url = u; title= t }
     // |> mapping<Option<String> -> Option<int> -> Result2, IReadOnlyDictionary<String, JToken>, String, Result2, String, JToken>
     // |> jfieldopt<Result2, string, Option<int> -> Result2> "url"   (fun x -> x.url)
@@ -293,8 +279,6 @@ module JsonCodec =
             | None -> failwithf "A union case was not found for: %s" property.ProvidedProperty.Name 
             
         let mapMi = Expr.methoddefof <@ FSharpPlus.Operators.map<int, string, int [], string []> x x @>
-
-        
         let propertyType = property.Type.RuntimeType
         let unionType = descriptor.OneOfType :> Type
             
@@ -377,11 +361,11 @@ module JsonCodec =
     
     //a: record type, b: field type, c: next type
     let inline joptR< ^a,^b  when (OfJson or ^b) : (static member OfJson : ^b*OfJson -> (JsonValue -> ^b ParseResult)) 
-                             and  (ToJson or ^b) : (static member ToJson : ^b*ToJson -> JsonValue) > (propertyD: PropertyDescriptor) =        
+                             and  (ToJson or ^b) : (static member ToJson : ^b*ToJson -> JsonValue) > (property: ProvidedProperty) (rule: ProtoFieldRule) =        
         let getter = 
             let xvar = Var("x",typeof< ^a>)
-            let property = Expr.PropertyGet(Expr.Var xvar, propertyD.ProvidedProperty)
-            match propertyD.Rule with
+            let property = Expr.PropertyGet(Expr.Var xvar, property)
+            match rule with
             | ProtoFieldRule.Optional ->
                 <@ %%(Expr.Lambda(xvar, property)) : ^a -> ^b option @>
             | ProtoFieldRule.Repeated ->
@@ -389,10 +373,10 @@ module JsonCodec =
                 <@ %%Expr.Lambda(xvar, exp) : ^a -> ^b option @>
             | _ -> failwith "ProtoFieldRule Required is not supported"
         
-        <@@ jopt propertyD.ProvidedProperty.Name %getter : ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list, ^b option,'a> @@>
+        <@@ jopt property.Name %getter : ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list, ^b option,'a> @@>
                     
-    let calljopt (recordType: Type) (propertyD: PropertyDescriptor) (fieldType: Type ) =
-        TypeBinder.create joptR<_,int> [recordType; fieldType] [Expr.Value propertyD]
+    let calljopt (recordType: Type) (property: ProvidedProperty) (rule: ProtoFieldRule) (fieldType: Type ) =
+        TypeBinder.create joptR<_,int> [recordType; fieldType] [Expr.Value property; Expr.Value rule]
 
     let createJsonObjCodecFromoneOf (descriptor: OneOfDescriptor) =
         let maps =
@@ -411,14 +395,12 @@ module JsonCodec =
             
         let jsonObjCodec = ProvidedProperty("JsonObjCodec", signatureType, getterCode = (fun args -> jchoice), isStatic = true )
         jsonObjCodec
-        
+     
+    let getOptionType (o: Type) = o.GetGenericArguments().[0]   
                         
     let createRecordJFieldOpts (typeDescriptor: TypeDescriptor) =
         let recordType = typeDescriptor.Type :> Type
-        let recordFields = typeDescriptor.Fields
-        
-        let getOptionType (o: Type) = o.GetGenericArguments().[0]
-        
+        let recordFields = typeDescriptor.Fields        
         let createJfieldopt (propertyDescriptor: FieldDescriptor) rest =
             match propertyDescriptor with
             | Property propertyDescriptor -> 
@@ -427,7 +409,7 @@ module JsonCodec =
                     let fieldType = getOptionType propertyDescriptor.ProvidedProperty.PropertyType
                     
                     //first experimental srtp debug
-                    let jopt = calljopt typeDescriptor.Type propertyDescriptor fieldType
+                    let jopt = calljopt typeDescriptor.Type propertyDescriptor.ProvidedProperty propertyDescriptor.Rule fieldType
                     
                     let jfieldOpt = callJfieldopt typeDescriptor.Type rule propertyDescriptor.ProvidedProperty fieldType rest
                     jfieldOpt
@@ -450,20 +432,18 @@ module JsonCodec =
                 match propertyDescriptor.Rule with
                 | ProtoFieldRule.Optional as rule ->
                     let fieldType = getOptionType propertyDescriptor.ProvidedProperty.PropertyType
-                    let jopt = calljopt typeDescriptor.Type propertyDescriptor fieldType
-                    jopt
+                    calljopt typeDescriptor.Type propertyDescriptor.ProvidedProperty propertyDescriptor.Rule fieldType
                 | ProtoFieldRule.Repeated as rule ->
                     let fieldType = propertyDescriptor.ProvidedProperty.PropertyType
-                    let jopt = calljopt typeDescriptor.Type propertyDescriptor fieldType
-                    jopt
+                    calljopt typeDescriptor.Type propertyDescriptor.ProvidedProperty propertyDescriptor.Rule fieldType
                 | ProtoFieldRule.Required ->
                     failwith "not supported"
             | OneOf oneOf ->
                 let fieldType = getOptionType oneOf.CaseProperty.PropertyType
-                callJfieldopt typeDescriptor.Type ProtoFieldRule.Optional oneOf.CaseProperty fieldType rest
+                //callJfieldopt typeDescriptor.Type ProtoFieldRule.Optional oneOf.CaseProperty fieldType rest
             | Map map ->
                 let fieldType = getOptionType map.ProvidedProperty.PropertyType
-                callJfieldopt typeDescriptor.Type ProtoFieldRule.Optional map.ProvidedProperty fieldType rest
+                //callJfieldopt typeDescriptor.Type ProtoFieldRule.Optional map.ProvidedProperty fieldType rest
 
         let fieldTypeWithRest =
             let rec loop (recordFields: FieldDescriptor list) =
