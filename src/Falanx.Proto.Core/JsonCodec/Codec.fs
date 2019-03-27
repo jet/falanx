@@ -29,81 +29,12 @@ module FleeceExtensions =
             remainderFields <*> currentField
             
 #nowarn "686"   
-module JsonCodec =
-    type TypeChainCache<'a> = 
-        | Lookup of ConditionalWeakTable<Type,TypeChainCache<'a>>
-        | Value of 'a
-        member x.GetOrAdd(tl : Type list, f) = 
-            match tl with 
-            | h :: t -> 
-                match x with 
-                | Lookup d -> 
-                    let v = 
-                        let scc,v = d.TryGetValue(h)
-                        if scc then
-                            v
-                        else
-                            let v = 
-                                match t with 
-                                | [] -> f() |> Value
-                                | _ -> ConditionalWeakTable<Type,TypeChainCache<'a>>() |> Lookup
-                            d.Add(h,v)
-                            v
-                    v.GetOrAdd(t,f)
-                | Value v -> failwith "Bad type list length"
-            | [] -> 
-                match x with 
-                | Lookup d -> failwith "Bad type list length"
-                | Value v -> v
-        static member Create() = ConditionalWeakTable<Type,TypeChainCache<'a>>() |> Lookup
-        
-    type TypeTemplate<'a,'b>() =
-        static let cache = System.Collections.Generic.Dictionary<string,TypeChainCache<_>>()
-        static member create ([<ReflectedDefinition(false)>] f : Expr<'a -> 'b>) = 
-            fun cacheName -> 
-                let cache = 
-                    let scc,v = cache.TryGetValue cacheName
-                    if scc then 
-                        v
-                    else
-                        let v = TypeChainCache.Create()
-                        cache.Add(cacheName,v)
-                        v
-                let f() =
-                    let v = 
-                        let rec extractCall e = 
-                            match e with
-                            | Patterns.Lambda(_,body) -> extractCall body
-                            | Patterns.Call(_o,minfo,_args) -> minfo
-                            | _ -> failwithf "Expression not of expected form %A" e
-                        let rec replaceMethod minfo e = 
-                            match e with
-                            | Patterns.Lambda(v,body) -> Expr.Lambda(v, replaceMethod minfo body)
-                            | Patterns.Call(Some o,_,args) -> Expr.CallUnchecked(o,minfo,args)
-                            | Patterns.Call(None,_,args) -> Expr.CallUnchecked(minfo,args)
-                            | _ -> failwithf "Expression not of expected form %A" e
-                        match f with
-                        | Patterns.Lambda (_,e) -> 
-                            let minfo = extractCall e
-                            let makeMethod =
-                                if minfo.IsGenericMethod then
-                                    let minfodef = minfo.GetGenericMethodDefinition()
-                                    fun types -> 
-                                        minfodef.MakeGenericMethod(types |> Seq.toArray)
-                                else
-                                    fun _ -> minfo
-                            fun types -> 
-                                let method = makeMethod types
-                                let lambda = replaceMethod method f
-                                let res = FSharp.Linq.RuntimeHelpers.LeafExpressionConverter.EvaluateQuotation lambda :?> ('a -> 'b)
-                                res
-                        | _ -> failwithf "Expression not of expected form %A" f
-                    v
-                fun types -> 
-                    cache.GetOrAdd(types, fun () -> f() types)
-                    
-    let qs = QuotationSimplifier.QuotationSimplifier(true)                          
-             
+module JsonCodec =              
+    let inline (|NameAndType|) arg =
+        let name = ( ^a : (member Name : string) arg)
+        let typ = ( ^a : (member PropertyType : Type) arg)
+        name,typ
+    
     let createLambdaRecord (typeDescriptor: TypeDescriptor) =
         //Lambda (u, Lambda (t, NewRecord (Result2, u, t))
         let recordType = typeDescriptor.Type :?> ProvidedRecord
@@ -117,10 +48,10 @@ module JsonCodec =
                             Var(pp.Name, typedefof<Option<_>>.MakeGenericType(pp.PropertyType))
                         | Property{ProvidedProperty = pp} ->
                             Var(pp.Name, pp.PropertyType)
-                        | OneOf oneOf ->
-                            Var(oneOf.CaseProperty.Name, oneOf.CaseProperty.PropertyType)
-                        | Map m ->
-                            Var(m.ProvidedProperty.Name, m.ProvidedProperty.PropertyType))
+                        | OneOf{CaseProperty = NameAndType(n,t)} ->
+                            Var(n, t)
+                        | Map{ProvidedProperty = property} ->
+                            Var(property.Name, property.PropertyType))
 
         let recordArguments =
             lambdaVars
@@ -130,19 +61,16 @@ module JsonCodec =
                             //For fleece we need to flatten and expand methods in the to lambda construction and field map respectively.
                             Expr.callStaticGeneric [pp.PropertyType.GenericTypeArguments.[0] ] [Expr.Var v] <@ flatten x @>
                         | _, v -> Expr.Var v )
-            
- 
+
         let result =
             let state = Expr.NewRecordUnchecked(recordType, recordArguments)
-            List.foldBack (fun var acc ->
-                                            Expr.Lambda(var, acc)) lambdaVars state
-            
+            List.foldBack (fun var acc -> Expr.Lambda(var, acc)) lambdaVars state
         result
               
     let  getFunctionReturnType (typ: Type) =
         let rec loop (typ: Type) = 
             if FSharpTypeSafe.IsFunction typ then
-                let domain, range = FSharpTypeSafe.GetFunctionElements typ                   
+                let _domain, range = FSharpTypeSafe.GetFunctionElements typ                   
                 loop range
             else typ  
         let result = loop typ
@@ -364,11 +292,8 @@ module JsonCodec =
             | Some case -> case
             | None -> failwithf "A union case was not found for: %s" property.ProvidedProperty.Name 
             
-        let mapMi =
-            Expr.methoddefof <@ FSharpPlus.Operators.map<int, string, int [], string []> x x @>
-//            let genericMethod = typedefof<Fleece.Newtonsoft.ConcreteCodec<_,_,_,_>>
-//            let method = genericMethod.GetMethod "op_LessBangGreater"
-//            method
+        let mapMi = Expr.methoddefof <@ FSharpPlus.Operators.map<int, string, int [], string []> x x @>
+
         
         let propertyType = property.Type.RuntimeType
         let unionType = descriptor.OneOfType :> Type
@@ -451,36 +376,24 @@ module JsonCodec =
         Expr.CallUnchecked(jchoiceMethodInfoTyped, [choiceElements])
     
     //a: record type, b: field type, c: next type
-                    
     let inline joptR< ^a,^b  when (OfJson or ^b) : (static member OfJson : ^b*OfJson -> (JsonValue -> ^b ParseResult)) 
-                             and  (ToJson or ^b) : (static member ToJson : ^b*ToJson -> JsonValue) > (propertyD: PropertyDescriptor) =
-                                   
-        let fieldName = Expr.Value propertyD.ProvidedProperty.Name
-        
+                             and  (ToJson or ^b) : (static member ToJson : ^b*ToJson -> JsonValue) > (propertyD: PropertyDescriptor) =        
         let getter = 
             let xvar = Var("x",typeof< ^a>)
             let property = Expr.PropertyGet(Expr.Var xvar, propertyD.ProvidedProperty)
             match propertyD.Rule with
             | ProtoFieldRule.Optional ->
                 <@ %%(Expr.Lambda(xvar, property)) : ^a -> ^b option @>
-//            | ProtoFieldRule.Repeated ->
-//                let exp = Expr.callStaticGeneric [yield! property.Type.GenericTypeArguments] [property] <@ expand x @>
-//                <@ %%Expr.Lambda(xvar, exp) : ^a -> ^b option @>
+            | ProtoFieldRule.Repeated ->
+                let exp = Expr.callStaticGeneric [yield! property.Type.GenericTypeArguments] [property] <@ expand x @>
+                <@ %%Expr.Lambda(xvar, exp) : ^a -> ^b option @>
             | _ -> failwith "ProtoFieldRule Required is not supported"
         
-        <@@ jopt (%%fieldName: string) %getter : ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list, ^b option,'a> @@>
-        
+        <@@ jopt propertyD.ProvidedProperty.Name %getter : ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list, ^b option,'a> @@>
+                    
     let calljopt (recordType: Type) (propertyD: PropertyDescriptor) (fieldType: Type ) =
-        let t1 = TypeBinder.create joptR<_,int> [recordType; fieldType] [Expr.Value propertyD] 
-        let t2 = callStaticGeneric [recordType; fieldType] [Expr.Value propertyD] <@ joptR<_,int> x @>
-        
-        let t3 = TypeBinder.create2(joptR<_,int>, propertyD) [recordType; fieldType]
+        TypeBinder.create joptR<_,int> [recordType; fieldType] [Expr.Value propertyD]
 
-        let a,b,c = t1, t2, t3
-        let t3 = TypeTemplate.create joptR<_,string> "jopt" [recordType; fieldType] propertyD
-        t3
-        //Expr.callStaticGeneric [recordType;fieldType;nextFieldType] [providedProperty; ""; protoFieldRule] joptR<_,string,_>
-        
     let createJsonObjCodecFromoneOf (descriptor: OneOfDescriptor) =
         let maps =
             descriptor.Properties
@@ -512,13 +425,37 @@ module JsonCodec =
                 match propertyDescriptor.Rule with
                 | ProtoFieldRule.Optional as rule ->
                     let fieldType = getOptionType propertyDescriptor.ProvidedProperty.PropertyType
+                    
+                    //first experimental srtp debug
                     let jopt = calljopt typeDescriptor.Type propertyDescriptor fieldType
+                    
                     let jfieldOpt = callJfieldopt typeDescriptor.Type rule propertyDescriptor.ProvidedProperty fieldType rest
                     jfieldOpt
                 | ProtoFieldRule.Repeated as rule -> //will call expand, so type signature affected
                     
                     let fieldType = propertyDescriptor.ProvidedProperty.PropertyType
                     callJfieldopt typeDescriptor.Type rule propertyDescriptor.ProvidedProperty fieldType rest
+                | ProtoFieldRule.Required ->
+                    failwith "not supported"
+            | OneOf oneOf ->
+                let fieldType = getOptionType oneOf.CaseProperty.PropertyType
+                callJfieldopt typeDescriptor.Type ProtoFieldRule.Optional oneOf.CaseProperty fieldType rest
+            | Map map ->
+                let fieldType = getOptionType map.ProvidedProperty.PropertyType
+                callJfieldopt typeDescriptor.Type ProtoFieldRule.Optional map.ProvidedProperty fieldType rest
+                
+        let createJopt (propertyDescriptor: FieldDescriptor) rest =
+            match propertyDescriptor with
+            | Property propertyDescriptor -> 
+                match propertyDescriptor.Rule with
+                | ProtoFieldRule.Optional as rule ->
+                    let fieldType = getOptionType propertyDescriptor.ProvidedProperty.PropertyType
+                    let jopt = calljopt typeDescriptor.Type propertyDescriptor fieldType
+                    jopt
+                | ProtoFieldRule.Repeated as rule ->
+                    let fieldType = propertyDescriptor.ProvidedProperty.PropertyType
+                    let jopt = calljopt typeDescriptor.Type propertyDescriptor fieldType
+                    jopt
                 | ProtoFieldRule.Required ->
                     failwith "not supported"
             | OneOf oneOf ->
@@ -571,8 +508,6 @@ module JsonCodec =
             <!> jopt<NewSampleMessage,int> "martId" (fun b -> b.martId)
             <*> jopt<NewSampleMessage,string> "test_oneof" (fun a -> a.test_oneof)
             <*> jopt<NewSampleMessage,float> "test_two" (fun a -> a.test_two)
-            
-            
             
         static member GetQuotedJsonObjCodec() =
             let property = Expr.propertyof <@ NewSampleMessage.JsonObjCodec @>
@@ -661,17 +596,13 @@ type foo =
                (fun (arg0 : Int32) -> (Foo_int(arg0) : foo)) (Fleece.Newtonsoft.Operators.jreq<foo, Int32> 
                                                                                       ("Foo_int") (fun (arg1 : foo) -> 
                                                                                       if match arg1 with
-                                                                                         | Foo_int _ -> 
-                                                                                             true
+                                                                                         | Foo_int _ -> true
                                                                                          | _ -> false
                                                                                       then 
                                                                                           let x : Int32 =
                                                                                               match arg1 with
-                                                                                              | Foo_int(Foo_int = x) -> 
-                                                                                                  x
-                                                                                              | _ -> 
-                                                                                                  failwith 
-                                                                                                      "Should never hit"
+                                                                                              | Foo_int(Foo_int = x) -> x
+                                                                                              | _ -> failwith "Should never hit"
                                                                                           (Some(x) : Option<Int32>)
                                                                                       else (None : Option<Int32>)))
            
