@@ -289,3 +289,6 @@ namespace Falanx.Machinery
     type TypeBinder =
          static member create ([<ReflectedDefinition(false)>] f : Expr<'a -> 'b>) =
             fun types args -> Expr.callStaticGeneric types args f
+            
+         static member Quote([<ReflectedDefinition(false)>] (exp: Expr<_>)) =
+            exp
