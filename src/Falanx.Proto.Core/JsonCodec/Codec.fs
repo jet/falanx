@@ -28,6 +28,9 @@ module FleeceExtensions =
         static member inline apply  (currentField: ConcreteCodec<'S, 'S, 'f, 'T>) (remainderFields: ConcreteCodec<'S, 'S, 'f ->'r, 'T>) =
             remainderFields <*> currentField
             
+        static member inline fillHole(masterGeneric: ^a) =
+             typeof<ConcreteCodec<KeyValuePair<string, JsonValue> list,KeyValuePair<string, JsonValue> list, 'a, 'a>>
+            
 #nowarn "686"   
 module JsonCodec =              
     let inline (|NameAndType|) arg =
@@ -397,6 +400,25 @@ module JsonCodec =
         jsonObjCodec
      
     let getOptionType (o: Type) = o.GetGenericArguments().[0]   
+        
+    let createJopt (recordDescriptor: TypeDescriptor) (propertyDescriptor: FieldDescriptor) rest =
+        match propertyDescriptor with
+        | Property propertyDescriptor -> 
+            match propertyDescriptor.Rule with
+            | ProtoFieldRule.Optional as rule ->
+                let fieldType = getOptionType propertyDescriptor.ProvidedProperty.PropertyType
+                calljopt recordDescriptor.Type propertyDescriptor.ProvidedProperty propertyDescriptor.Rule fieldType
+            | ProtoFieldRule.Repeated as rule ->
+                let fieldType = propertyDescriptor.ProvidedProperty.PropertyType
+                calljopt recordDescriptor.Type propertyDescriptor.ProvidedProperty propertyDescriptor.Rule fieldType
+            | ProtoFieldRule.Required ->
+                failwith "not supported"
+        | OneOf oneOf ->
+            let fieldType = getOptionType oneOf.CaseProperty.PropertyType
+            calljopt recordDescriptor.Type oneOf.CaseProperty ProtoFieldRule.Optional fieldType
+        | Map map ->
+            let fieldType = getOptionType map.ProvidedProperty.PropertyType
+            calljopt recordDescriptor.Type map.ProvidedProperty ProtoFieldRule.Optional fieldType
                         
     let createRecordJFieldOpts (typeDescriptor: TypeDescriptor) =
         let recordType = typeDescriptor.Type :> Type
@@ -407,14 +429,9 @@ module JsonCodec =
                 match propertyDescriptor.Rule with
                 | ProtoFieldRule.Optional as rule ->
                     let fieldType = getOptionType propertyDescriptor.ProvidedProperty.PropertyType
-                    
-                    //first experimental srtp debug
-                    let jopt = calljopt typeDescriptor.Type propertyDescriptor.ProvidedProperty propertyDescriptor.Rule fieldType
-                    
                     let jfieldOpt = callJfieldopt typeDescriptor.Type rule propertyDescriptor.ProvidedProperty fieldType rest
                     jfieldOpt
                 | ProtoFieldRule.Repeated as rule -> //will call expand, so type signature affected
-                    
                     let fieldType = propertyDescriptor.ProvidedProperty.PropertyType
                     callJfieldopt typeDescriptor.Type rule propertyDescriptor.ProvidedProperty fieldType rest
                 | ProtoFieldRule.Required ->
@@ -425,27 +442,12 @@ module JsonCodec =
             | Map map ->
                 let fieldType = getOptionType map.ProvidedProperty.PropertyType
                 callJfieldopt typeDescriptor.Type ProtoFieldRule.Optional map.ProvidedProperty fieldType rest
-                
-        let createJopt (propertyDescriptor: FieldDescriptor) rest =
-            match propertyDescriptor with
-            | Property propertyDescriptor -> 
-                match propertyDescriptor.Rule with
-                | ProtoFieldRule.Optional as rule ->
-                    let fieldType = getOptionType propertyDescriptor.ProvidedProperty.PropertyType
-                    calljopt typeDescriptor.Type propertyDescriptor.ProvidedProperty propertyDescriptor.Rule fieldType
-                | ProtoFieldRule.Repeated as rule ->
-                    let fieldType = propertyDescriptor.ProvidedProperty.PropertyType
-                    calljopt typeDescriptor.Type propertyDescriptor.ProvidedProperty propertyDescriptor.Rule fieldType
-                | ProtoFieldRule.Required ->
-                    failwith "not supported"
-            | OneOf oneOf ->
-                let fieldType = getOptionType oneOf.CaseProperty.PropertyType
-                calljopt typeDescriptor.Type oneOf.CaseProperty ProtoFieldRule.Optional fieldType
-            | Map map ->
-                let fieldType = getOptionType map.ProvidedProperty.PropertyType
-                calljopt typeDescriptor.Type map.ProvidedProperty ProtoFieldRule.Optional fieldType
 
+        let entityDetailsSQL:PrintfFormat<(int -> ResizeArray<string>),_,_,ResizeArray<string>> = " blah %d "
+        
         let fieldTypeWithRest =
+            
+            let _ = entityDetailsSQL
             let rec loop (recordFields: FieldDescriptor list) =
                 [
                     match recordFields with
@@ -519,21 +521,96 @@ module JsonCodec =
             
         let createJsonObjCodec = ProvidedProperty("JsonObjCodec", signatureType, getterCode = (fun args -> foldedFunctions), isStatic = true )
         createJsonObjCodec
+    
+    let callMapOperator =
+        // f: 'T -> 'U  -> x: ^Functor<'T> -> ^Functor<'U> (requires static member Map )
+        // 'T is int option //current field
+        // 'U is ResizeArray<string> option -> TestAllTypes //nextfield -> nextfield/record
+        // 'Functor<'T> is ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list,int option,TestAllTypes>
+        // 'Functor<'U> is ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list,(ResizeArray<string> option -> TestAllTypes),TestAllTypes>
+        let map =
+            TypeBinder.create (fun (a: int option -> string option -> string) (b: ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list,int option, string>) -> a <!> b)
+                              [] //types
+                              [] //args
+        map
+    
+    type CCRemaining<'a, 'b> = ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list, 'a, 'b>
+    let callApplicative =
+        //static member inline (<*>) (remainderFields: ConcreteCodec<'S, 'S, 'f ->'r, 'T>, currentField: ConcreteCodec<'S, 'S, 'f, 'T>) =
+        
+        //remaining fields
+        //ConcreteCodec<
+        // S       KeyValuePair<string,JsonValue> list,
+        // S       KeyValuePair<string,JsonValue> list,
+        // f -> r (float option -> ResizeArray<string> option -> TestAllTypes),
+        // T       TestAllTypes>
+   
+        //current field
+        //ConcreteCodec<
+        // S   KeyValuePair<string,JsonValue> list,
+        // S   KeyValuePair<string,JsonValue> list,
+        // f   float option,
+        // T   TestAllTypes>
+        
+        //return
+        //ConcreteCodec<
+        //    KeyValuePair<string,JsonValue> list,
+        //    KeyValuePair<string,JsonValue> list,
+        //    (ResizeArray<string> option -> TestAllTypes),
+        //    TestAllTypes>
+        
+        
+        //remaining
+        //ConcreteCodec<
+        //    KeyValuePair<string,JsonValue> list,
+        //    KeyValuePair<string,JsonValue> list,
+        //    (ResizeArray<string> option -> TestAllTypes),
+        //    TestAllTypes>
+        
+        //current
+        //ConcreteCodec<
+        //    KeyValuePair<string,JsonValue> list,
+        //    KeyValuePair<string,JsonValue> list,
+        //    ResizeArray<string> option,
+        //    TestAllTypes>
+        
+        //return
+        //ConcreteCodec<
+        //    KeyValuePair<string,JsonValue> list,
+        //    KeyValuePair<string,JsonValue> list,
+        //    TestAllTypes,
+        //    TestAllTypes>
+        let app =
+            TypeBinder.create (fun (a: ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list,(string option -> string),string>) b -> a <*> b)
+                              [] //types
+                              [] //args
+        app
+        
+        
+    let createJsonObjCodecConcrete (typeDescriptor: TypeDescriptor) =     
+        let lambdaRecord = createLambdaRecord typeDescriptor
+        
+        let signatureType = ConcreteCodec.fillHole typeDescriptor.Type
+        
+        let foldedFunctions = <@@ () @@> //TODO
+        
+        let createJsonObjCodec = ProvidedProperty("JsonObjCodec", signatureType, getterCode = (fun args -> foldedFunctions), isStatic = true )
+        createJsonObjCodec
  
 #if DEBUG
 #nowarn "686"
 [<CLIMutable>]
 type TestAllTypes =
     { mutable singleInt32 : int option
+      mutable singlefloat : float option
       mutable repeatedString : string ResizeArray }
     
     [<ReflectedDefinition>]
     static member JsonObjCodec =
-        fun singleInt32 repeatedString -> {singleInt32 = singleInt32; repeatedString = flatten<string> repeatedString}
-        |> withFields<int option -> Option<ResizeArray<String>> -> TestAllTypes, IReadOnlyDictionary<String, JToken>, DecodeError, TestAllTypes, String, JToken>
-        |> jfieldOpt<TestAllTypes, Int32, Option<ResizeArray<String>> -> TestAllTypes> "singleInt32"  (fun x -> x.singleInt32)
-        |> jfieldOpt<TestAllTypes, ResizeArray<String> , TestAllTypes> "repeatedString"  (fun x -> expand<string> x.repeatedString)
-
+        fun singleInt32 singlefloat repeatedString -> {singleInt32 = singleInt32; singlefloat = singlefloat; repeatedString = flatten<string> repeatedString}
+        <!> jopt "singleInt32"  (fun x -> x.singleInt32)
+        <*> jopt "singlefloat"  (fun x -> x.singlefloat)
+        <*> jopt "repeatedString"  (fun x -> expand<string> x.repeatedString)
         
 type test_oneof =
     | First_name of First_name : string
