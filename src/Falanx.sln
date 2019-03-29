@@ -38,6 +38,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "example_schemas", "example_
 		..\test\examples\schemas\maptest.proto = ..\test\examples\schemas\maptest.proto
 		..\test\examples\schemas\oneOf.proto = ..\test\examples\schemas\oneOf.proto
 		..\test\examples\schemas\searchResponse.proto = ..\test\examples\schemas\searchResponse.proto
+		..\test\examples\schemas\simplethree.proto = ..\test\examples\schemas\simplethree.proto
 	EndProjectSection
 EndProject
 Global
