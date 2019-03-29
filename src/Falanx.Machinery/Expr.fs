@@ -80,7 +80,7 @@ namespace Falanx.Machinery
           | ExprShape.ShapeVar _ -> () ]
         
         let x<'T> : 'T = Unchecked.defaultof<'T>
-        let private onlyVar = function Var v -> Some v | _ -> None
+        let onlyVar = function Var v -> Some v | _ -> None
         
         let (|Field|_|) = function
             | FieldGet(_, info) -> Some info
