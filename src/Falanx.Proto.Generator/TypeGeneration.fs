@@ -1,4 +1,5 @@
 namespace Falanx.Proto.Generator
+open Falanx.Proto.Core
 
 module TypeGeneration =
     open System
@@ -283,6 +284,8 @@ module TypeGeneration =
                         providedType.DefineMethodOverride(serializedLengthMethod, typeof<IMessage>.GetMethod("SerializedLength"))
                     | Json ->
                         let jsonObjCodec = JsonCodec.createJsonObjCodec typeInfo
+                        
+                        let jsonObjCodecConcrete = JsonCodec.createJsonObjCodecConcrete typeInfo
                         providedType.AddMember jsonObjCodec
                         )
                           

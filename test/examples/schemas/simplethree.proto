@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+message BundleRequest {
+    int32 myInt = 1;
+    string myString = 2;
+    float myFloat = 3;
+}
