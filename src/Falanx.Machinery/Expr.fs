@@ -53,7 +53,8 @@ namespace Falanx.Machinery
                                            printfn "    Args: %A" args
                                            printfn "    Type: %a" simpleTypeFormatter e.Type
                                            printfn "    MI_RType: %a" simpleTypeFormatter mi.ReturnType
-                                           mi.GetGenericArguments()
+                                           let genericArgs = mi.GetGenericArguments()
+                                           genericArgs
                                            |> Array.iteri (fun i a -> printfn "    %i: %a" i simpleTypeFormatter a)
                                            printfn ""
                                            None
@@ -219,7 +220,9 @@ namespace Falanx.Machinery
             ty :? ProvidedTypeDefinition || 
             (ty.IsGenericType && ty.GetGenericArguments() |> Seq.exists (fun gt -> gt :? ProvidedTypeDefinition))
         
-        let makeGenericMethod (types: Type list) methodInfo =
+        let makeGenericMethod (types: Type list) (methodInfo:MethodInfo) =
+            let genericArgs = methodInfo.GetGenericArguments()
+            let _ = genericArgs
             if types |> List.exists isGenerated
             then ProvidedTypeBuilder.MakeGenericMethod(methodInfo, types)
             else methodInfo.MakeGenericMethod(types |> Array.ofList)

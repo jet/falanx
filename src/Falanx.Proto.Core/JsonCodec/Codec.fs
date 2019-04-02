@@ -482,11 +482,11 @@ module JsonCodec =
             loop recordFields
         joptwithNext
     
-    module M =
-        let inline (<*>) (x: ^T) (y: ^U) = ((^T or ^U) : (static member (<*>): ^T * ^U -> ^V) (x, y))
-        let inline (<!>) (x: ^T) (y: ^U) = ((^T or ^U) : (static member (<!>): ^T * ^U -> ^V) (x, y))
+//    module M =
+//        let inline (<*>) (x: ^T) (y: ^U) = ((^T or ^U) : (static member (<*>): ^T * ^U -> ^V) (x, y))
+//        let inline (<!>) (x: ^T) (y: ^U) = ((^T or ^U) : (static member (<!>): ^T * ^U -> ^V) (x, y))
     
-    open M
+    //open M
 
     [<CLIMutable>]
     type NewSampleMessage =
@@ -538,6 +538,19 @@ module JsonCodec =
         // 'U is ResizeArray<string> option -> TestAllTypes //nextfield -> nextfield/record
         // 'Functor<'T> is ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list,int option,TestAllTypes>
         // 'Functor<'U> is ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list,(ResizeArray<string> option -> TestAllTypes),TestAllTypes>
+        
+        // 0: FSharpOption[int]
+        // 1: FSharpFunc[FSharpOption[String], FSharpFunc[FSharpOption[Double], NewSampleMessage]]
+        // 2: ConcreteCodec[FSharpList[KeyValuePair[String, JToken]], FSharpList[KeyValuePair[String, JToken]],
+        //     FSharpOption[int], NewSampleMessage]
+        // 3: ConcreteCodec[FSharpList[KeyValuePair[String, JToken]], FSharpList[KeyValuePair[String, JToken]],
+        //     FSharpFunc[FSharpOption[String], FSharpFunc[FSharpOption[Double], NewSampleMessage]], NewSampleMessage]
+        
+        // 0: int option
+        // 1: string option -> float option -> NewSampleMessage
+        // 2: ConcreteCodec<KeyValuePair<String, JToken> list, KeyValuePair<String, JToken> list, int option, NewSampleMessage>
+        // 3: ConcreteCodec<KeyValuePair<String, JToken> list, KeyValuePair<String, JToken> list, string option -> float option -> NewSampleMessage, NewSampleMessage>
+        
         let map =
             TypeBinder.create (fun (a: int option -> string option -> string) (b: ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list,int option, string>) -> a <!> b)
                               types 
@@ -595,14 +608,82 @@ module JsonCodec =
                               args
         app
         
+    let mkFunTy a b =
+        let funTyC = typeof<(obj -> obj)>.GetGenericTypeDefinition()
+        let voidTy = typeof<System.Void>
+        let unitTy = typeof<unit>
+        let removeVoid a = if a = voidTy then unitTy else a
+            
+        let (a, b) = removeVoid a, removeVoid b
+        if Expr.isGenerated a || Expr.isGenerated b then
+            ProvidedTypeBuilder.MakeGenericType(funTyC, [a;b])
+        else
+            funTyC.MakeGenericType([| a;b |])
+                    
     let callMapAndApply (e1:Expr) (e2: Expr) =
         match e1 with
         
-        | Quotations.DerivedPatterns.Lambdas(vars, Patterns.NewRecord(typ, args)) when (List.concat vars) = (args |> List.choose onlyVar) ->
+        | Quotations.DerivedPatterns.Lambdas(vars, Patterns.NewRecord(recordType, args)) as lambda
+            when (List.concat vars) = (args |> List.choose onlyVar) ->
             //do map
+            // f: 'T -> 'U  -> x: ^Functor<'T> -> ^Functor<'U> (requires static member Map )
+            // 'T is int option //current field
+            // 'U is ResizeArray<string> option -> TestAllTypes //nextfield -> nextfield/record
+            // 'Functor<'T> is ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list,int option,TestAllTypes>
+            // 'Functor<'U> is ConcreteCodec<KeyValuePair<string,JsonValue> list,KeyValuePair<string,JsonValue> list,(ResizeArray<string> option -> TestAllTypes),TestAllTypes>
+            
+            // 0: int option
+            // 1: string option -> float option -> NewSampleMessage
+            // 2: ConcreteCodec<KeyValuePair<String, JToken> list, KeyValuePair<String, JToken> list, int option, NewSampleMessage>
+            // 3: ConcreteCodec<KeyValuePair<String, JToken> list, KeyValuePair<String, JToken> list, string option -> float option -> NewSampleMessage, NewSampleMessage>
+            
+            let vars = List.concat vars
+            
+            let domain, range =
+                match vars with
+                | h::t ->
+                    let extractedTypes = t |> List.map (fun v -> v.Type)
+                    let rest = List.foldBack(fun t state -> mkFunTy t state) extractedTypes recordType
+                    h.Type, rest    
+                | [] -> failwith "empty vars"
+
+            let lambdaType = lambda.Type
+            
+            let domain, range = FSharpTypeSafe.GetFunctionElements lambdaType
+            let codec1, codec2 =
+                let concreteCodec = typedefof<ConcreteCodec<_,_,_,_>>
+                let keyPairs = typeof<KeyValuePair<string, JsonValue> list>
+                ProvidedTypeBuilder.MakeGenericType(concreteCodec, [keyPairs; keyPairs; domain; recordType]),
+                ProvidedTypeBuilder.MakeGenericType(concreteCodec, [keyPairs; keyPairs; range; recordType])
+
+            let map = callMapOperator [domain; range; codec1; codec2] [e1; e2]
+            map
+        | Quotations.Patterns.Call(_instance, methodInfo, arguments) ->
+            //do apply
+            //map takes off the ?int part
+            //int option -> string option -> float option -> record
+            //apply should be
+            //string option-> float option -> record
+
+
+            //0: ConcreteCodec[KeyValuePair[String,JToken] list, KeyValuePair[String,JToken] list,
+            //     string option -> float option -> NewSampleMessage, NewSampleMessage]
+            //1: ConcreteCodec[KeyValuePair[String,JToken] list, KeyValuePair[String,JToken] list,
+            //        string option, NewSampleMessage]
+            //2: ConcreteCodec[KeyValuePair[String,JToken] list, KeyValuePair[String,JToken] list,
+            //        float option -> NewSampleMessage, NewSampleMessage]
+            
+            //0: ConcreteCodec[KeyValuePair[String,JToken] list, KeyValuePair[String,JToken] list,
+            //        float option -> NewSampleMessage, NewSampleMessage]
+            //1: ConcreteCodec[KeyValuePair[String,JToken] list, KeyValuePair[String,JToken] list,
+            //        float option, NewSampleMessage]
+            //2: ConcreteCodec[KeyValuePair[String,JToken] list, KeyValuePair[String,JToken] list,
+            //        NewSampleMessage, NewSampleMessage]
+
+            let app = callApplicative [] [e1;e2]
+            app
             <@@ () @@>
-        | _ -> //do apply
-            <@@ () @@>
+        | _ -> failwith "unknown expression"
         
         
     let createJsonObjCodecConcrete (typeDescriptor: TypeDescriptor) =     
