@@ -723,7 +723,7 @@ module JsonCodec =
                 
             let app = callApplicative [codec1; codec2; codec3] [e1;e2]
             app
-        | _ -> failwith "unknown expression"
+        | exp -> failwith "unknown expression: %A" exp
         
         
     let createJsonObjCodecConcrete (typeDescriptor: TypeDescriptor) =     
