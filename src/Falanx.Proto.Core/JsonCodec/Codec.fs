@@ -2,6 +2,7 @@ namespace Falanx.Proto.Core
 open System
 open System.Reflection
 open System.Collections.Generic
+open System.Diagnostics
 open Fleece
 open Fleece.Newtonsoft
 open Fleece.Newtonsoft.Operators
@@ -10,14 +11,32 @@ open Microsoft.FSharp.Quotations
 open ProviderImplementation.ProvidedTypes
 open ProviderImplementation.ProvidedTypes.UncheckedQuotations
 open Falanx.Machinery
-open Falanx.Machinery
 open Falanx.Machinery.Expr
 open Falanx.Proto.Core.Model
 open Newtonsoft.Json.Linq
 open Reflection
 open Froto.Parser.ClassModel
 open Falanx.Proto.Codec.Json.ResizeArray
-open System.Runtime.CompilerServices
+
+[<DebuggerDisplay "{ToDebuggerDisplay(),nq}">]
+type TypeWrapper =
+    | Single of Type
+    | Function of Type list
+    static member create(t:Type) =
+        match t with
+        | t when FSharpTypeSafe.IsFunction t ->
+            Function (Utils.getFunctionElements t)
+        | _ -> Single (t)
+        
+    override this.ToString() =
+        match this with
+        | Single t -> t.ToString()
+        | Function elements ->
+            elements
+            |> List.map (fun t -> t.ToString())
+            |> String.concat " -> "
+    
+    member this.ToDebuggerDisplay () = this.ToString()
 
 [<AutoOpen>]
 module FleeceExtensions =
@@ -80,15 +99,6 @@ module JsonCodec =
         let result = loop typ
         result
         
-    let rec getLambdaElements typ = [
-        let returnOrLoop t = [
-            if FSharpTypeSafe.IsFunction t then 
-                yield! getLambdaElements t
-            else yield t ]
-        let domain, rest = FSharpTypeSafe.GetFunctionElements(typ)
-        yield! returnOrLoop domain
-        yield! returnOrLoop rest
-        ]
         
     let makeFunctionTypeFromElements (xs: Type list) =
         let newFunction = xs |> List.reduceBack (fun a b -> FSharpType.MakeFunctionType(a, b) )
@@ -618,7 +628,7 @@ module JsonCodec =
         if Expr.isGenerated a || Expr.isGenerated b then
             ProvidedTypeBuilder.MakeGenericType(funTyC, [a;b])
         else
-            funTyC.MakeGenericType([| a;b |])
+            funTyC.MakeGenericType([| a;b |])        
                     
     let callMapAndApply (e1:Expr) (e2: Expr) =
         match e1 with
@@ -660,29 +670,59 @@ module JsonCodec =
             map
         | Quotations.Patterns.Call(_instance, methodInfo, arguments) ->
             //do apply
-            //map takes off the ?int part
-            //int option -> string option -> float option -> record
-            //apply should be
-            //string option-> float option -> record
-
-
-            //0: ConcreteCodec[KeyValuePair[String,JToken] list, KeyValuePair[String,JToken] list,
-            //     string option -> float option -> NewSampleMessage, NewSampleMessage]
-            //1: ConcreteCodec[KeyValuePair[String,JToken] list, KeyValuePair[String,JToken] list,
-            //        string option, NewSampleMessage]
-            //2: ConcreteCodec[KeyValuePair[String,JToken] list, KeyValuePair[String,JToken] list,
-            //        float option -> NewSampleMessage, NewSampleMessage]
+            // map would remove the int option part
+            // int option -> string option -> float option -> record
+            // apply should be: string option-> float option -> record
+               
+            //0: ConcreteCodec[KeyValuePair[String,JToken] list, KeyValuePair[String,JToken] list, string option -> float option -> NewSampleMessage, NewSampleMessage]
+            //1: ConcreteCodec[KeyValuePair[String,JToken] list, KeyValuePair[String,JToken] list, string option, NewSampleMessage]
+            //2: ConcreteCodec[KeyValuePair[String,JToken] list, KeyValuePair[String,JToken] list, float option -> NewSampleMessage, NewSampleMessage]
             
-            //0: ConcreteCodec[KeyValuePair[String,JToken] list, KeyValuePair[String,JToken] list,
-            //        float option -> NewSampleMessage, NewSampleMessage]
-            //1: ConcreteCodec[KeyValuePair[String,JToken] list, KeyValuePair[String,JToken] list,
-            //        float option, NewSampleMessage]
-            //2: ConcreteCodec[KeyValuePair[String,JToken] list, KeyValuePair[String,JToken] list,
-            //        NewSampleMessage, NewSampleMessage]
-
-            let app = callApplicative [] [e1;e2]
+            //0: ConcreteCodec[KeyValuePair[String,JToken] list, KeyValuePair[String,JToken] list, float option -> NewSampleMessage, NewSampleMessage]
+            //1: ConcreteCodec[KeyValuePair[String,JToken] list, KeyValuePair[String,JToken] list, float option, NewSampleMessage]
+            //2: ConcreteCodec[KeyValuePair[String,JToken] list, KeyValuePair[String,JToken] list, NewSampleMessage, NewSampleMessage]
+            let e1Type = e1.Type
+            let e1GenericArgs =
+                let genericArgs = e1Type.GetGenericArguments()
+                genericArgs
+                |> Array.map (fun a -> if FSharpTypeSafe.IsFunction a
+                                       then
+                                            let elements = Utils.getFunctionElements a
+                                            makeFunctionTypeFromElements elements
+                                       else a )
+            
+            let e2Type = e2.Type
+            let e2GenericArgs =
+                let genericArgs = e2Type.GetGenericArguments()
+                genericArgs
+                |> Array.map (fun a -> if FSharpTypeSafe.IsFunction a
+                                       then
+                                            let elements = Utils.getFunctionElements a
+                                            makeFunctionTypeFromElements elements
+                                       else a )
+                
+            let codec1, codec2, codec3 =
+                let concreteCodec = typedefof<ConcreteCodec<_,_,_,_>>
+                let keyPairs = typeof<KeyValuePair<string, JsonValue> list>
+                let c1, c2 =
+                    match e1GenericArgs with
+                    | [| _ ; _ ; t3; t4|] -> t3, t4
+                    | _ -> failwith "unexpected number of arguments"
+                    
+                let c3, c4 =
+                    match e2GenericArgs with
+                    | [| _ ; _ ; t3; t4|] -> t3, t4
+                    | _ -> failwith "unexpected number of arguments"
+                
+                //let c1,c2,c3,c4 = TypeWrapper.create c1, TypeWrapper.create c2, TypeWrapper.create c3, TypeWrapper.create c4
+                let _domain, range = FSharpTypeSafe.GetFunctionElements c1
+                                  
+                ProvidedTypeBuilder.MakeGenericType(concreteCodec, [keyPairs; keyPairs; c1; c2 ]),
+                ProvidedTypeBuilder.MakeGenericType(concreteCodec, [keyPairs; keyPairs; c3; c4]),
+                ProvidedTypeBuilder.MakeGenericType(concreteCodec, [keyPairs; keyPairs; range; c4])
+                
+            let app = callApplicative [codec1; codec2; codec3] [e1;e2]
             app
-            <@@ () @@>
         | _ -> failwith "unknown expression"
         
         
@@ -699,7 +739,7 @@ module JsonCodec =
             functions
             |> List.reduce callMapAndApply
         
-        let createJsonObjCodec = ProvidedProperty("JsonObjCodec", signatureType, getterCode = (fun args -> foldedFunctions), isStatic = true )
+        let createJsonObjCodec = ProvidedProperty("JsonObjCodecConcrete", signatureType, getterCode = (fun args -> foldedFunctions), isStatic = true )
         createJsonObjCodec
  
 #if DEBUG
