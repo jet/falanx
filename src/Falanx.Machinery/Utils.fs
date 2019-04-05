@@ -16,6 +16,16 @@ namespace Falanx.Machinery
         open ProviderImplementation.ProvidedTypes.UncheckedQuotations
         open Falanx.Machinery.Reflection
         
+        let rec getFunctionElements typ = [
+            let returnOrLoop t = [
+                if FSharpTypeSafe.IsFunction t then 
+                    yield! getFunctionElements t
+                else yield t ]
+            let domain, rest = FSharpTypeSafe.GetFunctionElements(typ)
+            yield! returnOrLoop domain
+            yield! returnOrLoop rest
+            ]
+        
         let thisPrefix = "x"
         
         let inline notImpl<'T> e : 'T = raise <| NotImplementedException(sprintf "%O" e)
