@@ -287,6 +287,7 @@ module TypeGeneration =
                         
                         let jsonObjCodecConcrete = JsonCodec.createJsonObjCodecConcrete typeInfo
                         providedType.AddMember jsonObjCodec
+                        providedType.AddMember jsonObjCodecConcrete
                         )
                           
              providedType
