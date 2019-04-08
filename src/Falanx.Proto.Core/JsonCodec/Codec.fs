@@ -18,6 +18,9 @@ open Reflection
 open Froto.Parser.ClassModel
 open Falanx.Proto.Codec.Json.ResizeArray
 
+module List =
+    let (|Concat|) = List.concat
+
 [<DebuggerDisplay "{ToDebuggerDisplay(),nq}">]
 type TypeWrapper =
     | Single of Type
@@ -633,8 +636,8 @@ module JsonCodec =
     let callMapAndApply (e1:Expr) (e2: Expr) =
         match e1 with
         
-        | Quotations.DerivedPatterns.Lambdas(vars, Patterns.NewRecord(recordType, args)) as lambda
-            when (List.concat vars) = (args |> List.choose onlyVar) ->
+        | Quotations.DerivedPatterns.Lambdas( List.Concat(vars), Patterns.NewRecord(recordType, VarOrCallWithVar(args))) as lambda
+            when vars = args ->
             //do map
             // f: 'T -> 'U  -> x: ^Functor<'T> -> ^Functor<'U> (requires static member Map )
             // 'T is int option //current field
@@ -646,8 +649,6 @@ module JsonCodec =
             // 1: string option -> float option -> NewSampleMessage
             // 2: ConcreteCodec<KeyValuePair<String, JToken> list, KeyValuePair<String, JToken> list, int option, NewSampleMessage>
             // 3: ConcreteCodec<KeyValuePair<String, JToken> list, KeyValuePair<String, JToken> list, string option -> float option -> NewSampleMessage, NewSampleMessage>
-            
-            let vars = List.concat vars
             
             let domain, range =
                 match vars with
