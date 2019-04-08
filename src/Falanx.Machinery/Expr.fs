@@ -82,6 +82,8 @@ namespace Falanx.Machinery
         
         let x<'T> : 'T = Unchecked.defaultof<'T>
         let onlyVar = function Var v -> Some v | _ -> None
+        let (|VarOrCallWithVar|) xs =
+            xs |> List.choose  (function Var v -> Some v | Call(_,_,[Var v]) -> Some v | _ -> None)
         
         let (|Field|_|) = function
             | FieldGet(_, info) -> Some info
