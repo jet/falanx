@@ -57,7 +57,18 @@ type Quotations() =
                 //dependencies.Append v.Type
                 let ident = mkIdent range v.Name
                 SynExpr.Ident ident
-            
+            | DerivedPatterns.Lambdas(vars, (NewRecord _ as body)) ->
+                let sp (v: Var) =
+                    let id = SynSimplePat.Id(mkIdent range v.Name, None, false ,false ,false, range)
+                    let vtype = sysTypeToSynType range v.Type knownNamespaces ommitEnclosingType
+                    SynSimplePat.Typed(id, vtype, range)
+                                                                      
+                let result =
+                    List.foldBack (fun v state -> SynExpr.Lambda(false, true, SynSimplePats.SimplePats([sp v], range), state, range)) (vars |> List.concat) (exprToAst body)
+                
+                SynExpr.Paren(result, range, None, range)
+                //result
+                
             | Lambda(v, body) ->
                 //dependencies.Append v.Type
                 let id = SynSimplePat.Id(mkIdent range v.Name, None, false ,false ,false, range)
