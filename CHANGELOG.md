@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 The `Unreleased` section name is replaced by the expected version of next release. A stable versions log contains all changes between that version and the previous stable version (can duplicate the prereleases logs)
 
+<a name="v0.5.2"></a>
+## [0.5.2] - 2019-04-09
+
+### Added
+Changed Fleece support to use the new ConcreteCodec, which means recursive defnitions can now be supported.  
+This also changes the way that Fleece definitions (JsonObjCodec) are encoded to use combinators:
+```
+    static member JsonObjCodec =
+        fun singleInt32 singlefloat repeatedString -> {singleInt32 = singleInt32; singlefloat = singlefloat; repeatedString = flatten<string> repeatedString}
+        <!> jopt "singleInt32"  (fun x -> x.singleInt32)
+        <*> jopt "singlefloat"  (fun x -> x.singlefloat)
+        <*> jopt "repeatedString"  (fun x -> expand<string> x.repeatedString)
+```
+
 <a name="v0.5.1"></a>
 ## [0.5.1]
 
