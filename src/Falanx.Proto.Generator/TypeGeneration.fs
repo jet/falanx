@@ -282,11 +282,8 @@ module TypeGeneration =
                         let serializedLengthMethod = Falanx.Proto.Codec.Binary.Serialization.createSerializedLength typeInfo
                         providedType.AddMember serializedLengthMethod
                         providedType.DefineMethodOverride(serializedLengthMethod, typeof<IMessage>.GetMethod("SerializedLength"))
-                    | Json ->
-                        let jsonObjCodec = JsonCodec.createJsonObjCodec typeInfo
-                        
+                    | Json ->                       
                         let jsonObjCodecConcrete = JsonCodec.createJsonObjCodecConcrete typeInfo
-                        providedType.AddMember jsonObjCodec
                         providedType.AddMember jsonObjCodecConcrete
                         )
                           

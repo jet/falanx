@@ -516,27 +516,27 @@ module JsonCodec =
             reflectedDefinition |> Option.iter (Expr.quotationsTypePrinter >> ignore)
             reflectedDefinition.Value
         
-    let createJsonObjCodec (typeDescriptor: TypeDescriptor) =     
-        let lambdaRecord = createLambdaRecord typeDescriptor
-        let mapping = callwithFields lambdaRecord
-        let jFieldOpts = createRecordJFieldOpts typeDescriptor
-        let allPipedFunctions = [yield lambdaRecord; yield mapping; yield! jFieldOpts]
-        let foldedFunctions = allPipedFunctions |> List.reduce callPipeRight                                   
-
-#if DEBUG
-        let jsonObjCodec = NewSampleMessage.GetQuotedJsonObjCodec()
-        let _ctast, ctpt = Quotations.ToAst(jsonObjCodec)
-        let pt = ASTCleaner.untypeParseTree ctpt
-        let code = Fantomas.CodeFormatter.FormatAST(pt, "test", None, Fantomas.FormatConfig.FormatConfig.Default)
-        let _ = code
-#endif                       
-
-        let signatureType =
-            let def = typedefof<Codec<_,_>>
-            def.MakeGenericType [|typeof<IReadOnlyDictionary<string,JsonValue>>; typeDescriptor.Type :> _ |]
-            
-        let createJsonObjCodec = ProvidedProperty("JsonObjCodec", signatureType, getterCode = (fun args -> foldedFunctions), isStatic = true )
-        createJsonObjCodec
+//    let createJsonObjCodec (typeDescriptor: TypeDescriptor) =     
+//        let lambdaRecord = createLambdaRecord typeDescriptor
+//        let mapping = callwithFields lambdaRecord
+//        let jFieldOpts = createRecordJFieldOpts typeDescriptor
+//        let allPipedFunctions = [yield lambdaRecord; yield mapping; yield! jFieldOpts]
+//        let foldedFunctions = allPipedFunctions |> List.reduce callPipeRight                                   
+//
+//#if DEBUG
+//        let jsonObjCodec = NewSampleMessage.GetQuotedJsonObjCodec()
+//        let _ctast, ctpt = Quotations.ToAst(jsonObjCodec)
+//        let pt = ASTCleaner.untypeParseTree ctpt
+//        let code = Fantomas.CodeFormatter.FormatAST(pt, "test", None, Fantomas.FormatConfig.FormatConfig.Default)
+//        let _ = code
+//#endif                       
+//
+//        let signatureType =
+//            let def = typedefof<Codec<_,_>>
+//            def.MakeGenericType [|typeof<IReadOnlyDictionary<string,JsonValue>>; typeDescriptor.Type :> _ |]
+//            
+//        let createJsonObjCodec = ProvidedProperty("JsonObjCodec", signatureType, getterCode = (fun args -> foldedFunctions), isStatic = true )
+//        createJsonObjCodec
     
     let callMapOperator types args =
         // f: 'T -> 'U  -> x: ^Functor<'T> -> ^Functor<'U> (requires static member Map )
@@ -722,18 +722,15 @@ module JsonCodec =
         
     let createJsonObjCodecConcrete (typeDescriptor: TypeDescriptor) =     
         let lambdaRecord = createLambdaRecord typeDescriptor
-        
         let signatureType = ConcreteCodec.fillHole typeDescriptor.Type
-        
         let jFieldOpts = createRecordJopts typeDescriptor
-
         let functions = [yield lambdaRecord; yield! jFieldOpts]
         
         let foldedFunctions =
             functions
             |> List.reduce callMapAndApply
         
-        let createJsonObjCodec = ProvidedProperty("JsonObjCodecConcrete", signatureType, getterCode = (fun args -> foldedFunctions), isStatic = true )
+        let createJsonObjCodec = ProvidedProperty("JsonObjCodec", signatureType, getterCode = (fun args -> foldedFunctions), isStatic = true )
         createJsonObjCodec
  
 #if DEBUG
