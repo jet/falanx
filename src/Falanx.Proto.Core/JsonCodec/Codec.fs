@@ -43,14 +43,7 @@ type TypeWrapper =
 
 [<AutoOpen>]
 module FleeceExtensions =
-
-    type ConcreteCodec<'S1, 'S2, 't1, 't2> with
-        static member inline map  (field: ConcreteCodec<'S, 'S, 'f, 'T>) (f) =
-            f <!> field
-        
-        static member inline apply  (currentField: ConcreteCodec<'S, 'S, 'f, 'T>) (remainderFields: ConcreteCodec<'S, 'S, 'f ->'r, 'T>) =
-            remainderFields <*> currentField
-            
+    type ConcreteCodec<'S1, 'S2, 't1, 't2> with            
         static member inline fillHole(masterGeneric: ^a) =
              typeof<ConcreteCodec<KeyValuePair<string, JsonValue> list,KeyValuePair<string, JsonValue> list, 'a, 'a>>
             
@@ -754,9 +747,9 @@ type TestAllTypes =
     [<ReflectedDefinition>]
     static member JsonObjCodec =
         fun singleInt32 singlefloat repeatedString -> {singleInt32 = singleInt32; singlefloat = singlefloat; repeatedString = flatten<string> repeatedString}
-        <!> jopt "singleInt32"  (fun x -> x.singleInt32)
-        <*> jopt "singlefloat"  (fun x -> x.singlefloat)
-        <*> jopt "repeatedString"  (fun x -> expand<string> x.repeatedString)
+        <!> jopt<TestAllTypes, int> "singleInt32"  (fun x -> x.singleInt32)
+        <*> jopt<TestAllTypes, float> "singlefloat"  (fun x -> x.singlefloat)
+        <*> jopt<TestAllTypes, ResizeArray<string>> "repeatedString"  (fun x -> expand<string> x.repeatedString)
         
 type test_oneof =
     | First_name of First_name : string
