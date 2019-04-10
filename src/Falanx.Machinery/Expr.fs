@@ -1,5 +1,4 @@
 namespace Falanx.Machinery
-    open Prelude
     open System
     open System.Collections
     open System.Collections.Generic
@@ -25,7 +24,6 @@ namespace Falanx.Machinery
               .Replace("FSharp.Collections.", "")
               .Replace("Fleece.Newtonsoft+", "")
               .Replace("Falanx.Proto.Core.", "")
-              
               .Replace("Int32", "int") |> ignore
             sb.ToString()
             
@@ -48,7 +46,7 @@ namespace Falanx.Machinery
               | ExprShape.ShapeVar _ -> q
                  
             traverseQuotation (fun e -> match e with
-                                        | Call(_,mi,args) when mi.IsGenericMethod -> 
+                                        | Call(_instance,mi,args) when mi.IsGenericMethod -> 
                                            printfn "Call: %s" mi.Name
                                            printfn "    Args: %A" args
                                            printfn "    Type: %a" simpleTypeFormatter e.Type
@@ -58,7 +56,7 @@ namespace Falanx.Machinery
                                            |> Array.iteri (fun i a -> printfn "    %i: %a" i simpleTypeFormatter a)
                                            printfn ""
                                            None
-                                        | Let(v,mi,_) ->
+                                        | Let(v,_mi,_) ->
                                             printfn "Let:\n    Var: %s\n    Type: %a\n" v.Name simpleTypeFormatter v.Type
                                             None
                                         | Lambda(v, expr) ->
@@ -75,8 +73,8 @@ namespace Falanx.Machinery
           | Patterns.Call(_,_,exprs) as call ->
               yield call
               yield! exprs |> List.map traverseForCall |> List.concat
-          | ExprShape.ShapeLambda(v, body)  -> yield! traverseForCall body
-          | ExprShape.ShapeCombination(comb, args) -> 
+          | ExprShape.ShapeLambda(_v, body)  -> yield! traverseForCall body
+          | ExprShape.ShapeCombination(_comb, args) -> 
               for ex in args do yield! traverseForCall ex
           | ExprShape.ShapeVar _ -> () ]
         
@@ -105,7 +103,7 @@ namespace Falanx.Machinery
                 | Let(arg, _, exp2) ->  
                     let newArgs = Set.add arg collectedArgs
                     loop exp2 newArgs
-                | Call(instance, mi, args) ->
+                | Call(_instance, mi, args) ->
                     let setOfCallArgs =
                         args
                         |> List.choose onlyVar
@@ -130,7 +128,7 @@ namespace Falanx.Machinery
                 if justArgs = allArgs then
                     Some (target, info)
                 else None
-            | Lambdas(args, somethingElse) ->
+            | Lambdas(_args, _body) ->
                 None
             | _ -> None
             
@@ -213,7 +211,6 @@ namespace Falanx.Machinery
             | Lambda(_, DefaultValue(t)) -> t.DeclaringType
             | _ -> failwith "Not a module, or not a supported module detection expression"
 
-        
         let sequence expressions = 
             if expressions |> Seq.isEmpty then Expr.Value(()) 
             else expressions |> Seq.reduce (fun acc s -> Expr.Sequential(acc, s))
@@ -252,9 +249,7 @@ namespace Falanx.Machinery
                 typeHierarchy sequence.Type
                 |> Seq.tryFind (fun ty -> ty.IsGenericType && ty.GetGenericTypeDefinition() = typedefof<seq<_>>)
                 |> Option.map (fun ty -> ty.GetGenericArguments().[0])
-                |> function
-                   | Some(x) -> x
-                   | None -> failwith "Given collection is not a seq<'T>"
+                |> function Some(x) -> x | None -> failwith "Given collection is not a seq<'T>"
                 
             let iterVar = Var("current", elementType)
             let enumeratorVar = Var("enumerator", typedefof<IEnumerator<_>> |> makeGenericType [elementType])
