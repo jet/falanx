@@ -4,14 +4,11 @@ open System.Reflection
 open Microsoft.FSharp.Reflection
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Quotations.Patterns
-open Microsoft.FSharp.Quotations.DerivedPatterns
-open Microsoft.FSharp.Quotations.ExprShape
 open Microsoft.FSharp.Compiler.Ast
 open Microsoft.FSharp.Compiler.Range
 open Utils
 open Microsoft.FSharp.Compiler
 open Microsoft.FSharp.Compiler.SourceCodeServices
-open ProviderImplementation.ProvidedTypes
 open Falanx.Machinery
 
 type Quotations() =
@@ -45,13 +42,11 @@ type Quotations() =
                 | :? (byte[]) as bs -> SynExpr.Const(SynConst.Bytes(bs, range), range)
                 | :? (uint16[]) as is -> SynExpr.Const(SynConst.UInt16s is, range)
                 // null literal support
-                | null -> //when not <| t.GetCompilationRepresentationFlags().HasFlag CompilationRepresentationFlags.UseNullAsTrueValue ->
+                | null ->
                     let synTy = sysTypeToSynType range t knownNamespaces ommitEnclosingType
                     SynExpr.Typed(SynExpr.Null range, synTy, range)
                 | :? Expr as e -> exprToAst e
                 | unknown -> failwithf "unknown value: %A" unknown
-                  //  let ident = pickles.Append(obj, t)                
-                    //SynExpr.Ident(ident)
     
             | Var v ->
                 //dependencies.Append v.Type
@@ -67,7 +62,6 @@ type Quotations() =
                     List.foldBack (fun v state -> SynExpr.Lambda(false, true, SynSimplePats.SimplePats([sp v], range), state, range)) (vars |> List.concat) (exprToAst body)
                 
                 SynExpr.Paren(result, range, None, range)
-                //result
                 
             | Lambda(v, body) ->
                 //dependencies.Append v.Type
@@ -265,7 +259,7 @@ type Quotations() =
                         let ctorArgs =
                             let fieldLength = 
                                 match uci.DeclaringType with
-                                | :? ProvidedUnion as pu ->
+                                | :? ProvidedUnion as _pu ->
                                     //TODO: add logic to providedUnion to figure out the number of fields in the particular unionCase
                                     //At the moment we are only supporting 1 field with proto3 implementation
                                     1
@@ -335,7 +329,7 @@ type Quotations() =
                 let callExpr,_ = List.fold foldApp (synMethod, 0) groupings
                 callExpr
     
-            | TupleGet(tuple, idx) as tg ->
+            | TupleGet(tuple, idx) ->
                 let synTuple = exprToAst tuple
                 let arity = FSharpType.GetTupleElements(tuple.Type).Length
                 let ident = mkUniqueIdentifier range
@@ -352,7 +346,7 @@ type Quotations() =
                 SynExpr.LetOrUse(false, false, [binding], synIdent, range)
     
             // pattern matching with union case field binding
-            | UnionCasePropertyGet(instance, ucType, ucName, position) ->
+            | UnionCasePropertyGet(instance, ucType, ucName, _position) ->
                 //dependencies.Append uci.DeclaringType
                 let synInstance = exprToAst instance
                 let matchArg = mkIdent range "x"
@@ -477,20 +471,12 @@ type Quotations() =
             let seqExpr = SynExpr.Sequential(SequencePointsAtSeq, true, SynExpr.Const(SynConst.Unit, defaultRange), expr, defaultRange)
             let binding = mkBinding defaultRange false synPat seqExpr
             SynModuleDecl.Let(false, [binding], defaultRange)
-    
-    //    let mkPickleBinding (entry : ExprPickle) =
-    //        let synUnPickle = exprToAst entry.Expr
-    //        let synPat = SynPat.Named(SynPat.Wild range0, entry.Ident, false, None, range0)
-    //        let binding = mkBinding range0 true synPat synUnPickle
-    //        SynModuleDecl.Let(false, [binding], range0)
-    
+        
         let moduleDeclsToParsedInput (decls : SynModuleDecl list) =
             let modl = SynModuleOrNamespace([mkIdent defaultRange "compiledFunctionName"], false, true, decls, PreXmlDoc.Empty,[], None, defaultRange)
             let file = ParsedImplFileInput("/QuotationCompiler.fs", false, QualifiedNameOfFile(mkIdent defaultRange "compiledFunctionName"), [],[], [modl], ((* isLastCompiland *) true, (* isExe *) false))
             ParsedInput.ImplFile file
     
         let synExpr = expr |> exprToAst 
-        //let pickleBindings = pickles.PickledValues |> List.map mkPickleBinding 
         let parsedInput =  [synExpr |> synExprToLetBinding] |> moduleDeclsToParsedInput
-        //dependencies.Assemblies, parsedInput
         synExpr, parsedInput
