@@ -122,7 +122,7 @@ module Serialization =
              
     let serializeUnion buffer this (prop : OneOfDescriptor) =
         match prop.Type.Kind with 
-        | TypeKind.OneOf(_scope, _name, fields) ->
+        | TypeKind.OneOf(_scope, _name, _fields) ->
 
             let oneOfExpr = Expr.PropertyGet(this, prop.CaseProperty)
             
