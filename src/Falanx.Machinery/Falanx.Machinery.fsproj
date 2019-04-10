@@ -23,7 +23,6 @@
     </Compile>
     <Compile Include="Prelude.fs" />
     <Compile Include="Reflection.fs" />
-    <Compile Include="QuotationSimplifier.fs" />
     <Compile Include="Naming.fs" />
     <Compile Include="ProvidedTypesExtensions.fs" />
     <Compile Include="Expr.fs" />
