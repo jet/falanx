@@ -25,10 +25,7 @@ and ProvidedUnion(className:string, baseType, ?hideObjectMethods, ?nonNullable, 
     let unionCases = ResizeArray<_>()
     
     do base.AddMember tagsType
-      
-    static let defaultAttributes isErased = 
-         TypeAttributes.Public ||| TypeAttributes.Class ||| TypeAttributes.Sealed ||| enum (if isErased then int32 TypeProviderTypeAttributes.IsErased else 0)
-      
+            
     override this.GetCustomAttributes(_inherit) = unionAttribs
     override this.GetCustomAttributes(_attributeType, _inherit) =
         unionAttribs
