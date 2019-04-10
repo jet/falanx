@@ -71,8 +71,8 @@ module TypeResolver =
                         let ty : ProvidedTypeDefinition = 
                             match kind with
                             | TypeKind.OneOf(_scope, name, _unionFields) -> ProvidedUnion(name, Some typeof<obj>, isErased = false) :> _
-                            | Class(scope, message) -> ProvidedRecord(message.Name, Some typeof<obj>, isErased = false) :> _
-                            | Enum(scope, name) -> ProvidedTypeDefinition.mkEnum name
+                            | Class(_scope, message) -> ProvidedRecord(message.Name, Some typeof<obj>, isErased = false) :> _
+                            | Enum(_scope, name) -> ProvidedTypeDefinition.mkEnum name
                             | Primitive type' -> invalidOpf "Primitive type '%s' does not require custom Type" type'
                         kind.FullName, (kind, ty))
                     |> Seq.append enums
