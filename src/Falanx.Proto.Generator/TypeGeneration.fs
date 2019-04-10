@@ -5,7 +5,6 @@ module TypeGeneration =
     open System
     open System.Reflection
     open Falanx.Proto.Codec.Binary
-    open Falanx.Proto.Core
     open Falanx.Proto.Core.Model
     open Froto.Parser.Ast
     open Froto.Parser.ClassModel
