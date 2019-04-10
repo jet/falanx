@@ -109,13 +109,6 @@ namespace Falanx.Proto.Codec.Binary
                 
         let writeOptionalEmbedded position buffer value =
             value |> Option.iter (writeEmbedded position buffer)
-
-        let writeUnionOptionalEmbedded unionType unionMembers =
-            fun buffer value cases ->
-                match value with
-                | Some union ->
-                    cases
-                | _ -> ()
                 
         let writeRepeated (writeItem: Writer<'T>) position buffer value =
             value |> Seq.iter (writeItem position buffer)
