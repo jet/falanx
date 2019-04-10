@@ -1,7 +1,6 @@
 namespace Falanx.Machinery
     module Utils =
         open System
-        open System.Collections.Generic
         open System.Text.RegularExpressions
         open System.Reflection
         open System.Runtime.Serialization
@@ -292,8 +291,7 @@ namespace Falanx.Machinery
         
         /// recognizes bindings to union case fields in pattern matches
         /// Quotations directly access propertyInfo instances, which are
-        /// not public. Recovers union metadata required for a proper pattern match expression
-        /// in the F# ast.
+        /// not public. Recovers union metadata required for a proper pattern match expression in the F# ast.
         let (|UnionCasePropertyGet|_|) (expr : Expr) =
             match expr with
             | PropertyGet(Some instance, propertyInfo, []) when isUnion instance ->
