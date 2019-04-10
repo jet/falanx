@@ -1,18 +1,7 @@
 namespace Falanx.Machinery
 
-open System
-open System.Reflection
-open Microsoft.FSharp.Reflection
-open Microsoft.FSharp.Quotations
-open Microsoft.FSharp.Quotations.Patterns
-open Microsoft.FSharp.Quotations.DerivedPatterns
-open Microsoft.FSharp.Quotations.ExprShape
 open Microsoft.FSharp.Compiler.Ast
-open Microsoft.FSharp.Compiler.Range
-open Utils
-open Microsoft.FSharp.Compiler
 open Microsoft.FSharp.Compiler.SourceCodeServices
-open ProviderImplementation.ProvidedTypes
 
 module ASTCleaner =
   
@@ -40,26 +29,26 @@ module ASTCleaner =
     
     and untypeSynPat (node: SynPat) =
         match node with
-        | SynPat.Const(synConst, range) -> node
-        | SynPat.Wild(range) -> node
-        | SynPat.Named(synPat, ident, isSelfIdentifier, accessibility, range) -> node
-        | SynPat.Typed(synPat, synType, range) -> synPat
-        | SynPat.Attrib(synPat, synAttributes, range) -> node
-        | SynPat.Or(synPatL, synPatR, range_)-> node
-        | SynPat.Ands(synPats,  range) -> node
-        | SynPat.LongIdent(longDotId, ident, synValTyparDecls, synConstructorArgs, accessibility, range) -> node
-        | SynPat.Tuple(synPats, range) -> node
-        | SynPat.StructTuple(synPats, range) -> node
-        | SynPat.Paren(synPat, range) -> node 
-        | SynPat.ArrayOrList(a, synPats, range) -> node
-        | SynPat.Record(fields, range) -> node
-        | SynPat.Null(range) -> node
-        | SynPat.OptionalVal(ident,range) -> node
-        | SynPat.IsInst(synType,range) -> node
-        | SynPat.QuoteExpr(synExpr, range) -> node
-        | SynPat.DeprecatedCharRange(char1, char2, range) -> node
-        | SynPat.InstanceMember(ident1, ident2, ident3, accessibility,range) -> node
-        | SynPat.FromParseError(synPat, range) -> node
+        | SynPat.Const(_synConst, _range) -> node
+        | SynPat.Wild(_range) -> node
+        | SynPat.Named(_synPat, _ident, _isSelfIdentifier, _accessibility, _range) -> node
+        | SynPat.Typed(synPat, _synType, _range) -> synPat
+        | SynPat.Attrib(_synPat, _synAttributes, _range) -> node
+        | SynPat.Or(_synPatL, _synPatR, _range_)-> node
+        | SynPat.Ands(_synPats,  _range) -> node
+        | SynPat.LongIdent(_longDotId, _ident, _synValTyparDecls, _synConstructorArgs, _accessibility, _range) -> node
+        | SynPat.Tuple(_synPats, _range) -> node
+        | SynPat.StructTuple(_synPats, _range) -> node
+        | SynPat.Paren(_synPat, _range) -> node 
+        | SynPat.ArrayOrList(_arrayOrList, _synPats, _range) -> node
+        | SynPat.Record(_fields, _range) -> node
+        | SynPat.Null(_range) -> node
+        | SynPat.OptionalVal(_ident,_range) -> node
+        | SynPat.IsInst(_synType, _range) -> node
+        | SynPat.QuoteExpr(_synExpr, _range) -> node
+        | SynPat.DeprecatedCharRange(_char1, _char2, _range) -> node
+        | SynPat.InstanceMember(_ident1, _ident2, _ident3, _accessibility, _range) -> node
+        | SynPat.FromParseError(_synPat, _range) -> node
 
     and untypeSynExpr (node: SynExpr) =
         match node with
@@ -149,15 +138,15 @@ module ASTCleaner =
         | SynMemberDefn.LetBindings(bindings, isStatic, isRec, range) ->
              SynMemberDefn.LetBindings(bindings |> List.map untypeSynBinding, isStatic, isRec, range)
              
-        | SynMemberDefn.Open(longId, range) -> node
-        | SynMemberDefn.ImplicitCtor(accessiblity, attributes, ctorArgs, selfIdentifier, range) -> node
-        | SynMemberDefn.ImplicitInherit(inheritType, inheritArgs, inheritAlias, range) -> node
-        | SynMemberDefn.AbstractSlot(synValSig, memberFlags, range) -> node
-        | SynMemberDefn.Interface(typ, memberDefns, range) -> node
-        | SynMemberDefn.Inherit(typ, ident, range) -> node
-        | SynMemberDefn.ValField(field, range) -> node
-        | SynMemberDefn.NestedType(typeDefn, accessibility, range) -> node
-        | SynMemberDefn.AutoProperty(attribs, isStatic, ident, typeOpt, propKind, memberFlags, xmlDoc, accessiblity, synExpr, getSetRange, range) -> node
+        | SynMemberDefn.Open(_longId, _range) -> node
+        | SynMemberDefn.ImplicitCtor(_accessiblity, _attributes, _ctorArgs, _selfIdentifier, _range) -> node
+        | SynMemberDefn.ImplicitInherit(_inheritType, _inheritArgs, _inheritAlias, _range) -> node
+        | SynMemberDefn.AbstractSlot(_synValSig, _memberFlags, _range) -> node
+        | SynMemberDefn.Interface(_typ, _memberDefns, _range) -> node
+        | SynMemberDefn.Inherit(_typ, _ident, _range) -> node
+        | SynMemberDefn.ValField(_field, _range) -> node
+        | SynMemberDefn.NestedType(_typeDefn, _accessibility, _range) -> node
+        | SynMemberDefn.AutoProperty(_attribs, _isStatic, _ident, _typeOpt, _propKind, _memberFlags, _xmlDoc, _accessiblity, _synExpr, _getSetRange, _range) -> node
          
     let untypeSynTypeDefn (SynTypeDefn.TypeDefn(ci, typeDefRepr, synMemberDefns, range)) =
          TypeDefn(ci, typeDefRepr, synMemberDefns |> List.map untypeSynMemberDefn, range)
@@ -176,12 +165,12 @@ module ASTCleaner =
         | SynModuleDecl.NestedModule(synComponentInfo, isRecursive, synModuleDecls, bool, range) ->
             SynModuleDecl.NestedModule(synComponentInfo, isRecursive, synModuleDecls |> List.map untypeSynModuleDecl, bool, range)
         
-        | SynModuleDecl.ModuleAbbrev(ident: Ident, longId: LongIdent, range) -> node
-        | SynModuleDecl.Exception(synExceptionDefn, range) -> node
-        | SynModuleDecl.Open(longDotId: LongIdentWithDots, range) -> node
-        | SynModuleDecl.Attributes(synAttributes, range) -> node
-        | SynModuleDecl.HashDirective(parsedHashDirective, range) -> node
-        | SynModuleDecl.NamespaceFragment(synModuleOrNamespace) -> node
+        | SynModuleDecl.ModuleAbbrev(_ident, _longId, _range) -> node
+        | SynModuleDecl.Exception(_synExceptionDefn, _range) -> node
+        | SynModuleDecl.Open(_longDotId, _range) -> node
+        | SynModuleDecl.Attributes(_synAttributes, _range) -> node
+        | SynModuleDecl.HashDirective(_parsedHashDirective, _range) -> node
+        | SynModuleDecl.NamespaceFragment(_synModuleOrNamespace) -> node
         
     let untypeSynModuleDecls (nodes: SynModuleDecls) =
         nodes |> List.map untypeSynModuleDecl
