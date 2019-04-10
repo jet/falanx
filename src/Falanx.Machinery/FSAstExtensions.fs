@@ -1,11 +1,9 @@
 namespace Falanx.Machinery
     [<AutoOpen>]
     module SynTypeExtensions =
-    
         open System
         open FsAst
         open Microsoft.FSharp.Compiler.Ast
-        open Microsoft.FSharp.Compiler.Range
         open ProviderImplementation.ProvidedTypes
         open Utils
         open Prelude
