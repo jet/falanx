@@ -38,7 +38,7 @@ module Model =
             | Primitive type' -> type'
             | Class(scope, message) -> scope +.+ message.Name
             | Enum(scope, fullName) -> scope +.+ fullName
-            | OneOf(scope, name, fields) -> scope +.+ name
+            | OneOf(scope, name, _fields) -> scope +.+ name
     
     type TypeContext = 
         { Kind: TypeKind
