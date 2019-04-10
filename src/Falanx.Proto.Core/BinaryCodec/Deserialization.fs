@@ -113,7 +113,6 @@ module Deserialization =
               Expr.CallUnchecked(list, addMethod, [value]) ]
     
     let readFrom (typeInfo: TypeDescriptor) (this:Expr) (allFields:Expr) =
-    
         try
             // handlers for all properties, depending on position
             let handlers = 
