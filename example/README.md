@@ -21,5 +21,5 @@ tools/falanx --help
 ## sample1
 
 ```
-falanx --inputfile ../sample1/bundle.proto --defaultnamespace MyNamespace --outputfile bundle.fs
+falanx --inputfile ./sample1/bundle.proto --defaultnamespace MyNamespace --outputfile bundle.fs
 ```
