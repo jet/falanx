@@ -3,7 +3,7 @@
 
 # Falanx code generation
 
-This repository contains the code generator to generate F# source (.fs files) from ProtoBuff v3 schema.
+This repository contains the code generator to generate F# source (.fs files) from Protobuf v3 schema.
 
 The general concepts are as follows:
 
@@ -98,7 +98,7 @@ Falanx use
 
 - `Type Provider SDK` common type for quotation and AST support
 - `FsAst` untyped F# AST to code via the code formatter Fantomas
-- `Froto` protobuff parser and binary serializer
+- `Froto` protobuf parser and binary serializer
 - `Fantomas` code formatter and linter
 
 ## Security
