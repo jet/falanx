@@ -15,9 +15,9 @@ The general concepts are as follows:
 In a .NET Sdk library project, add the following packages
 
 ```xml
-<PackageReference Include="Falanx.Proto.Codec.Binary" Version="0.4.*" />
-<PackageReference Include="Falanx.Proto.Codec.Json" Version="0.4.*" />
-<PackageReference Include="Falanx.Sdk" Version="0.4.*" PrivateAssets="All" />
+<PackageReference Include="Falanx.Proto.Codec.Binary" Version="0.5.*" />
+<PackageReference Include="Falanx.Proto.Codec.Json" Version="0.5.*" />
+<PackageReference Include="Falanx.Sdk" Version="0.5.*" PrivateAssets="All" />
 ```
 
 It's possibile to use only one of `Falanx.Proto.Codec.Binary` and `Falanx.Proto.Codec.Json` or both, the generated code will depends on the packages referenced
