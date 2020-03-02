@@ -94,7 +94,7 @@ To specify a version pass the `Version` property like `/p:Version=0.1.0-alpha7`
 
 ### Info
 
-Falanx use
+Falanx uses:
 
 - `Type Provider SDK` common type for quotation and AST support
 - `FsAst` untyped F# AST to code via the code formatter Fantomas
