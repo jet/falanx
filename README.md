@@ -3,7 +3,7 @@
 
 # Falanx code generation
 
-This repository contains the code generator to generate F# source (.fs files) from ProtoBuff v3 schema.
+This repository contains the code generator to generate F# source (.fs files) from Protobuf v3 schema.
 
 The general concepts are as follows:
 
@@ -15,9 +15,9 @@ The general concepts are as follows:
 In a .NET Sdk library project, add the following packages
 
 ```xml
-<PackageReference Include="Falanx.Proto.Codec.Binary" Version="0.4.*" />
-<PackageReference Include="Falanx.Proto.Codec.Json" Version="0.4.*" />
-<PackageReference Include="Falanx.Sdk" Version="0.4.*" PrivateAssets="All" />
+<PackageReference Include="Falanx.Proto.Codec.Binary" Version="0.5.*" />
+<PackageReference Include="Falanx.Proto.Codec.Json" Version="0.5.*" />
+<PackageReference Include="Falanx.Sdk" Version="0.5.*" PrivateAssets="All" />
 ```
 
 It's possibile to use only one of `Falanx.Proto.Codec.Binary` and `Falanx.Proto.Codec.Json` or both, the generated code will depends on the packages referenced
@@ -94,11 +94,11 @@ To specify a version pass the `Version` property like `/p:Version=0.1.0-alpha7`
 
 ### Info
 
-Falanx use
+Falanx uses:
 
 - `Type Provider SDK` common type for quotation and AST support
 - `FsAst` untyped F# AST to code via the code formatter Fantomas
-- `Froto` protobuff parser and binary serializer
+- `Froto` protobuf parser and binary serializer
 - `Fantomas` code formatter and linter
 
 ## Security
