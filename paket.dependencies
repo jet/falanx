@@ -33,13 +33,6 @@ nuget MedallionShell ~> 1.5
 
 github enricosada/dotnet-proj-info test/dotnet-proj.Tests/FileUtils.fs
 
-group MergeNupkgTool
-source https://www.nuget.org/api/v2
-frameworks: netcoreapp2.0, netstandard2.0
-storage: none
-
-clitool dotnet-mergenupkg ~> 2.4
-
 group ProtoTests
 
 github protocolbuffers/protobuf:47d33e752e5256bec315e5867b940ca33d66e8a2 csharp/protos/unittest_proto3.proto
