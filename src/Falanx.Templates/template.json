@@ -7,7 +7,7 @@
   "description": "A example project for creating a library that use Falanx to serialize protobuff",
   "groupIdentity": "Jet.Falanx",
   "precedence": "3000",
-  "identity": "Jet.Falanx.FSharp.2.1",
+  "identity": "Jet.Falanx.FSharp.3.1",
   "shortName": "falanx",
   "tags": {
     "language": "F#",
@@ -19,7 +19,7 @@
     "app": {
       "description": "Target netcoreapp",
       "defaultOverrides": {
-        "Framework": "netcoreapp2.1"
+        "Framework": "netcoreapp3.1"
       }
     },
     "standard": {
@@ -78,8 +78,8 @@
       "datatype": "choice",
       "choices": [
         {
-          "choice": "netcoreapp2.1",
-          "description": "Target netcoreapp2.1"
+          "choice": "netcoreapp3.1",
+          "description": "Target netcoreapp3.1"
         },
         {
           "choice": "netstandard2.0",

@@ -1,7 +1,7 @@
 version 5.195.4
 
 source https://www.nuget.org/api/v2
-framework: netcoreapp2.1, netstandard2.0
+framework: netcoreapp3.1, netstandard2.0
 storage: none
 
 nuget ArgU
@@ -15,7 +15,7 @@ nuget Froto.Serialization
 nuget Fleece.NewtonsoftJson 0.8.0-alpha-3
 nuget Newtonsoft.Json 11.0.2
 
-nuget Microsoft.SourceLink.GitHub 1.0.0-beta2-18618-05 copy_local: true
+nuget Microsoft.SourceLink.GitHub 1.0.0 copy_local: true
 
 github 7sharp9/FSharp.TypeProviders.SDK:falanx src/ProvidedTypes.fsi 5dd0739e04416e53222e3a179038b99ad2611e86
 github 7sharp9/FSharp.TypeProviders.SDK:falanx src/ProvidedTypes.fs 5dd0739e04416e53222e3a179038b99ad2611e86
@@ -23,7 +23,7 @@ github 7sharp9/FSharp.TypeProviders.SDK:falanx src/ProvidedTypesTesting.fs 5dd07
 
 group IntegrationTests
 source https://www.nuget.org/api/v2
-framework: netcoreapp2.1, netstandard2.0
+framework: netcoreapp3.1, netstandard2.0
 storage: none
 
 nuget FSharp.Core 4.5.4 strategy: min

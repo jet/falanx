@@ -265,7 +265,7 @@ let tests pkgUnderTestVersion =
       |> checkExitCodeZero
 
       // should run correctly
-      let outputPath = projDir/"bin"/"Debug"/"netcoreapp2.1"/template.AssemblyName + ".dll"
+      let outputPath = projDir/"bin"/"Debug"/"netcoreapp3.1"/template.AssemblyName + ".dll"
       Expect.isTrue (File.Exists outputPath) (sprintf "output assembly '%s' not found" outputPath)
 
       let binaryFilePath = testDir/"my.bin"
@@ -322,7 +322,7 @@ let tests pkgUnderTestVersion =
         dotnet fs ["build"; projPath]
         |> checkExitCodeZero
 
-        let outputPath = projDir/"bin"/"Debug"/"netcoreapp2.1"/template.AssemblyName + ".dll"
+        let outputPath = projDir/"bin"/"Debug"/"netcoreapp3.1"/template.AssemblyName + ".dll"
         Expect.isTrue (File.Exists outputPath) (sprintf "output assembly '%s' not found" outputPath)
 
         let writeAndRead format serializedPath deserializedPath =
