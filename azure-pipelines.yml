@@ -17,6 +17,8 @@ jobs:
     displayName: 'Use .NET Core sdk'
     inputs:
       useGlobalJson: true
+  - script: dotnet tool restore
+    displayName: Restore .NET local tools
   - script: dotnet pack build.proj -v n
     displayName: Create package
     env:
@@ -44,6 +46,8 @@ jobs:
     displayName: 'Use .NET Core sdk'
     inputs:
       useGlobalJson: true
+  - script: dotnet tool restore
+    displayName: Restore .NET local tools
   - script: dotnet pack build.proj -v n
     displayName: Create package
   - script: dotnet test build.proj -v n
