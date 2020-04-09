@@ -51,6 +51,7 @@ let getTempFilePath () =
 let sbtPath () =
   match getEnv "SBT_HOME" with
   | None -> None
+  | Some "" -> None
   | Some dir -> Some (dir/"sbt.bat")
 
 let sbt_run (fs: FileUtils) args =
