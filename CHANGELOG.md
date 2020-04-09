@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 The `Unreleased` section name is replaced by the expected version of next release. A stable versions log contains all changes between that version and the previous stable version (can duplicate the prereleases logs)
 
 <a name="v0.6.0"></a>
-## [0.6.0]
+## [0.6.0] - 2020-04-09
 
 ### Added
 - Support for .NET Core 3.1
