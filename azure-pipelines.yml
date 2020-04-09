@@ -27,6 +27,7 @@ jobs:
     displayName: Run tests
     env:
       VersionSuffix: '$(VersionSuffix)'
+      SBT_HOME: '' # disable scala tests
   - task: PublishTestResults@2
     inputs:
       testResultsFormat: 'VSTest'
