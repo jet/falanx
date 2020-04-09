@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <ProtoFile Include="schemas\falanx_test.proto" />
@@ -29,7 +29,7 @@
   <!-- use the falanx generator binary directly -->
   <PropertyGroup>
     <FalanxSdk_GeneratorExeHost>dotnet </FalanxSdk_GeneratorExeHost>
-    <FalanxSdk_GeneratorExe>..\..\src\Falanx.Tool\bin\$(Configuration)\netcoreapp2.1\falanx.dll</FalanxSdk_GeneratorExe>
+    <FalanxSdk_GeneratorExe>..\..\src\Falanx.Tool\bin\$(Configuration)\netcoreapp3.1\falanx.dll</FalanxSdk_GeneratorExe>
   </PropertyGroup>
   <!-- include to enable the generation of these formats -->
   <Import Project="..\..\src\Falanx.Proto.Codec.Binary\build\Falanx.Proto.Codec.Binary.props" />

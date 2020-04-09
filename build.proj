@@ -3,8 +3,7 @@
   <Import Project="Directory.Build.props" />
 
   <Target Name="Restore">
-    <Exec Command="$(MonoOrEmpty)paket.exe restore" WorkingDirectory=".paket" ConsoleToMSBuild="true" />
-    <Exec Command="dotnet restore" WorkingDirectory="tools" ConsoleToMSBuild="true" />
+    <Exec Command="dotnet paket restore" ConsoleToMSBuild="true" />
   </Target>
 
   <Target Name="Build" DependsOnTargets="Restore">
@@ -19,7 +18,7 @@
     <Exec Command='dotnet pack src/Falanx.Sdk -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
     <Exec Command='dotnet pack src/Falanx.Tool -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
     <Exec Command='dotnet pack src/Falanx.Templates -c Release -o "$(NupkgsDir)" /p:Version=$(Version)' />
-    <Exec Command='dotnet mergenupkg --source "$(NupkgsDir)/Falanx.Sdk.$(Version).nupkg" --other "$(NupkgsDir)/Falanx.Tool.$(Version).nupkg" --tools --only-files' WorkingDirectory="tools" />
+    <Exec Command='dotnet mergenupkg --source "$(NupkgsDir)/Falanx.Sdk.$(Version).nupkg" --other "$(NupkgsDir)/Falanx.Tool.$(Version).nupkg" --tools --only-files' />
   </Target>
 
   <Target Name="Test">

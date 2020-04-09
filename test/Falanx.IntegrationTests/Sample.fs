@@ -51,6 +51,7 @@ let getTempFilePath () =
 let sbtPath () =
   match getEnv "SBT_HOME" with
   | None -> None
+  | Some "" -> None
   | Some dir -> Some (dir/"sbt.bat")
 
 let sbt_run (fs: FileUtils) args =
@@ -265,7 +266,7 @@ let tests pkgUnderTestVersion =
       |> checkExitCodeZero
 
       // should run correctly
-      let outputPath = projDir/"bin"/"Debug"/"netcoreapp2.1"/template.AssemblyName + ".dll"
+      let outputPath = projDir/"bin"/"Debug"/"netcoreapp3.1"/template.AssemblyName + ".dll"
       Expect.isTrue (File.Exists outputPath) (sprintf "output assembly '%s' not found" outputPath)
 
       let binaryFilePath = testDir/"my.bin"
@@ -322,7 +323,7 @@ let tests pkgUnderTestVersion =
         dotnet fs ["build"; projPath]
         |> checkExitCodeZero
 
-        let outputPath = projDir/"bin"/"Debug"/"netcoreapp2.1"/template.AssemblyName + ".dll"
+        let outputPath = projDir/"bin"/"Debug"/"netcoreapp3.1"/template.AssemblyName + ".dll"
         Expect.isTrue (File.Exists outputPath) (sprintf "output assembly '%s' not found" outputPath)
 
         let writeAndRead format serializedPath deserializedPath =

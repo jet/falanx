@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 The `Unreleased` section name is replaced by the expected version of next release. A stable versions log contains all changes between that version and the previous stable version (can duplicate the prereleases logs)
 
+<a name="v0.6.0"></a>
+## [0.6.0]
+
+### Added
+- Support for .NET Core 3.1
+
+### Removed
+- Support for .NET Core 2.1
+
 <a name="v0.5.2"></a>
 ## [0.5.2] - 2019-04-09
 
