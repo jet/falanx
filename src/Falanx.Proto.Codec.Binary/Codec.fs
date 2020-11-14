@@ -24,6 +24,7 @@ namespace Falanx.Proto.Codec.Binary
     type proto_map<'Key, 'Value> = Collections.Generic.Dictionary<'Key, 'Value>   
           
     type Writer<'T> = FieldNum -> ZeroCopyBuffer -> 'T -> unit
+    type PackedWriter<'T> = (ResizeArray<'T> -> uint64, 'T -> ZeroCopyBuffer -> unit) // (obtain len fn, encode val fn)
     type Reader<'T> = RawField -> 'T
 
     // Eventually this interface could be addd to Froto itself
@@ -89,6 +90,20 @@ namespace Falanx.Proto.Codec.Binary
         let writeBool: Writer<proto_bool> = write Encode.fromBool
         let writeString: Writer<proto_string> = write Encode.fromString
         let writeBytes: Writer<proto_bytes> = write Encode.fromBytes
+
+        let writeDoublePacked: PackedWriter<proto_double> = (fun a -> a.length * 8, Pack.toDouble)
+        let writeFloatPacked: PackedWriter<proto_float> = (fun a -> a.length * 4, Pack.toSingle)
+        let writeInt32Packed: PackedWriter<proto_int32> = (Seq.sumBy (uint64 >> Utility.varIntLenNoDefault), uint64 >> Pack.toVarint)
+        let writeInt64Packed: PackedWriter<proto_int64> = (Seq.sumBy (uint64 >> Utility.varIntLenNoDefault), uint64 >> Pack.toVarint)
+        let writeUInt32Packed: PackedWriter<proto_uint32> = (Seq.sumBy (uint64 >> Utility.varIntLenNoDefault), uint64 >> Pack.toVarint)
+        let writeUInt64Packed: PackedWriter<proto_uint64> = (Seq.sumBy (uint64 >> Utility.varIntLenNoDefault), Pack.toVarint)
+        let writeSInt32Packed: PackedWriter<proto_sint32> = (Seq.sumBy (zigZag32 >> uint64 >> Utility.varIntLenNoDefault), zigZag32 >> uint64 >> Pack.toVarint)
+        let writeSInt64Packed: PackedWriter<proto_sint64> = (Seq.sumBy (zigZag64 >> uint64 >> Utility.varIntLenNoDefault), zigZag32 >> uint64 >> Pack.toVarint)
+        let writeFixed32Packed: PackedWriter<proto_fixed32> = (fun a -> a.length * 4, Pack.toFixed32)
+        let writeFixed64Packed: PackedWriter<proto_fixed64> = (fun a -> a.length * 8, Pack.toFixed64)
+        let writeSFixed32Packed: PackedWriter<proto_sfixed32> = (fun a -> a.length * 4, uint32 >> Pack.toFixed32)
+        let writeSFixed64Packed: PackedWriter<proto_sfixed64> = (fun a -> a.length * 8, uint64 >> Pack.toFixed64)
+        let writeBoolPacked: PackedWriter<proto_bool> = (fun a -> a.length, Pack.toBool)
         
         /// Serializes optional field using provided function to handle inner value if present
         let writeOptional (writeInner: Writer<'T>) (position: FieldNum) buffer value =
@@ -112,7 +127,13 @@ namespace Falanx.Proto.Codec.Binary
                 
         let writeRepeated (writeItem: Writer<'T>) position buffer value =
             value |> Seq.iter (writeItem position buffer)
-            
+
+        let writeRepeatedPacked ((getLen, writeItemPacked): PackedWriter<'T>) position buffer (value: ResizeArray<'T>) =
+            let vlen = getLen value
+            Pack.toTag position WireType.LengthDelimited buffer |> ignore
+            Pack.toVarint vlen buffer |> ignore
+            Seq.iter (fun v -> writeItemPacked v buffer) value
+
         let writeRepeatedEmbedded<'a  when 'a :> IMessage > (position, buffer, value ) =             
              for (v: 'a) in (value: ResizeArray<'a>) do
                     buffer
