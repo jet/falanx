@@ -27,7 +27,23 @@ module Serialization =
         | "bool" -> <@@ writeBool @@>
         | "string" -> <@@ writeString @@>
         | "bytes" -> <@@ writeBytes @@>
-        | x -> failwithf "Type %A nor supported" x
+        | x -> failwithf "Type %A not supported" x
+
+    let primitivePackedWriter = function
+        | "double" -> <@@ writeDoublePacked @@>
+        | "float" -> <@@ writeFloatPacked @@>
+        | "int32" -> <@@ writeInt32Packed @@>
+        | "int64" -> <@@ writeInt64Packed @@>
+        | "uint32" -> <@@ writeUInt32Packed @@>
+        | "uint64" -> <@@ writeUInt64Packed @@>
+        | "sint32" -> <@@ writeSInt32Packed @@>
+        | "sint64" -> <@@ writeSInt64Packed @@>
+        | "fixed32" -> <@@ writeFixed32Packed @@>
+        | "fixed64" -> <@@ writeFixed64Packed @@>
+        | "sfixed32" -> <@@ writeSFixed32Packed @@>
+        | "sfixed64" -> <@@ writeSFixed64Packed @@>
+        | "bool" -> <@@ writeBoolPacked @@>
+        | x -> failwithf "Type %A not supported" x
     
     let serializeMapExpr buffer this (map: MapDescriptor) =
         let keyWriter = primitiveWriter map.KeyType.ProtobufType
@@ -54,20 +70,25 @@ module Serialization =
                 [keyWriter; positionExpr; buffer; mapExpr]
                 <@@ writeEnumMap x x x x @@>
     
-    let callPrimitive writer (prop: PropertyDescriptor) rule position buffer value =
+    let callPrimitive (prop: PropertyDescriptor) rule position buffer value =
         let args = [position; buffer; value]
         match rule with
         | Required ->
-            Expr.apply writer args
+            Expr.apply (primitiveWriter prop.Type.ProtobufType) args
         | Optional ->            
             Expr.callStaticGeneric 
                             [prop.Type.UnderlyingType]
-                            [writer; position; buffer; value]
+                            [primitiveWriter prop.Type.ProtobufType; position; buffer; value]
                             <@@ writeOption x x x x @@>
+        | Repeated when prop.Type.ProtobufType <> "string" && prop.Type.ProtobufType <> "bytes" -> 
+            Expr.callStaticGeneric 
+                [prop.Type.UnderlyingType]
+                ((primitivePackedWriter prop.Type.ProtobufType) ::args)
+                <@@ writeRepeatedPacked x x x x @@>
         | Repeated -> 
             Expr.callStaticGeneric 
                 [prop.Type.UnderlyingType]
-                (writer::args)
+                ((primitiveWriter prop.Type.ProtobufType) ::args)
                 <@@ writeRepeated x x x x @@>
                             
     
@@ -114,7 +135,7 @@ module Serialization =
                         [ <@@ writeInt32 @@> ;position; buffer; seqMap]
                         <@@ writeRepeated x x x x @@>
             | Primitive _type, rule ->
-                callPrimitive (primitiveWriter prop.Type.ProtobufType) prop rule position buffer value
+                callPrimitive prop rule position buffer value
         with
         | ex -> 
             printfn "Failed to serialize property %s: %O. Error: %O" prop.ProvidedProperty.Name value.Type ex
